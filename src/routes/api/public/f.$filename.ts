@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-// Proxies the file from the underlying provider so the source host is hidden.
-// URL shape: /f/{id}.{ext}
-export const Route = createFileRoute("/f/$filename")({
+// Public file proxy. URL: /api/public/f/{id}.{ext}
+// Streams the file from the underlying provider so the source host stays hidden.
+export const Route = createFileRoute("/api/public/f/$filename")({
   server: {
     handlers: {
       GET: async ({ params }) => {
@@ -23,6 +23,7 @@ export const Route = createFileRoute("/f/$filename")({
         if (cl) headers.set("Content-Length", cl);
         headers.set("Cache-Control", "public, max-age=31536000, immutable");
         headers.set("Content-Disposition", `inline; filename="${filename}"`);
+        headers.set("Access-Control-Allow-Origin", "*");
 
         return new Response(upstream.body, { status: 200, headers });
       },

@@ -6,7 +6,7 @@ const CORS = {
   "Access-Control-Allow-Headers": "Content-Type",
 };
 
-export const Route = createFileRoute("/api/upload")({
+export const Route = createFileRoute("/api/public/upload")({
   server: {
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: CORS }),
@@ -47,10 +47,10 @@ export const Route = createFileRoute("/api/upload")({
             );
           }
 
-          // Extract just the filename (e.g. "abc123.jpg") and mask the source.
+          // Mask the source: only expose our own /api/public/f/{id}.{ext} path.
           const filename = data.url.split("/").pop() ?? "";
           const origin = new URL(request.url).origin;
-          const maskedUrl = `${origin}/f/${filename}`;
+          const maskedUrl = `${origin}/api/public/f/${filename}`;
 
           return Response.json(
             {
