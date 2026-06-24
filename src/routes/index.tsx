@@ -106,7 +106,6 @@ function Index() {
     <main className="min-h-screen bg-background text-foreground flex flex-col">
       <header className="px-6 pt-8 pb-2 flex items-center justify-between max-w-2xl mx-auto w-full">
         <div className="flex items-center gap-2">
-          <div className="size-7 rounded-[8px] bg-gradient-to-br from-primary to-[oklch(0.55_0.22_265)] shadow-lg shadow-primary/30" />
           <h1 className="text-[17px] font-semibold tracking-tight">Cloud</h1>
         </div>
         <span className="text-[13px] text-muted-foreground">Upload · Share</span>
