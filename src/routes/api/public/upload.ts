@@ -3,8 +3,16 @@ import { createFileRoute } from "@tanstack/react-router";
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Accept, Origin",
+  "Access-Control-Max-Age": "86400",
 };
+
+function getOrigin(request: Request) {
+  const forwardedHost = request.headers.get("x-forwarded-host");
+  const forwardedProto = request.headers.get("x-forwarded-proto") ?? "https";
+  if (forwardedHost) return `${forwardedProto}://${forwardedHost}`;
+  return new URL(request.url).origin;
+}
 
 export const Route = createFileRoute("/api/public/upload")({
   server: {
@@ -47,10 +55,16 @@ export const Route = createFileRoute("/api/public/upload")({
             );
           }
 
-          // Mask the source: only expose our own /api/public/f/{id}.{ext} path.
+          // Mask the source: only expose our own /f/{id}.{ext} path.
           const filename = data.url.split("/").pop() ?? "";
-          const origin = new URL(request.url).origin;
-          const maskedUrl = `${origin}/api/public/f/${filename}`;
+          if (!filename || !/^[\w.-]+$/.test(filename)) {
+            return Response.json(
+              { success: false, error: "Invalid upload URL" },
+              { status: 502, headers: CORS },
+            );
+          }
+
+          const maskedUrl = `${getOrigin(request)}/f/${filename}`;
 
           return Response.json(
             {
