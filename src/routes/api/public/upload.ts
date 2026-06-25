@@ -14,6 +14,49 @@ function getOrigin(request: Request) {
   return new URL(request.url).origin;
 }
 
+function extensionFrom(file: File, upstreamUrl: string) {
+  const fromName = file.name.match(/\.([A-Za-z0-9]{1,12})$/)?.[1];
+  if (fromName) return fromName.toLowerCase();
+
+  const pathname = new URL(upstreamUrl).pathname;
+  const fromUrl = pathname.match(/\.([A-Za-z0-9]{1,12})$/)?.[1];
+  return fromUrl?.toLowerCase() ?? "bin";
+}
+
+function makeSlug(ext: string) {
+  const alphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const bytes = new Uint8Array(12);
+  crypto.getRandomValues(bytes);
+  const id = Array.from(bytes, (byte) => alphabet[byte % alphabet.length]).join("");
+  return `${id}.${ext}`;
+}
+
+async function saveMapping(input: {
+  sourceUrl: string;
+  originalName: string;
+  contentType: string;
+  fileSize: number;
+  ext: string;
+}) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const slug = makeSlug(input.ext);
+    const { error } = await supabaseAdmin.from("file_links" as never).insert({
+      slug,
+      source_url: input.sourceUrl,
+      original_name: input.originalName,
+      content_type: input.contentType,
+      file_size: input.fileSize,
+    } as never);
+
+    if (!error) return slug;
+    if (error.code !== "23505") throw error;
+  }
+
+  throw new Error("Could not create unique link");
+}
+
 export const Route = createFileRoute("/api/public/upload")({
   server: {
     handlers: {
@@ -55,15 +98,31 @@ export const Route = createFileRoute("/api/public/upload")({
             );
           }
 
-          // Mask the source: only expose our own /f/{id}.{ext} path.
-          const filename = data.url.split("/").pop() ?? "";
-          if (!filename || !/^[\w.-]+$/.test(filename)) {
+          let sourceUrl: URL;
+          try {
+            sourceUrl = new URL(data.url);
+          } catch {
             return Response.json(
               { success: false, error: "Invalid upload URL" },
               { status: 502, headers: CORS },
             );
           }
 
+          if (!/^https?:$/.test(sourceUrl.protocol)) {
+            return Response.json(
+              { success: false, error: "Invalid upload URL" },
+              { status: 502, headers: CORS },
+            );
+          }
+
+          const ext = extensionFrom(file, data.url);
+          const filename = await saveMapping({
+            sourceUrl: data.url,
+            originalName: file.name || "upload",
+            contentType: file.type || "application/octet-stream",
+            fileSize: file.size,
+            ext,
+          });
           const maskedUrl = `${getOrigin(request)}/f/${filename}`;
 
           return Response.json(

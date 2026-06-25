@@ -8,7 +8,7 @@ const FILE_CORS = {
 };
 
 function safeFilename(filename: string) {
-  return /^[\w.-]+$/.test(filename);
+  return /^[A-Za-z0-9_-]{8,40}(\.[A-Za-z0-9]{1,12})?$/.test(filename);
 }
 
 async function streamFile(filename: string, method: "GET" | "HEAD") {
@@ -16,7 +16,23 @@ async function streamFile(filename: string, method: "GET" | "HEAD") {
     return new Response("Invalid file", { status: 400, headers: FILE_CORS });
   }
 
-  const upstream = await fetch(`https://files.catbox.moe/${filename}`, { method });
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin
+    .from("file_links" as never)
+    .select("source_url, original_name, content_type" as never)
+    .eq("slug" as never, filename as never)
+    .maybeSingle();
+
+  if (error || !data) {
+    return new Response("Not found", { status: 404, headers: FILE_CORS });
+  }
+
+  const fileLink = data as unknown as {
+    source_url: string;
+    original_name: string | null;
+    content_type: string | null;
+  };
+  const upstream = await fetch(fileLink.source_url, { method });
   if (!upstream.ok || (method === "GET" && !upstream.body)) {
     return new Response("Not found", { status: 404, headers: FILE_CORS });
   }
@@ -28,11 +44,15 @@ async function streamFile(filename: string, method: "GET" | "HEAD") {
   const contentRange = upstream.headers.get("content-range");
 
   if (contentType) headers.set("Content-Type", contentType);
+  else if (fileLink.content_type) headers.set("Content-Type", fileLink.content_type);
   if (contentLength) headers.set("Content-Length", contentLength);
   if (acceptRanges) headers.set("Accept-Ranges", acceptRanges);
   if (contentRange) headers.set("Content-Range", contentRange);
   headers.set("Cache-Control", "public, max-age=31536000, immutable");
-  headers.set("Content-Disposition", `inline; filename="${filename.replaceAll('"', "")}"`);
+  headers.set(
+    "Content-Disposition",
+    `inline; filename="${(fileLink.original_name || filename).replaceAll('"', "")}"`,
+  );
 
   return new Response(method === "HEAD" ? null : upstream.body, {
     status: upstream.status,
