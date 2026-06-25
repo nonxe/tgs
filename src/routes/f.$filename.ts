@@ -64,8 +64,8 @@ async function streamFile(filename: string, method: "GET" | "HEAD", request: Req
   const acceptRanges = upstream.headers.get("accept-ranges");
   const contentRange = upstream.headers.get("content-range");
 
-  if (contentType) headers.set("Content-Type", contentType);
-  else if (fileLink.content_type) headers.set("Content-Type", fileLink.content_type);
+  if (fileLink.content_type) headers.set("Content-Type", fileLink.content_type);
+  else if (contentType) headers.set("Content-Type", contentType);
   if (contentLength) headers.set("Content-Length", contentLength);
   if (acceptRanges) headers.set("Accept-Ranges", acceptRanges);
   if (contentRange) headers.set("Content-Range", contentRange);
