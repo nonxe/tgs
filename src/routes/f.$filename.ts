@@ -13,7 +13,7 @@ function safeFilename(filename: string) {
   return /^[A-Za-z0-9_-]{8,40}(\.[A-Za-z0-9]{1,12})?$/.test(filename);
 }
 
-async function streamFile(filename: string, method: "GET" | "HEAD") {
+async function streamFile(filename: string, method: "GET" | "HEAD", request: Request) {
   if (!filename || !safeFilename(filename)) {
     return new Response("Invalid file", { status: 400, headers: FILE_CORS });
   }
@@ -49,10 +49,11 @@ async function streamFile(filename: string, method: "GET" | "HEAD") {
     sourceUrl = signed.signedUrl;
   }
 
-  const upstream = await fetch(sourceUrl, {
-    method,
-    headers: { Range: new Request("http://local").headers.get("Range") ?? "" },
-  });
+  const upstreamHeaders = new Headers();
+  const range = request.headers.get("Range");
+  if (range) upstreamHeaders.set("Range", range);
+
+  const upstream = await fetch(sourceUrl, { method, headers: upstreamHeaders });
   if (!upstream.ok || (method === "GET" && !upstream.body)) {
     return new Response("Not found", { status: 404, headers: FILE_CORS });
   }
@@ -86,8 +87,8 @@ export const Route = createFileRoute("/f/$filename")({
   server: {
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: FILE_CORS }),
-      HEAD: async ({ params }) => streamFile(params.filename, "HEAD"),
-      GET: async ({ params }) => streamFile(params.filename, "GET"),
+      HEAD: async ({ params, request }) => streamFile(params.filename, "HEAD", request),
+      GET: async ({ params, request }) => streamFile(params.filename, "GET", request),
     },
   },
 });
