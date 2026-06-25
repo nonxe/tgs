@@ -14,13 +14,12 @@ function getOrigin(request: Request) {
   return new URL(request.url).origin;
 }
 
-function extensionFrom(file: File, upstreamUrl: string) {
+const UPLOAD_BUCKET = "file-uploads";
+
+function extensionFrom(file: File) {
   const fromName = file.name.match(/\.([A-Za-z0-9]{1,12})$/)?.[1];
   if (fromName) return fromName.toLowerCase();
-
-  const pathname = new URL(upstreamUrl).pathname;
-  const fromUrl = pathname.match(/\.([A-Za-z0-9]{1,12})$/)?.[1];
-  return fromUrl?.toLowerCase() ?? "bin";
+  return "bin";
 }
 
 function makeSlug(ext: string) {
@@ -32,7 +31,7 @@ function makeSlug(ext: string) {
 }
 
 async function saveMapping(input: {
-  sourceUrl: string;
+  file: File;
   originalName: string;
   contentType: string;
   fileSize: number;
@@ -42,15 +41,28 @@ async function saveMapping(input: {
 
   for (let attempt = 0; attempt < 5; attempt++) {
     const slug = makeSlug(input.ext);
+    const { error: uploadError } = await supabaseAdmin.storage
+      .from(UPLOAD_BUCKET)
+      .upload(slug, input.file, {
+        contentType: input.contentType,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      if (uploadError.message.toLowerCase().includes("already exists")) continue;
+      throw uploadError;
+    }
+
     const { error } = await supabaseAdmin.from("file_links" as never).insert({
       slug,
-      source_url: input.sourceUrl,
+      source_url: `lovable-storage://${UPLOAD_BUCKET}/${slug}`,
       original_name: input.originalName,
       content_type: input.contentType,
       file_size: input.fileSize,
     } as never);
 
     if (!error) return slug;
+    await supabaseAdmin.storage.from(UPLOAD_BUCKET).remove([slug]);
     if (error.code !== "23505") throw error;
   }
 
@@ -72,52 +84,9 @@ export const Route = createFileRoute("/api/public/upload")({
             );
           }
 
-          const forward = new FormData();
-          forward.append("file", file, file.name || "upload");
-
-          const upstream = await fetch(
-            "https://apis.davidcyril.name.ng/uploader/catbox",
-            { method: "POST", body: forward },
-          );
-
-          if (!upstream.ok) {
-            return Response.json(
-              { success: false, error: "Upstream upload failed" },
-              { status: 502, headers: CORS },
-            );
-          }
-
-          const data = (await upstream.json()) as {
-            success?: boolean;
-            url?: string;
-          };
-          if (!data?.success || !data.url) {
-            return Response.json(
-              { success: false, error: "Upload rejected" },
-              { status: 502, headers: CORS },
-            );
-          }
-
-          let sourceUrl: URL;
-          try {
-            sourceUrl = new URL(data.url);
-          } catch {
-            return Response.json(
-              { success: false, error: "Invalid upload URL" },
-              { status: 502, headers: CORS },
-            );
-          }
-
-          if (!/^https?:$/.test(sourceUrl.protocol)) {
-            return Response.json(
-              { success: false, error: "Invalid upload URL" },
-              { status: 502, headers: CORS },
-            );
-          }
-
-          const ext = extensionFrom(file, data.url);
+          const ext = extensionFrom(file);
           const filename = await saveMapping({
-            sourceUrl: data.url,
+            file,
             originalName: file.name || "upload",
             contentType: file.type || "application/octet-stream",
             fileSize: file.size,

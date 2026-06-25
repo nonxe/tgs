@@ -7,11 +7,13 @@ const FILE_CORS = {
   "Access-Control-Max-Age": "86400",
 };
 
+const UPLOAD_BUCKET = "file-uploads";
+
 function safeFilename(filename: string) {
   return /^[A-Za-z0-9_-]{8,40}(\.[A-Za-z0-9]{1,12})?$/.test(filename);
 }
 
-async function streamFile(filename: string, method: "GET" | "HEAD") {
+async function streamFile(filename: string, method: "GET" | "HEAD", request: Request) {
   if (!filename || !safeFilename(filename)) {
     return new Response("Invalid file", { status: 400, headers: FILE_CORS });
   }
@@ -32,7 +34,26 @@ async function streamFile(filename: string, method: "GET" | "HEAD") {
     original_name: string | null;
     content_type: string | null;
   };
-  const upstream = await fetch(fileLink.source_url, { method });
+  let sourceUrl = fileLink.source_url;
+
+  if (sourceUrl.startsWith("lovable-storage://")) {
+    const path = sourceUrl.slice(`lovable-storage://${UPLOAD_BUCKET}/`.length);
+    const { data: signed, error: signedError } = await supabaseAdmin.storage
+      .from(UPLOAD_BUCKET)
+      .createSignedUrl(path, 60);
+
+    if (signedError || !signed?.signedUrl) {
+      return new Response("Not found", { status: 404, headers: FILE_CORS });
+    }
+
+    sourceUrl = signed.signedUrl;
+  }
+
+  const upstreamHeaders = new Headers();
+  const range = request.headers.get("Range");
+  if (range) upstreamHeaders.set("Range", range);
+
+  const upstream = await fetch(sourceUrl, { method, headers: upstreamHeaders });
   if (!upstream.ok || (method === "GET" && !upstream.body)) {
     return new Response("Not found", { status: 404, headers: FILE_CORS });
   }
@@ -66,8 +87,8 @@ export const Route = createFileRoute("/f/$filename")({
   server: {
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: FILE_CORS }),
-      HEAD: async ({ params }) => streamFile(params.filename, "HEAD"),
-      GET: async ({ params }) => streamFile(params.filename, "GET"),
+      HEAD: async ({ params, request }) => streamFile(params.filename, "HEAD", request),
+      GET: async ({ params, request }) => streamFile(params.filename, "GET", request),
     },
   },
 });
