@@ -12,4 +12,8 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // Outside the Lovable build, honor NITRO_PRESET so we can target Vercel
+  // (e.g. `NITRO_PRESET=vercel bun run build`). Inside Lovable's build the
+  // preset is forced to Cloudflare and this override is ignored.
+  nitro: process.env.NITRO_PRESET ? { preset: process.env.NITRO_PRESET } : undefined,
 });
