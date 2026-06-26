@@ -14,59 +14,24 @@ function getOrigin(request: Request) {
   return new URL(request.url).origin;
 }
 
-const UPLOAD_BUCKET = "file-uploads";
+async function uploadToBackend(file: File): Promise<string> {
+  // Forward to upstream provider; we only keep the returned filename.
+  const fd = new FormData();
+  fd.append("reqtype", "fileupload");
+  fd.append("fileToUpload", file, file.name || "upload");
 
-function extensionFrom(file: File) {
-  const fromName = file.name.match(/\.([A-Za-z0-9]{1,12})$/)?.[1];
-  if (fromName) return fromName.toLowerCase();
-  return "bin";
-}
-
-function makeSlug(ext: string) {
-  const alphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  const bytes = new Uint8Array(12);
-  crypto.getRandomValues(bytes);
-  const id = Array.from(bytes, (byte) => alphabet[byte % alphabet.length]).join("");
-  return `${id}.${ext}`;
-}
-
-async function saveMapping(input: {
-  file: File;
-  originalName: string;
-  contentType: string;
-  fileSize: number;
-  ext: string;
-}) {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const slug = makeSlug(input.ext);
-    const { error: uploadError } = await supabaseAdmin.storage
-      .from(UPLOAD_BUCKET)
-      .upload(slug, input.file, {
-        contentType: input.contentType,
-        upsert: false,
-      });
-
-    if (uploadError) {
-      if (uploadError.message.toLowerCase().includes("already exists")) continue;
-      throw uploadError;
-    }
-
-    const { error } = await supabaseAdmin.from("file_links" as never).insert({
-      slug,
-      source_url: `lovable-storage://${UPLOAD_BUCKET}/${slug}`,
-      original_name: input.originalName,
-      content_type: input.contentType,
-      file_size: input.fileSize,
-    } as never);
-
-    if (!error) return slug;
-    await supabaseAdmin.storage.from(UPLOAD_BUCKET).remove([slug]);
-    if (error.code !== "23505") throw error;
+  const res = await fetch("https://catbox.moe/user/api.php", {
+    method: "POST",
+    body: fd,
+  });
+  const text = (await res.text()).trim();
+  if (!res.ok || !text.startsWith("http")) {
+    throw new Error(text || `Upload failed (${res.status})`);
   }
-
-  throw new Error("Could not create unique link");
+  // text looks like: https://files.catbox.moe/abc123.mp4
+  const filename = text.split("/").pop();
+  if (!filename) throw new Error("Bad upstream response");
+  return filename;
 }
 
 export const Route = createFileRoute("/api/public/upload")({
@@ -84,15 +49,8 @@ export const Route = createFileRoute("/api/public/upload")({
             );
           }
 
-          const ext = extensionFrom(file);
-          const filename = await saveMapping({
-            file,
-            originalName: file.name || "upload",
-            contentType: file.type || "application/octet-stream",
-            fileSize: file.size,
-            ext,
-          });
-          const maskedUrl = `${getOrigin(request)}/f/${filename}`;
+          const filename = await uploadToBackend(file);
+          const maskedUrl = `${getOrigin(request)}/${filename}`;
 
           return Response.json(
             {
