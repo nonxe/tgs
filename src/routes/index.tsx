@@ -43,6 +43,21 @@ function Index() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [server, setServer] = useState<string>("us");
+
+  const servers: { id: string; flag: string; name: string; tier: "free" | "premium" }[] = [
+    { id: "us", flag: "🇺🇸", name: "United States", tier: "free" },
+    { id: "tw", flag: "🇹🇼", name: "Taiwan", tier: "free" },
+    { id: "cn", flag: "🇨🇳", name: "China", tier: "premium" },
+    { id: "xk", flag: "🇽🇰", name: "Kosovo", tier: "premium" },
+    { id: "de", flag: "🇩🇪", name: "Germany", tier: "premium" },
+    { id: "ru", flag: "🇷🇺", name: "Russian Federation", tier: "premium" },
+    { id: "kr", flag: "🇰🇷", name: "South Korea", tier: "premium" },
+    { id: "sg", flag: "🇸🇬", name: "Singapore", tier: "premium" },
+    { id: "fr", flag: "🇫🇷", name: "France", tier: "premium" },
+    { id: "gb", flag: "🇬🇧", name: "United Kingdom", tier: "premium" },
+    { id: "ca", flag: "🇨🇦", name: "Canada", tier: "premium" },
+  ];
 
   const pick = () => inputRef.current?.click();
 
@@ -84,7 +99,9 @@ function Index() {
   const onFile = (f: File | null) => {
     if (!f) return;
     setFile(f);
-    upload(f);
+    setResult(null);
+    setError(null);
+    setProgress(0);
   };
 
   const copy = async () => {
@@ -124,7 +141,7 @@ function Index() {
             </p>
           </div>
 
-          {!result && (
+          {!result && !file && (
             <div
               onDragOver={(e) => {
                 e.preventDefault();
@@ -165,23 +182,101 @@ function Index() {
                   <path d="M5 21h14" />
                 </svg>
               </div>
-              <p className="text-[15px] font-medium">
-                {busy
-                  ? `Uploading ${file?.name ?? ""}`
-                  : "Tap to choose or drop here"}
-              </p>
-              <p className="mt-1 text-[13px] text-muted-foreground">
-                {busy && file ? formatBytes(file.size) : "Up to 200MB"}
-              </p>
+              <p className="text-[15px] font-medium">Tap to choose or drop here</p>
+              <p className="mt-1 text-[13px] text-muted-foreground">Up to 200MB</p>
+            </div>
+          )}
+
+          {file && !result && (
+            <div className="rounded-2xl bg-card/80 backdrop-blur-xl border border-border p-5 space-y-5">
+              <div className="flex items-center gap-3">
+                <div className="size-10 rounded-xl bg-secondary flex items-center justify-center text-muted-foreground">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <path d="M14 2v6h6" />
+                  </svg>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[15px] font-medium truncate">{file.name}</p>
+                  <p className="text-[13px] text-muted-foreground">{formatBytes(file.size)}</p>
+                </div>
+                {!busy && (
+                  <button
+                    onClick={reset}
+                    className="text-[13px] text-muted-foreground hover:text-foreground transition px-2"
+                    aria-label="Remove file"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              <div>
+                <p className="text-[12px] uppercase tracking-wider text-muted-foreground mb-2 px-1">
+                  Choose server
+                </p>
+                <div className="max-h-64 overflow-y-auto rounded-xl border border-border divide-y divide-border">
+                  {servers.map((s) => {
+                    const disabled = s.tier === "premium";
+                    const active = server === s.id;
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        disabled={disabled || busy}
+                        onClick={() => setServer(s.id)}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition ${
+                          active && !disabled
+                            ? "bg-primary/10"
+                            : disabled
+                            ? "opacity-50 cursor-not-allowed"
+                            : "hover:bg-secondary/60"
+                        }`}
+                      >
+                        <span className="text-[20px] leading-none">{s.flag}</span>
+                        <span className="flex-1 text-[14px] font-medium truncate">{s.name}</span>
+                        {disabled ? (
+                          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
+                            Premium
+                          </span>
+                        ) : (
+                          <span className="text-[11px] font-semibold uppercase tracking-wider text-primary bg-primary/15 px-2 py-0.5 rounded-full">
+                            Free
+                          </span>
+                        )}
+                        {active && !disabled && (
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+                            <path d="M20 6 9 17l-5-5" />
+                          </svg>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
               {busy && (
-                <div className="mt-5 h-1 w-full rounded-full bg-secondary overflow-hidden">
-                  <div
-                    className="h-full bg-primary transition-all duration-200"
-                    style={{ width: `${progress}%` }}
-                  />
+                <div>
+                  <div className="flex justify-between text-[12px] text-muted-foreground mb-1.5">
+                    <span>Uploading…</span>
+                    <span>{progress}%</span>
+                  </div>
+                  <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
+                    <div
+                      className="h-full bg-primary transition-all duration-200"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
                 </div>
               )}
+
+              <button
+                onClick={() => file && upload(file)}
+                disabled={busy}
+                className="w-full h-11 rounded-xl bg-primary text-primary-foreground text-[15px] font-medium active:scale-[0.98] transition disabled:opacity-60"
+              >
+                {busy ? "Uploading…" : "Upload"}
+              </button>
             </div>
           )}
 
