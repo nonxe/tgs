@@ -19,12 +19,17 @@ async function streamFile(filename: string, method: "GET" | "HEAD", request: Req
   const range = request.headers.get("Range");
   if (range) upstreamHeaders.set("Range", range);
 
-  const upstream = await fetch(`https://files.catbox.moe/${filename}`, {
-    method,
-    headers: upstreamHeaders,
-  });
-
-  if (!upstream.ok && upstream.status !== 206) {
+  // Try permanent host first, then the 72h fallback host.
+  const hosts = ["https://files.catbox.moe", "https://litter.catbox.moe"];
+  let upstream: Response | null = null;
+  for (const host of hosts) {
+    const r = await fetch(`${host}/${filename}`, { method, headers: upstreamHeaders });
+    if (r.ok || r.status === 206) {
+      upstream = r;
+      break;
+    }
+  }
+  if (!upstream) {
     return new Response("Not found", { status: 404, headers: FILE_CORS });
   }
 
