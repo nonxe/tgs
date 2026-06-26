@@ -14,24 +14,48 @@ function getOrigin(request: Request) {
   return new URL(request.url).origin;
 }
 
+// We forward to an upstream cloud and just keep the returned filename.
+// Permanent host first; falls back to a 72h host if the permanent one
+// rejects the request (some egress IPs are blocked by the permanent host).
 async function uploadToBackend(file: File): Promise<string> {
-  // Forward to upstream provider; we only keep the returned filename.
+  const filename = file.name || "upload";
+
+  // Attempt 1: permanent host (catbox).
+  try {
+    const fd = new FormData();
+    fd.append("reqtype", "fileupload");
+    fd.append("fileToUpload", file, filename);
+    const res = await fetch("https://catbox.moe/user/api.php", {
+      method: "POST",
+      body: fd,
+      headers: { "User-Agent": "Mozilla/5.0" },
+    });
+    const text = (await res.text()).trim();
+    if (res.ok && text.startsWith("http")) {
+      const name = text.split("/").pop();
+      if (name) return name;
+    }
+  } catch {
+    /* fall through */
+  }
+
+  // Attempt 2: 72h fallback (litterbox, same filename scheme).
   const fd = new FormData();
   fd.append("reqtype", "fileupload");
-  fd.append("fileToUpload", file, file.name || "upload");
-
-  const res = await fetch("https://catbox.moe/user/api.php", {
+  fd.append("time", "72h");
+  fd.append("fileToUpload", file, filename);
+  const res = await fetch("https://litterbox.catbox.moe/resources/internals/api.php", {
     method: "POST",
     body: fd,
+    headers: { "User-Agent": "Mozilla/5.0" },
   });
   const text = (await res.text()).trim();
   if (!res.ok || !text.startsWith("http")) {
     throw new Error(text || `Upload failed (${res.status})`);
   }
-  // text looks like: https://files.catbox.moe/abc123.mp4
-  const filename = text.split("/").pop();
-  if (!filename) throw new Error("Bad upstream response");
-  return filename;
+  const name = text.split("/").pop();
+  if (!name) throw new Error("Bad upstream response");
+  return name;
 }
 
 export const Route = createFileRoute("/api/public/upload")({
