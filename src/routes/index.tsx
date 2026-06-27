@@ -68,27 +68,69 @@ function Index() {
     setProgress(0);
 
     try {
-      const data = await new Promise<UploadResult>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", "/api/public/upload");
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100));
-        };
-        xhr.onload = () => {
-          try {
-            resolve(JSON.parse(xhr.responseText));
-          } catch {
-            reject(new Error("Bad server response"));
-          }
-        };
-        xhr.onerror = () => reject(new Error("Network error"));
-        const fd = new FormData();
-        fd.append("file", f);
-        xhr.send(fd);
-      });
+      // Upload directly from the browser to the upstream provider so we
+      // are not bottlenecked by serverless request body / memory limits.
+      // Catbox: permanent, up to 200MB. Litterbox: 72h, up to 1GB.
+      const SMALL_LIMIT = 200 * 1024 * 1024;
+      const targets =
+        f.size > SMALL_LIMIT
+          ? [
+              {
+                url: "https://litterbox.catbox.moe/resources/internals/api.php",
+                extra: { time: "72h" },
+              },
+            ]
+          : [
+              { url: "https://catbox.moe/user/api.php", extra: {} as Record<string, string> },
+              {
+                url: "https://litterbox.catbox.moe/resources/internals/api.php",
+                extra: { time: "72h" },
+              },
+            ];
 
-      if (!data.success) throw new Error(data.error || "Upload failed");
-      setResult(data);
+      let uploadedName: string | null = null;
+      let lastError = "";
+
+      for (const t of targets) {
+        try {
+          const name = await new Promise<string>((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", t.url);
+            xhr.upload.onprogress = (e) => {
+              if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100));
+            };
+            xhr.onload = () => {
+              const text = (xhr.responseText || "").trim();
+              if (xhr.status >= 200 && xhr.status < 300 && text.startsWith("http")) {
+                const n = text.split("/").pop();
+                if (n) return resolve(n);
+              }
+              reject(new Error(text || `Upload failed (${xhr.status})`));
+            };
+            xhr.onerror = () => reject(new Error("Network error"));
+            const fd = new FormData();
+            fd.append("reqtype", "fileupload");
+            for (const [k, v] of Object.entries(t.extra)) fd.append(k, v);
+            fd.append("fileToUpload", f, f.name || "upload");
+            xhr.send(fd);
+          });
+          uploadedName = name;
+          break;
+        } catch (e) {
+          lastError = (e as Error).message;
+        }
+      }
+
+      if (!uploadedName) throw new Error(lastError || "Upload failed");
+
+      const maskedUrl = `${window.location.origin}/${uploadedName}`;
+      setResult({
+        success: true,
+        url: maskedUrl,
+        filename: uploadedName,
+        size: f.size,
+        type: f.type,
+      });
     } catch (e) {
       setError((e as Error).message);
     } finally {
