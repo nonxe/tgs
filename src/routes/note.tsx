@@ -37,6 +37,9 @@ function NoteLayout() {
           <Link to="/convert" className="text-[20px] font-black tracking-tighter select-none opacity-40 hover:opacity-100 transition-opacity">
             CONVERTS
           </Link>
+          <Link to="/more" className="text-[20px] font-black tracking-tighter select-none opacity-40 hover:opacity-100 transition-opacity">
+            MORE
+          </Link>
         </div>
 
         <div className="flex items-center gap-2.5">

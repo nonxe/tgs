@@ -57,9 +57,12 @@ function ConvertPage() {
           <Link to="/note" className="text-[20px] font-black tracking-tighter select-none opacity-40 hover:opacity-100 transition-opacity">
             NOTES
           </Link>
-          <span className="text-[20px] font-black tracking-tighter select-none">
+          <Link to="/convert" className="text-[20px] font-black tracking-tighter select-none">
             CONVERTS
-          </span>
+          </Link>
+          <Link to="/more" className="text-[20px] font-black tracking-tighter select-none opacity-40 hover:opacity-100 transition-opacity">
+            MORE
+          </Link>
         </div>
 
         <button 
