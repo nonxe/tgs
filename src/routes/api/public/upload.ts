@@ -17,29 +17,32 @@ function getOrigin(request: Request) {
 // We forward to an upstream cloud and just keep the returned filename.
 // Permanent host first; falls back to a 72h host if the permanent one
 // rejects the request (some egress IPs are blocked by the permanent host).
-async function uploadToBackend(file: File): Promise<string> {
+async function uploadToBackend(file: File, retention: string): Promise<string> {
   const filename = file.name || "upload";
 
-  // Attempt 1: permanent host (catbox).
-  try {
-    const fd = new FormData();
-    fd.append("reqtype", "fileupload");
-    fd.append("fileToUpload", file, filename);
-    const res = await fetch("https://catbox.moe/user/api.php", {
-      method: "POST",
-      body: fd,
-      headers: { "User-Agent": "Mozilla/5.0" },
-    });
-    const text = (await res.text()).trim();
-    if (res.ok && text.startsWith("http")) {
-      const name = text.split("/").pop();
-      if (name) return name;
+  // If retention is permanent (or fallback), try Catbox first.
+  // If explicitly 72h, skip Catbox and go straight to Litterbox.
+  if (retention !== "72h") {
+    try {
+      const fd = new FormData();
+      fd.append("reqtype", "fileupload");
+      fd.append("fileToUpload", file, filename);
+      const res = await fetch("https://catbox.moe/user/api.php", {
+        method: "POST",
+        body: fd,
+        headers: { "User-Agent": "Mozilla/5.0" },
+      });
+      const text = (await res.text()).trim();
+      if (res.ok && text.startsWith("http")) {
+        const name = text.split("/").pop();
+        if (name) return name;
+      }
+    } catch {
+      /* fall through */
     }
-  } catch {
-    /* fall through */
   }
 
-  // Attempt 2: 72h fallback (litterbox, same filename scheme).
+  // Attempt 2 (or primary if 72h): 72h fallback (litterbox, same filename scheme).
   const fd = new FormData();
   fd.append("reqtype", "fileupload");
   fd.append("time", "72h");
@@ -66,6 +69,8 @@ export const Route = createFileRoute("/api/public/upload")({
         try {
           const incoming = await request.formData();
           const file = incoming.get("file");
+          const retention = incoming.get("retention")?.toString() || "permanent";
+
           if (!(file instanceof File)) {
             return Response.json(
               { success: false, error: "No file provided" },
@@ -73,7 +78,7 @@ export const Route = createFileRoute("/api/public/upload")({
             );
           }
 
-          const filename = await uploadToBackend(file);
+          const filename = await uploadToBackend(file, retention);
           const maskedUrl = `${getOrigin(request)}/${filename}`;
 
           return Response.json(
