@@ -152,77 +152,89 @@ function NoteComposer() {
   };
 
   return (
-    <section className="flex-1 flex flex-col px-4 py-8 max-w-2xl mx-auto w-full gap-4">
+    <section className="flex-1 flex flex-col px-4 py-8 max-w-2xl md:max-w-6xl mx-auto w-full gap-6">
       {error && (
         <div className="rounded-[16px] border border-destructive/20 bg-destructive/5 text-destructive text-[14px] font-semibold p-4 text-center animate-shiver">
           {error}
         </div>
       )}
 
-      <div className="flex flex-col gap-4 flex-1">
-        <div className="flex items-center justify-between gap-4">
-          <input
-            type="text"
-            placeholder="Title (Optional)"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="flex-1 bg-secondary/35 text-[24px] font-black tracking-tight placeholder-foreground/30 border border-border/30 rounded-[20px] px-5 py-4 outline-none focus:border-foreground/50 transition-all focus:bg-secondary/60"
-            maxLength={100}
-          />
-          <button
-            onClick={publishNote}
-            disabled={busy || !content.trim()}
-            className="h-[60px] px-6 rounded-[20px] bg-foreground text-background font-bold text-[14px] hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-40 disabled:pointer-events-none ios-tap-active flex items-center gap-1.5"
-          >
-            {busy ? "Saving..." : "Save Note"}
-          </button>
-        </div>
-
-        <textarea
-          ref={contentRef}
-          placeholder="Start typing your note here..."
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          className="w-full flex-1 min-h-[300px] bg-secondary/35 text-[17px] leading-[1.65] placeholder-foreground/30 border border-border/30 rounded-[24px] p-6 outline-none focus:border-foreground/50 transition-all resize-none focus:bg-secondary/60"
-        />
-      </div>
-
-      {/* History List */}
-      {history.length > 0 && (
-        <div className="mt-8 space-y-4 animate-slide-up">
-          <h3 className="text-[17px] font-black tracking-tight border-b border-border/30 pb-2.5 flex items-center gap-2 select-none">
-            <BookOpen className="size-4.5 opacity-60" />
-            <span>Published Notes</span>
-          </h3>
-
-          <div className="grid gap-2">
-            {history.map((item) => (
-              <div
-                key={item.path}
-                onClick={() => navigate({ to: `/note/${item.path}` })}
-                className="group flex items-center justify-between p-4 rounded-[18px] border border-border/40 hover:border-foreground/45 hover:bg-secondary/20 transition-all duration-300 cursor-pointer ios-glass"
-              >
-                <div className="min-w-0 flex-1 pr-4">
-                  <p className="text-[15px] font-bold truncate tracking-tight">{item.title}</p>
-                  <p className="text-[13px] text-muted-foreground mt-0.5">
-                    {item.wordCount} words • {formatRelativeTime(item.timestamp)}
-                  </p>
-                </div>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={(e) => deleteFromHistory(item.path, e)}
-                    className="size-8 rounded-full hover:bg-secondary flex items-center justify-center text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all"
-                    title="Remove from history"
-                  >
-                    <Trash2 className="size-4" />
-                  </button>
-                  <ArrowRight className="size-4 opacity-30 group-hover:opacity-80 group-hover:translate-x-0.5 transition-all" />
-                </div>
-              </div>
-            ))}
+      {/* Grid Layout */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-8 items-start flex-1 w-full">
+        {/* Left Column: Note Editor */}
+        <div className="md:col-span-3 flex flex-col gap-4 w-full h-full min-h-[400px]">
+          <div className="flex items-center justify-between gap-4">
+            <input
+              type="text"
+              placeholder="Title (Optional)"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="flex-1 bg-secondary/35 text-[20px] md:text-[24px] font-black tracking-tight placeholder-foreground/30 border border-border/30 rounded-[20px] px-5 py-4 outline-none focus:border-foreground/50 transition-all focus:bg-secondary/60"
+              maxLength={100}
+            />
+            <button
+              onClick={publishNote}
+              disabled={busy || !content.trim()}
+              className="h-[60px] px-6 rounded-[20px] bg-foreground text-background font-bold text-[14.5px] hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-40 disabled:pointer-events-none ios-tap-active flex items-center gap-1.5"
+            >
+              {busy ? "Saving..." : "Save Note"}
+            </button>
           </div>
+
+          <textarea
+            ref={contentRef}
+            placeholder="Start typing your note here..."
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            className="w-full flex-1 min-h-[350px] bg-secondary/35 text-[17px] leading-[1.65] placeholder-foreground/30 border border-border/30 rounded-[24px] p-6 outline-none focus:border-foreground/50 transition-all resize-none focus:bg-secondary/60 font-sans"
+          />
         </div>
-      )}
+
+        {/* Right Column: Published Notes History */}
+        <div className="md:col-span-2 w-full space-y-4">
+          {history.length > 0 ? (
+            <div className="space-y-4 animate-slide-up">
+              <h3 className="text-[17px] font-black tracking-tight border-b border-border/30 pb-2.5 flex items-center gap-2 select-none">
+                <BookOpen className="size-4.5 opacity-60" />
+                <span>Published Notes</span>
+              </h3>
+
+              <div className="grid gap-2 max-h-[480px] overflow-y-auto pr-1">
+                {history.map((item) => (
+                  <div
+                    key={item.path}
+                    onClick={() => navigate({ to: `/note/${item.path}` })}
+                    className="group flex items-center justify-between p-4 rounded-[18px] border border-border/40 hover:border-foreground/45 hover:bg-secondary/20 transition-all duration-300 cursor-pointer ios-glass"
+                  >
+                    <div className="min-w-0 flex-1 pr-4">
+                      <p className="text-[15px] font-bold truncate tracking-tight">{item.title}</p>
+                      <p className="text-[13px] text-muted-foreground mt-0.5">
+                        {item.wordCount} words • {formatRelativeTime(item.timestamp)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={(e) => deleteFromHistory(item.path, e)}
+                        className="size-8 rounded-full hover:bg-secondary flex items-center justify-center text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all"
+                        title="Remove from history"
+                      >
+                        <Trash2 className="size-4" />
+                      </button>
+                      <ArrowRight className="size-4 opacity-30 group-hover:opacity-80 group-hover:translate-x-0.5 transition-all" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="border border-dashed border-border/40 rounded-[24px] p-8 text-center text-muted-foreground/70 select-none">
+              <BookOpen className="size-8 mx-auto mb-3 opacity-40" />
+              <p className="text-[14px] font-semibold">No published notes yet</p>
+              <p className="text-[12px] mt-1 text-muted-foreground/50">Your published notes will appear here on this device.</p>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Published Link Modal */}
       {publishedUrl && (
@@ -235,7 +247,7 @@ function NoteComposer() {
             <div className="space-y-2">
               <h3 className="text-[20px] font-black tracking-tight">Note Published!</h3>
               <p className="text-[14px] text-muted-foreground max-w-xs mx-auto">
-                Your note is saved permanently and anonymously on Telegraph. Share the link below:
+                Your note is saved permanently and anonymously on the cloud. Share the link below:
               </p>
             </div>
 

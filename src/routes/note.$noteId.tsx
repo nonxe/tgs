@@ -111,7 +111,7 @@ function ViewNotePage() {
   };
 
   return (
-    <article className="flex-1 px-4 py-10 max-w-2xl mx-auto w-full space-y-6 animate-slide-up">
+    <article className="flex-1 px-4 py-10 max-w-2xl md:max-w-3xl mx-auto w-full space-y-6 animate-slide-up md:py-16">
       {/* Sub Header / Action */}
       <div className="flex items-center justify-between gap-4">
         <Link
@@ -132,7 +132,7 @@ function ViewNotePage() {
       </div>
 
       {/* Title */}
-      <h1 className="text-[34px] md:text-[44px] font-black tracking-tight leading-[1.1] select-none text-foreground pt-4">
+      <h1 className="text-[34px] md:text-[46px] font-black tracking-tight leading-[1.1] select-none text-foreground pt-4 md:pt-8">
         {note.title}
       </h1>
 
@@ -145,17 +145,17 @@ function ViewNotePage() {
         <div className="size-1 rounded-full bg-border" />
         <div className="flex items-center gap-1.5">
           <Calendar className="size-4 opacity-60" />
-          <span>Published on Telegraph</span>
+          <span>Published on Cloud</span>
         </div>
       </div>
 
       {/* Note Body */}
-      <div className="pt-2 text-foreground/95 select-text font-serif">
+      <div className="pt-4 text-foreground/95 select-text font-serif text-[18px] md:text-[20px] leading-[1.75] max-w-none prose dark:prose-invert">
         {renderNodes(note.content)}
       </div>
 
       {/* Footer Actions */}
-      <div className="pt-10 border-t border-border/20 flex justify-center">
+      <div className="pt-12 border-t border-border/20 flex justify-center">
         <Link
           to="/note"
           className="inline-flex h-12 items-center justify-center rounded-full bg-foreground text-background px-6 font-bold text-[14px] hover:scale-[1.02] active:scale-[0.98] transition-all gap-1.5"
