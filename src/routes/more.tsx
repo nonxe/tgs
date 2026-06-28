@@ -26,7 +26,7 @@ export const Route = createFileRoute("/more")({
 });
 
 type TabType = "chat" | "writer" | "downloader" | "utils";
-type AIModel = "deepseek-v3" | "deepseek-r1";
+type AIModel = "deepseek-v3" | "deepseek-r1" | "gemini" | "copilot";
 
 interface Message {
   role: "user" | "assistant";
@@ -164,7 +164,7 @@ function ChatTool() {
       if (!res.ok) throw new Error("API request failed");
       const data = await res.json();
       
-      const reply = data.response || data.reply || data.result || "No response received.";
+      const reply = data.response || data.message || data.reply || data.result || "No response received.";
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
     } catch (err) {
       setMessages((prev) => [
@@ -191,7 +191,7 @@ function ChatTool() {
               model === "deepseek-v3" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
             }`}
           >
-            DeepSeek V3
+            V3
           </button>
           <button
             onClick={() => setModel("deepseek-r1")}
@@ -199,7 +199,23 @@ function ChatTool() {
               model === "deepseek-r1" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
             }`}
           >
-            DeepSeek R1
+            R1
+          </button>
+          <button
+            onClick={() => setModel("gemini")}
+            className={`px-3 py-1.5 rounded-[10px] text-[12px] font-black transition-all uppercase ${
+              model === "gemini" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+            }`}
+          >
+            Gemini
+          </button>
+          <button
+            onClick={() => setModel("copilot")}
+            className={`px-3 py-1.5 rounded-[10px] text-[12px] font-black transition-all uppercase ${
+              model === "copilot" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+            }`}
+          >
+            Copilot
           </button>
         </div>
 
@@ -217,7 +233,7 @@ function ChatTool() {
           <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground p-8 select-none">
             <Sparkles className="size-8 text-foreground opacity-30 mb-2 animate-pulse" />
             <p className="text-[14px] font-bold">Start a conversation</p>
-            <p className="text-[12px] opacity-75 mt-0.5">Send a message to {model === "deepseek-r1" ? "Deepseek R1 (Reasoning)" : "Deepseek V3 (General)"}.</p>
+            <p className="text-[12px] opacity-75 mt-0.5">Send a message to one of the working premium models.</p>
           </div>
         ) : (
           messages.map((msg, idx) => (
