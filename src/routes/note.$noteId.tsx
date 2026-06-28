@@ -1,12 +1,8 @@
 import { createFileRoute, Link, useLoaderData } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { 
-  Sun, 
-  Moon, 
   ArrowLeft, 
-  FileText, 
   Plus, 
-  Share2,
   Copy,
   Calendar,
   User
@@ -43,7 +39,7 @@ export const Route = createFileRoute("/note/$noteId")({
   },
   component: ViewNotePage,
   errorComponent: ({ error }) => (
-    <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-6 text-center">
+    <section className="flex-1 flex flex-col items-center justify-center p-6 text-center">
       <div className="max-w-md space-y-4">
         <h1 className="text-[32px] font-black tracking-tight text-destructive">Note not found</h1>
         <p className="text-[15px] text-muted-foreground">
@@ -58,29 +54,13 @@ export const Route = createFileRoute("/note/$noteId")({
           </Link>
         </div>
       </div>
-    </div>
+    </section>
   ),
 });
 
 function ViewNotePage() {
   const { note } = useLoaderData({ from: "/note/$noteId" });
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [copied, setCopied] = useState(false);
-
-  // Sync theme
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
-    const initialTheme = savedTheme || "dark";
-    setTheme(initialTheme);
-    document.documentElement.classList.toggle("dark", initialTheme === "dark");
-  }, []);
-
-  const toggleTheme = () => {
-    const next = theme === "dark" ? "light" : "dark";
-    setTheme(next);
-    localStorage.setItem("theme", next);
-    document.documentElement.classList.toggle("dark", next === "dark");
-  };
 
   const copyUrl = async () => {
     await navigator.clipboard.writeText(window.location.href);
@@ -131,72 +111,59 @@ function ViewNotePage() {
   };
 
   return (
-    <main className="min-h-screen bg-background text-foreground flex flex-col font-sans transition-colors duration-300 relative overflow-hidden">
-      {/* Header */}
-      <header className="px-6 py-6 flex items-center justify-between max-w-2xl mx-auto w-full border-b border-border/40 backdrop-blur-md sticky top-0 z-40">
+    <article className="flex-1 px-4 py-10 max-w-2xl mx-auto w-full space-y-6 animate-slide-up">
+      {/* Sub Header / Action */}
+      <div className="flex items-center justify-between gap-4">
         <Link
           to="/note"
-          className="h-10 px-4 rounded-full border border-border/70 hover:bg-secondary flex items-center gap-1.5 font-bold text-[13px] active:scale-95 transition-all"
+          className="h-10 px-4 rounded-full border border-border/70 hover:bg-secondary flex items-center gap-1.5 font-bold text-[13px] active:scale-95 transition-all select-none"
         >
           <ArrowLeft className="size-4" />
-          <span>Notes</span>
+          <span>All Notes</span>
         </Link>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={copyUrl}
-            className="h-10 px-4 rounded-full border border-border/70 hover:bg-secondary flex items-center gap-1.5 font-bold text-[13px] active:scale-95 transition-all"
-          >
-            <Copy className="size-4" />
-            <span>{copied ? "Copied!" : "Copy Link"}</span>
-          </button>
-          
-          <button
-            onClick={toggleTheme}
-            className="size-10 rounded-full border border-border flex items-center justify-center hover:bg-secondary transition-all active:scale-90"
-            aria-label="Toggle theme"
-          >
-            {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
-          </button>
-        </div>
-      </header>
+        <button
+          onClick={copyUrl}
+          className="h-10 px-4 rounded-full border border-border/70 hover:bg-secondary flex items-center gap-1.5 font-bold text-[13px] active:scale-95 transition-all select-none"
+        >
+          <Copy className="size-4" />
+          <span>{copied ? "Copied!" : "Copy Link"}</span>
+        </button>
+      </div>
 
-      {/* Reader Page Content */}
-      <article className="flex-1 px-4 py-10 max-w-2xl mx-auto w-full space-y-6 animate-slide-up">
-        {/* Title */}
-        <h1 className="text-[34px] md:text-[44px] font-black tracking-tight leading-[1.1] select-none text-foreground">
-          {note.title}
-        </h1>
+      {/* Title */}
+      <h1 className="text-[34px] md:text-[44px] font-black tracking-tight leading-[1.1] select-none text-foreground pt-4">
+        {note.title}
+      </h1>
 
-        {/* Meta details */}
-        <div className="flex flex-wrap items-center gap-4 text-[13px] text-muted-foreground border-y border-border/30 py-3.5 select-none">
-          <div className="flex items-center gap-1.5">
-            <User className="size-4 opacity-60" />
-            <span>{note.author_name || "Anonymous"}</span>
-          </div>
-          <div className="size-1 rounded-full bg-border" />
-          <div className="flex items-center gap-1.5">
-            <Calendar className="size-4 opacity-60" />
-            <span>Published on Telegraph</span>
-          </div>
+      {/* Meta details */}
+      <div className="flex flex-wrap items-center gap-4 text-[13px] text-muted-foreground border-y border-border/30 py-3.5 select-none">
+        <div className="flex items-center gap-1.5">
+          <User className="size-4 opacity-60" />
+          <span>{note.author_name || "Anonymous"}</span>
         </div>
+        <div className="size-1 rounded-full bg-border" />
+        <div className="flex items-center gap-1.5">
+          <Calendar className="size-4 opacity-60" />
+          <span>Published on Telegraph</span>
+        </div>
+      </div>
 
-        {/* Note Body */}
-        <div className="pt-2 text-foreground/95 select-text font-serif">
-          {renderNodes(note.content)}
-        </div>
+      {/* Note Body */}
+      <div className="pt-2 text-foreground/95 select-text font-serif">
+        {renderNodes(note.content)}
+      </div>
 
-        {/* Footer Actions */}
-        <div className="pt-10 border-t border-border/20 flex justify-center">
-          <Link
-            to="/note"
-            className="inline-flex h-12 items-center justify-center rounded-full bg-foreground text-background px-6 font-bold text-[14px] hover:scale-[1.02] active:scale-[0.98] transition-all gap-1.5"
-          >
-            <Plus className="size-4" />
-            <span>Create New Note</span>
-          </Link>
-        </div>
-      </article>
-    </main>
+      {/* Footer Actions */}
+      <div className="pt-10 border-t border-border/20 flex justify-center">
+        <Link
+          to="/note"
+          className="inline-flex h-12 items-center justify-center rounded-full bg-foreground text-background px-6 font-bold text-[14px] hover:scale-[1.02] active:scale-[0.98] transition-all gap-1.5"
+        >
+          <Plus className="size-4" />
+          <span>Create New Note</span>
+        </Link>
+      </div>
+    </article>
   );
 }
