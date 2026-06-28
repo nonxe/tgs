@@ -268,24 +268,68 @@ function Index() {
       });
     };
 
+    const uploadDirectTmpfiles = (fileToUpload: File): Promise<UploadResult> => {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "https://tmpfiles.org/api/v1/upload");
+
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            setProgress(Math.round((e.loaded / e.total) * 100));
+          }
+        };
+
+        xhr.onload = () => {
+          try {
+            const json = JSON.parse(xhr.responseText || "{}");
+            if (xhr.status >= 200 && xhr.status < 300 && json.data?.url) {
+              const directUrl = json.data.url.replace("https://tmpfiles.org/", "https://tmpfiles.org/dl/");
+              resolve({
+                success: true,
+                url: directUrl,
+                filename: fileToUpload.name,
+                size: fileToUpload.size,
+                type: fileToUpload.type,
+              });
+            } else {
+              reject(new Error("Tmpfiles upload failed"));
+            }
+          } catch {
+            reject(new Error("Tmpfiles parse failed"));
+          }
+        };
+
+        xhr.onerror = () => reject(new Error("Network error during tmpfiles upload"));
+
+        const fd = new FormData();
+        fd.append("file", fileToUpload, fileToUpload.name || "upload");
+        xhr.send(fd);
+      });
+    };
+
     try {
       let data: UploadResult;
-      const LARGE_FILE_THRESHOLD = 20 * 1024 * 1024; // 20MB serverless proxy bypass threshold
+      const LARGE_FILE_THRESHOLD = 4.5 * 1024 * 1024; // 4.5MB serverless proxy bypass threshold
 
-      if (retention === "72h") {
-        data = await uploadDirectLitterbox(f);
-      } else if (f.size > LARGE_FILE_THRESHOLD) {
+      if (retention === "72h" || f.size > LARGE_FILE_THRESHOLD) {
         try {
-          data = await uploadViaProxy(f);
-        } catch {
-          // Fallback to high-speed direct stream for huge files if proxy times out / rejects
           data = await uploadDirectLitterbox(f);
+        } catch {
+          try {
+            data = await uploadDirectTmpfiles(f);
+          } catch {
+            data = await uploadViaProxy(f);
+          }
         }
       } else {
         try {
           data = await uploadViaProxy(f);
         } catch {
-          data = await uploadDirectLitterbox(f);
+          try {
+            data = await uploadDirectLitterbox(f);
+          } catch {
+            data = await uploadDirectTmpfiles(f);
+          }
         }
       }
 
@@ -336,14 +380,11 @@ function Index() {
 
   return (
     <main className="min-h-screen bg-background text-foreground flex flex-col font-sans transition-colors duration-300 relative overflow-hidden">
-      {/* Ambient Background Glow */}
-      <div className="ambient-glow animate-pulse-glow" />
-
       {/* Header */}
       <header className="px-6 py-6 flex items-center justify-between max-w-2xl mx-auto w-full border-b border-border/40 backdrop-blur-md sticky top-0 z-40">
         <div className="flex items-center gap-1.5 select-none">
           <span className="text-[20px] font-black tracking-tighter">CLOUD</span>
-          <span className="size-1.5 rounded-full bg-foreground animate-pulse"></span>
+          <span className="size-1.5 rounded-full bg-foreground"></span>
         </div>
         
         <button 
