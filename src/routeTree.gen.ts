@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as NoteRouteImport } from './routes/note'
+import { Route as ConvertRouteImport } from './routes/convert'
 import { Route as FilenameRouteImport } from './routes/$filename'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as NoteIndexRouteImport } from './routes/note.index'
@@ -19,6 +20,11 @@ import { Route as ApiPublicUploadRouteImport } from './routes/api/public/upload'
 const NoteRoute = NoteRouteImport.update({
   id: '/note',
   path: '/note',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConvertRoute = ConvertRouteImport.update({
+  id: '/convert',
+  path: '/convert',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FilenameRoute = FilenameRouteImport.update({
@@ -50,6 +56,7 @@ const ApiPublicUploadRoute = ApiPublicUploadRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$filename': typeof FilenameRoute
+  '/convert': typeof ConvertRoute
   '/note': typeof NoteRouteWithChildren
   '/note/$noteId': typeof NoteNoteIdRoute
   '/note/': typeof NoteIndexRoute
@@ -58,6 +65,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$filename': typeof FilenameRoute
+  '/convert': typeof ConvertRoute
   '/note/$noteId': typeof NoteNoteIdRoute
   '/note': typeof NoteIndexRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
@@ -66,6 +74,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$filename': typeof FilenameRoute
+  '/convert': typeof ConvertRoute
   '/note': typeof NoteRouteWithChildren
   '/note/$noteId': typeof NoteNoteIdRoute
   '/note/': typeof NoteIndexRoute
@@ -76,16 +85,24 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$filename'
+    | '/convert'
     | '/note'
     | '/note/$noteId'
     | '/note/'
     | '/api/public/upload'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$filename' | '/note/$noteId' | '/note' | '/api/public/upload'
+  to:
+    | '/'
+    | '/$filename'
+    | '/convert'
+    | '/note/$noteId'
+    | '/note'
+    | '/api/public/upload'
   id:
     | '__root__'
     | '/'
     | '/$filename'
+    | '/convert'
     | '/note'
     | '/note/$noteId'
     | '/note/'
@@ -95,6 +112,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   FilenameRoute: typeof FilenameRoute
+  ConvertRoute: typeof ConvertRoute
   NoteRoute: typeof NoteRouteWithChildren
   ApiPublicUploadRoute: typeof ApiPublicUploadRoute
 }
@@ -106,6 +124,13 @@ declare module '@tanstack/react-router' {
       path: '/note'
       fullPath: '/note'
       preLoaderRoute: typeof NoteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/convert': {
+      id: '/convert'
+      path: '/convert'
+      fullPath: '/convert'
+      preLoaderRoute: typeof ConvertRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$filename': {
@@ -161,6 +186,7 @@ const NoteRouteWithChildren = NoteRoute._addFileChildren(NoteRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   FilenameRoute: FilenameRoute,
+  ConvertRoute: ConvertRoute,
   NoteRoute: NoteRouteWithChildren,
   ApiPublicUploadRoute: ApiPublicUploadRoute,
 }

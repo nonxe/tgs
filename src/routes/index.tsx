@@ -392,6 +392,12 @@ function Index() {
           >
             NOTES
           </Link>
+          <Link
+            to="/convert"
+            className="text-[20px] font-black tracking-tighter select-none opacity-40 hover:opacity-100 transition-opacity"
+          >
+            CONVERTS
+          </Link>
         </div>
         
         <button 
