@@ -528,7 +528,7 @@ function DownloaderTool() {
   const [result, setResult] = useState<{
     title?: string;
     thumbnail?: string;
-    downloadUrl?: string;
+    links: { label: string; url: string }[];
     type?: "video" | "audio" | "image";
     source?: string;
   } | null>(null);
@@ -568,26 +568,42 @@ function DownloaderTool() {
       const title = data.title || data.result?.title || data.result?.caption || "Media File";
       const thumb = data.thumbnail || data.result?.thumbnail || data.result?.cover || null;
       
-      let dlUrl = data.downloadUrl || data.result?.downloadUrl || data.result?.url || null;
-      if (Array.isArray(data.result?.urls) && data.result.urls.length > 0) {
-        dlUrl = data.result.urls[0].url || data.result.urls[0];
-      } else if (data.result?.hd) {
-        dlUrl = data.result.hd;
-      } else if (data.result?.sd) {
-        dlUrl = data.result.sd;
+      const linksList: { label: string; url: string }[] = [];
+      const resData = data.result || {};
+
+      if (endpoint === "download/tiktok") {
+        if (resData.video) linksList.push({ label: "Download Video", url: resData.video });
+        if (resData.music) linksList.push({ label: "Download Audio Track", url: resData.music });
+      } else if (endpoint === "facebook") {
+        if (resData.downloads?.hd?.url) linksList.push({ label: "Download HD Video", url: resData.downloads.hd.url });
+        if (resData.downloads?.sd?.url) linksList.push({ label: "Download SD Video", url: resData.downloads.sd.url });
+      } else {
+        // Fallback for YouTube, Instagram, Spotify, etc.
+        const singleUrl = 
+          data.downloadUrl || 
+          data.download_url || 
+          resData.download_url || 
+          resData.downloadUrl || 
+          resData.url || 
+          resData.link || 
+          null;
+
+        if (singleUrl) {
+          linksList.push({ label: "Download Media", url: singleUrl });
+        }
       }
 
-      if (!dlUrl) throw new Error("No download URL found");
+      if (linksList.length === 0) throw new Error("No download URL found");
 
       setResult({
         title,
         thumbnail: thumb,
-        downloadUrl: dlUrl,
+        links: linksList,
         type: endpoint === "spotifydl" ? "audio" : "video",
         source: endpoint.replace("download/", "")
       });
     } catch (err) {
-      alert("Error: Failed to fetch download details. Please verify your link.");
+      alert("Error: Failed to fetch download details. Please verify that your link is correct and public.");
     } finally {
       setLoading(false);
     }
@@ -674,15 +690,20 @@ function DownloaderTool() {
             </div>
           </div>
 
-          <a
-            href={result.downloadUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full md:w-auto h-12 px-6 rounded-full bg-foreground text-background font-black text-[13px] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 select-none shadow-lg z-10"
-          >
-            <Download className="size-4.5" />
-            <span>Download Media</span>
-          </a>
+          <div className="flex flex-col gap-2 w-full md:w-auto z-10">
+            {result.links.map((linkItem, lIdx) => (
+              <a
+                key={lIdx}
+                href={linkItem.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="h-11 px-5 rounded-full bg-foreground text-background font-black text-[12.5px] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 select-none shadow-lg whitespace-nowrap"
+              >
+                <Download className="size-4" />
+                <span>{linkItem.label}</span>
+              </a>
+            ))}
+          </div>
         </div>
       )}
     </div>
