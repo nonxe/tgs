@@ -196,11 +196,49 @@ function Index() {
     setResult(null);
     setProgress(0);
 
-    try {
-      const data = await new Promise<UploadResult>((resolve, reject) => {
+    const uploadDirectLitterbox = (fileToUpload: File): Promise<UploadResult> => {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "https://litterbox.catbox.moe/resources/internals/api.php");
+
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            setProgress(Math.round((e.loaded / e.total) * 100));
+          }
+        };
+
+        xhr.onload = () => {
+          const text = (xhr.responseText || "").trim();
+          if (xhr.status >= 200 && xhr.status < 300 && text.startsWith("http")) {
+            const name = text.split("/").pop() || fileToUpload.name;
+            resolve({
+              success: true,
+              url: text,
+              filename: name,
+              size: fileToUpload.size,
+              type: fileToUpload.type,
+            });
+          } else {
+            reject(new Error(text || `Upload failed (${xhr.status})`));
+          }
+        };
+
+        xhr.onerror = () => reject(new Error("Network error during direct high-speed upload"));
+
+        const fd = new FormData();
+        fd.append("reqtype", "fileupload");
+        fd.append("time", "72h");
+        fd.append("fileToUpload", fileToUpload, fileToUpload.name || "upload");
+
+        xhr.send(fd);
+      });
+    };
+
+    const uploadViaProxy = (fileToUpload: File): Promise<UploadResult> => {
+      return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open("POST", "/api/public/upload");
-        
+
         xhr.upload.onprogress = (e) => {
           if (e.lengthComputable) {
             setProgress(Math.round((e.loaded / e.total) * 100));
@@ -223,11 +261,33 @@ function Index() {
         xhr.onerror = () => reject(new Error("Network error"));
 
         const fd = new FormData();
-        fd.append("file", f, f.name || "upload");
+        fd.append("file", fileToUpload, fileToUpload.name || "upload");
         fd.append("retention", retention);
 
         xhr.send(fd);
       });
+    };
+
+    try {
+      let data: UploadResult;
+      const LARGE_FILE_THRESHOLD = 20 * 1024 * 1024; // 20MB serverless proxy bypass threshold
+
+      if (retention === "72h") {
+        data = await uploadDirectLitterbox(f);
+      } else if (f.size > LARGE_FILE_THRESHOLD) {
+        try {
+          data = await uploadViaProxy(f);
+        } catch {
+          // Fallback to high-speed direct stream for huge files if proxy times out / rejects
+          data = await uploadDirectLitterbox(f);
+        }
+      } else {
+        try {
+          data = await uploadViaProxy(f);
+        } catch {
+          data = await uploadDirectLitterbox(f);
+        }
+      }
 
       const finalResult: UploadResult = {
         success: true,
@@ -239,7 +299,6 @@ function Index() {
 
       setResult(finalResult);
 
-      // Save to local history
       if (data.url) {
         saveToHistory({
           url: data.url,
@@ -276,7 +335,10 @@ function Index() {
   };
 
   return (
-    <main className="min-h-screen bg-background text-foreground flex flex-col font-sans transition-colors duration-300">
+    <main className="min-h-screen bg-background text-foreground flex flex-col font-sans transition-colors duration-300 relative overflow-hidden">
+      {/* Ambient Background Glow */}
+      <div className="ambient-glow animate-pulse-glow" />
+
       {/* Header */}
       <header className="px-6 py-6 flex items-center justify-between max-w-2xl mx-auto w-full border-b border-border/40 backdrop-blur-md sticky top-0 z-40">
         <div className="flex items-center gap-1.5 select-none">
@@ -338,7 +400,7 @@ function Index() {
                 <Upload className="size-6 text-foreground group-hover:animate-bounce" />
               </div>
               <p className="text-[17px] font-bold tracking-tight">Tap to choose or drag here</p>
-              <p className="mt-1 text-[14px] text-muted-foreground">Up to 200MB size limit</p>
+              <p className="mt-1 text-[14px] text-muted-foreground">Supports huge files (100MB, 200MB, up to 1GB)</p>
             </div>
           )}
 
@@ -596,7 +658,7 @@ function Index() {
               },
               {
                 q: "What is the maximum file size limit?",
-                a: "You can upload any file format up to a maximum size of 200 MB. Uploads are streamed securely."
+                a: "You can upload any file format up to 200 MB for Permanent storage, and up to 1 GB for Temporary (72h) storage. Huge files automatically utilize high-speed direct cloud streaming."
               },
               {
                 q: "Is my upload history public?",
