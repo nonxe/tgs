@@ -7,31 +7,52 @@ import {
   MessageSquare,
   PenTool,
   Download,
-  Wrench,
   Send,
   Trash2,
-  Languages,
-  CreditCard,
   User,
   Bot,
   Percent,
   CheckCircle,
   HelpCircle,
   Video,
-  Music
+  Music,
+  ArrowRight,
+  ChevronRight,
+  ExternalLink,
+  Info
 } from "lucide-react";
 
 export const Route = createFileRoute("/more")({
   component: MorePage,
 });
 
-type TabType = "chat" | "writer" | "downloader" | "utils";
-type AIModel = "deepseek-v3" | "deepseek-r1" | "gemini" | "copilot";
+type TabType = "chat" | "writer" | "downloader";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
 }
+
+// Full list of AI Models
+const AI_MODELS = [
+  { id: "deepseek-v3", name: "DeepSeek V3", provider: "DeepSeek", desc: "Fast general-purpose model", badgeColor: "bg-green-500/10 text-green-500 border-green-500/20" },
+  { id: "deepseek-r1", name: "DeepSeek R1", provider: "DeepSeek", desc: "Advanced reasoning & logic", badgeColor: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" },
+  { id: "gpt4", name: "ChatGPT (GPT-4)", provider: "OpenAI", desc: "High-quality general reasoning", badgeColor: "bg-orange-500/10 text-orange-500 border-orange-500/20" },
+  { id: "claude", name: "Claude", provider: "Anthropic", desc: "Nuanced writing & synthesis", badgeColor: "bg-amber-600/10 text-amber-600 border-amber-600/20" },
+  { id: "claude-sonnet", name: "Claude Sonnet", provider: "Anthropic", desc: "Premium analysis & coding", badgeColor: "bg-amber-500/10 text-amber-500 border-amber-500/20" },
+  { id: "gemini", name: "Google Gemini", provider: "Google", desc: "Creative & multimodal tasks", badgeColor: "bg-purple-500/10 text-purple-500 border-purple-500/20" },
+  { id: "llama3", name: "Llama 3", provider: "Meta", desc: "Open-source general chat", badgeColor: "bg-blue-600/10 text-blue-600 border-blue-600/20" },
+  { id: "blackbox", name: "Blackbox AI", provider: "Blackbox", desc: "Excellent coding assistant", badgeColor: "bg-neutral-500/10 text-neutral-400 border-neutral-500/20" },
+  { id: "meta", name: "Meta AI", provider: "Meta", desc: "Social search companion", badgeColor: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
+  { id: "copilot", name: "MS Copilot", provider: "Microsoft", desc: "Web search integrated chat", badgeColor: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20" },
+  { id: "mixtral", name: "Mixtral 8x7B", provider: "Mistral", desc: "High-speed open models", badgeColor: "bg-orange-400/10 text-orange-400 border-orange-400/20" },
+  { id: "dolphin", name: "Dolphin AI", provider: "Cognitive", desc: "Uncensored assistant chat", badgeColor: "bg-rose-500/10 text-rose-500 border-rose-500/20" },
+  { id: "unlimited-ai", name: "Unlimited AI", provider: "Public", desc: "No rate limits chatbot", badgeColor: "bg-violet-500/10 text-violet-500 border-violet-500/20" },
+  { id: "perplexity", name: "Perplexity", provider: "Perplexity", desc: "Real-time answers & search", badgeColor: "bg-teal-500/10 text-teal-500 border-teal-500/20" },
+  { id: "searchgpt", name: "SearchGPT", provider: "OpenAI", desc: "Dynamic web search companion", badgeColor: "bg-orange-600/10 text-orange-600 border-orange-600/20" },
+  { id: "turboseek", name: "TurboSeek", provider: "Turbo", desc: "Blazing fast internet queries", badgeColor: "bg-pink-500/10 text-pink-500 border-pink-500/20" },
+  { id: "writecream", name: "Writecream", provider: "Writecream", desc: "Copywriting & helper tasks", badgeColor: "bg-yellow-600/10 text-yellow-600 border-yellow-600/20" }
+];
 
 function MorePage() {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
@@ -85,12 +106,12 @@ function MorePage() {
         {/* Intro */}
         <div className="text-center md:text-left">
           <h2 className="text-[34px] md:text-[44px] font-black tracking-tight leading-[1.1] select-none">
-            External API Tools.
+            Premium External APIs.
             <br />
-            <span className="opacity-40">AI Chat, media and utilities.</span>
+            <span className="opacity-40">Dynamic chatbot & tools.</span>
           </h2>
           <p className="mt-2 text-[15px] text-muted-foreground max-w-md">
-            A curated suite of high-utility tools powered by public REST APIs.
+            Interactive, fully integrated external micro-services loaded dynamically inside your browser.
           </p>
         </div>
 
@@ -100,9 +121,8 @@ function MorePage() {
           <div className="md:col-span-1 flex md:flex-col gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-none w-full select-none">
             {[
               { id: "chat", label: "AI Chatbot", icon: MessageSquare },
-              { id: "writer", label: "AI Writer Tools", icon: PenTool },
-              { id: "downloader", label: "Media Downloader", icon: Download },
-              { id: "utils", label: "Other Utilities", icon: Wrench }
+              { id: "writer", label: "AI Writing Tools", icon: PenTool },
+              { id: "downloader", label: "Media Downloader", icon: Download }
             ].map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -128,7 +148,6 @@ function MorePage() {
             {activeTab === "chat" && <ChatTool />}
             {activeTab === "writer" && <WriterTool />}
             {activeTab === "downloader" && <DownloaderTool />}
-            {activeTab === "utils" && <UtilsTool />}
           </div>
         </div>
       </section>
@@ -137,14 +156,17 @@ function MorePage() {
 }
 
 /* ==========================================================================
-   AI Chatbot Tool (Deepseek V3 / Deepseek R1)
+   AI Chatbot Tool (With Custom Models List)
    ========================================================================== */
 function ChatTool() {
-  const [model, setModel] = useState<AIModel>("deepseek-v3");
+  const [model, setModel] = useState("deepseek-v3");
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showModelsList, setShowModelsList] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const activeModel = AI_MODELS.find(m => m.id === model) || AI_MODELS[0];
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -169,7 +191,7 @@ function ChatTool() {
     } catch (err) {
       setMessages((prev) => [
         ...prev, 
-        { role: "assistant", content: "Error: Failed to connect to the AI model. Please try again or switch model." }
+        { role: "assistant", content: `Error: Failed to fetch response from ${activeModel.name}. This model may be undergoing maintenance. Please choose another model from the selection list.` }
       ]);
     } finally {
       setLoading(false);
@@ -181,59 +203,74 @@ function ChatTool() {
   };
 
   return (
-    <div className="rounded-[24px] border border-border p-5 ios-glass ios-shadow animate-spring-scale flex flex-col h-[550px] relative overflow-hidden">
-      {/* Model Control Header */}
-      <div className="flex items-center justify-between pb-4 border-b border-border/20 select-none flex-shrink-0">
-        <div className="flex gap-1.5 bg-secondary/40 p-1 rounded-[14px] border border-border/25">
+    <div className="rounded-[24px] border border-border p-5 ios-glass ios-shadow animate-spring-scale flex flex-col h-[580px] relative overflow-hidden">
+      {/* Model Selector Header */}
+      <div className="flex items-center justify-between pb-4 border-b border-border/20 select-none flex-shrink-0 relative">
+        <div className="flex items-center gap-3">
           <button
-            onClick={() => setModel("deepseek-v3")}
-            className={`px-3 py-1.5 rounded-[10px] text-[12px] font-black transition-all uppercase ${
-              model === "deepseek-v3" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
-            }`}
+            onClick={() => setShowModelsList(!showModelsList)}
+            className="flex items-center gap-2 px-3 py-2 rounded-[14px] bg-secondary/60 border border-border hover:bg-secondary transition-all text-left"
           >
-            V3
-          </button>
-          <button
-            onClick={() => setModel("deepseek-r1")}
-            className={`px-3 py-1.5 rounded-[10px] text-[12px] font-black transition-all uppercase ${
-              model === "deepseek-r1" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
-            }`}
-          >
-            R1
-          </button>
-          <button
-            onClick={() => setModel("gemini")}
-            className={`px-3 py-1.5 rounded-[10px] text-[12px] font-black transition-all uppercase ${
-              model === "gemini" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
-            }`}
-          >
-            Gemini
-          </button>
-          <button
-            onClick={() => setModel("copilot")}
-            className={`px-3 py-1.5 rounded-[10px] text-[12px] font-black transition-all uppercase ${
-              model === "copilot" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
-            }`}
-          >
-            Copilot
+            <div>
+              <p className="text-[12px] font-bold text-muted-foreground leading-tight">ACTIVE MODEL</p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="text-[14px] font-black tracking-tight">{activeModel.name}</span>
+                <ChevronRight className={`size-3.5 text-muted-foreground transition-transform ${showModelsList ? "rotate-90" : ""}`} />
+              </div>
+            </div>
           </button>
         </div>
 
         <button 
           onClick={clearChat}
-          className="size-9 rounded-full border border-border hover:bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-all"
+          className="size-9 rounded-full border border-border hover:bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-all active:scale-90"
         >
           <Trash2 className="size-4" />
         </button>
+
+        {/* Dropdown Models Drawer overlay */}
+        {showModelsList && (
+          <div className="absolute top-[52px] left-0 w-72 max-h-72 overflow-y-auto bg-background/95 backdrop-blur-xl border border-border rounded-[20px] shadow-2xl p-2.5 z-50 animate-spring-scale">
+            <p className="text-[10px] font-black uppercase text-muted-foreground/80 tracking-wider px-2.5 py-1">Select AI Model</p>
+            <div className="space-y-1 mt-1.5">
+              {AI_MODELS.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setModel(item.id);
+                    setShowModelsList(false);
+                  }}
+                  className={`w-full text-left p-2 rounded-[12px] transition-all hover:bg-secondary flex flex-col gap-0.5 ${
+                    model === item.id ? "bg-secondary" : ""
+                  }`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span className="text-[13px] font-black">{item.name}</span>
+                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${item.badgeColor}`}>
+                      {item.provider}
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-muted-foreground truncate">{item.desc}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Messages Box */}
+      {/* Messages Timeline */}
       <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-1 scrollbar-thin">
         {messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground p-8 select-none">
-            <Sparkles className="size-8 text-foreground opacity-30 mb-2 animate-pulse" />
-            <p className="text-[14px] font-bold">Start a conversation</p>
-            <p className="text-[12px] opacity-75 mt-0.5">Send a message to one of the working premium models.</p>
+            <Sparkles className="size-9 text-foreground opacity-30 mb-2 animate-pulse" />
+            <p className="text-[15px] font-bold">Start a conversation</p>
+            <p className="text-[12px] opacity-75 mt-0.5">Select from 17 external API models to get answers.</p>
+            <div className="mt-4 p-3 rounded-[16px] bg-secondary/20 border border-border/20 max-w-xs text-left flex gap-2">
+              <Info className="size-4.5 text-muted-foreground flex-shrink-0 mt-0.5" />
+              <p className="text-[11.5px] leading-relaxed text-muted-foreground">
+                <strong>Model Note:</strong> DeepSeek V3 and Gemini usually offer the fastest responses.
+              </p>
+            </div>
           </div>
         ) : (
           messages.map((msg, idx) => (
@@ -245,8 +282,8 @@ function ChatTool() {
               </div>
               <div className={`max-w-[75%] rounded-[18px] px-4 py-2.5 text-[14px] leading-relaxed ${
                 msg.role === "user" 
-                  ? "bg-secondary/45 text-foreground border border-border/20" 
-                  : "bg-secondary/20 text-foreground/90 border border-border/10"
+                  ? "bg-secondary/45 text-foreground border border-border/20 animate-fade-in" 
+                  : "bg-secondary/20 text-foreground/90 border border-border/10 animate-fade-in"
               }`} style={{ whiteSpace: "pre-wrap" }}>
                 {msg.content}
               </div>
@@ -272,7 +309,7 @@ function ChatTool() {
       <form onSubmit={handleSend} className="pt-3 border-t border-border/20 flex gap-2 flex-shrink-0 select-none">
         <input
           type="text"
-          placeholder={`Message ${model === "deepseek-r1" ? "DeepSeek R1" : "DeepSeek V3"}...`}
+          placeholder={`Ask ${activeModel.name}...`}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           disabled={loading}
@@ -291,7 +328,7 @@ function ChatTool() {
 }
 
 /* ==========================================================================
-   AI Writer & Assistant Tools (Humanizer & Detector)
+   AI Writer & Assistant Tools (Split View Layout)
    ========================================================================== */
 function WriterTool() {
   const [toolMode, setToolMode] = useState<"humanizer" | "detector">("humanizer");
@@ -326,7 +363,6 @@ function WriterTool() {
         if (!res.ok) throw new Error("API request failed");
         const data = await res.json();
         
-        // Strip HTML tags from humanized text
         const cleanText = (data.humanized || "")
           .replace(/<\/?[^>]+(>|$)/g, "")
           .replace(/&nbsp;/g, " ");
@@ -385,84 +421,106 @@ function WriterTool() {
         </button>
       </div>
 
-      <div className="space-y-4">
-        <div className="relative">
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder={
-              toolMode === "humanizer"
-                ? "Paste AI generated text here to make it sound human..."
-                : "Paste your text here (minimum 100 words required) to detect AI probability..."
-            }
-            rows={6}
-            className="w-full bg-secondary/35 text-[14px] font-medium border border-border/30 rounded-[18px] px-4 py-3.5 outline-none focus:border-foreground/50 transition-all resize-none placeholder:font-medium"
-          />
-          <span className="absolute bottom-3 right-3 text-[11px] font-bold text-muted-foreground select-none">
-            {wordCount} words
-          </span>
+      {/* Split pane workspace layout */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+        {/* Left Side: Input Form */}
+        <div className="md:col-span-3 space-y-4">
+          <div className="relative">
+            <textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder={
+                toolMode === "humanizer"
+                  ? "Paste AI generated text here to make it sound human..."
+                  : "Paste your text here (minimum 100 words required) to detect AI probability..."
+              }
+              rows={8}
+              className="w-full bg-secondary/35 text-[14px] font-medium border border-border/30 rounded-[18px] px-4 py-3.5 outline-none focus:border-foreground/50 transition-all resize-none placeholder:font-medium"
+            />
+            <span className="absolute bottom-3 right-3 text-[11px] font-bold text-muted-foreground select-none">
+              {wordCount} words
+            </span>
+          </div>
+
+          <button
+            onClick={handleProcess}
+            disabled={loading || !text.trim() || (toolMode === "detector" && wordCount < 100)}
+            className="w-full h-12 rounded-[16px] bg-foreground text-background font-bold text-[14px] hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:scale-100 select-none"
+          >
+            {loading ? "Processing..." : toolMode === "humanizer" ? "Humanize Text" : "Analyze AI Probability"}
+          </button>
         </div>
 
-        <button
-          onClick={handleProcess}
-          disabled={loading || !text.trim() || (toolMode === "detector" && wordCount < 100)}
-          className="w-full h-12 rounded-[16px] bg-foreground text-background font-bold text-[14px] hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:scale-100 select-none"
-        >
-          {loading ? "Processing..." : toolMode === "humanizer" ? "Humanize Text" : "Analyze AI Probability"}
-        </button>
+        {/* Right Side: Output Results */}
+        <div className="md:col-span-2">
+          {loading ? (
+            <div className="h-full min-h-[220px] rounded-[18px] border border-dashed border-border flex flex-col items-center justify-center text-center p-6 select-none animate-pulse">
+              <Sparkles className="size-6 text-foreground/40 mb-1.5" />
+              <p className="text-[13px] font-bold">API processing active</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Parsing AI structures client-side...</p>
+            </div>
+          ) : !humanizedText && !detectorResult ? (
+            <div className="h-full min-h-[220px] rounded-[18px] border border-dashed border-border flex flex-col items-center justify-center text-center p-6 select-none text-muted-foreground">
+              <Info className="size-6 text-foreground/20 mb-1.5" />
+              <p className="text-[13px] font-bold">Result Panel</p>
+              <p className="text-[11px] opacity-75 mt-0.5">Your processed results will be rendered here.</p>
+            </div>
+          ) : (
+            <div className="space-y-4 h-full">
+              {humanizedText && (
+                <div className="rounded-[18px] border border-border bg-secondary/20 p-4 space-y-3 animate-fade-in flex flex-col h-full justify-between">
+                  <div>
+                    <span className="text-[11px] font-bold text-muted-foreground select-none">HUMANIZED RESULT</span>
+                    <p className="text-[13px] leading-relaxed text-foreground/90 font-medium mt-2 max-h-52 overflow-y-auto pr-1">
+                      {humanizedText}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(humanizedText);
+                      alert("Copied to clipboard!");
+                    }}
+                    className="w-full mt-3 h-10 rounded-[12px] bg-secondary border border-border text-[12.5px] font-bold hover:bg-secondary/80 transition-all select-none"
+                  >
+                    Copy Text
+                  </button>
+                </div>
+              )}
+
+              {detectorResult && (
+                <div className="rounded-[18px] border border-border bg-secondary/20 p-5 space-y-4 animate-fade-in select-none">
+                  <div className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground">
+                    <Percent className="size-4" />
+                    <span>PROBABILITY GRAPH</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-[16px] border border-border bg-background p-3.5 text-center">
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase">AI Content</span>
+                      <p className="text-[28px] font-black tracking-tight mt-1 text-red-500">{detectorResult.aiScore}%</p>
+                    </div>
+                    <div className="rounded-[16px] border border-border bg-background p-3.5 text-center">
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase">Human content</span>
+                      <p className="text-[28px] font-black tracking-tight mt-1 text-green-500">{detectorResult.humanScore}%</p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-[12px] border border-border bg-secondary/25 p-3 flex items-start gap-2">
+                    <CheckCircle className="size-4 text-foreground/60 mt-0.5 flex-shrink-0" />
+                    <p className="text-[11px] font-bold text-muted-foreground leading-normal">{detectorResult.message}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
-
-      {/* Results Rendering */}
-      {humanizedText && (
-        <div className="rounded-[18px] border border-border bg-secondary/20 p-4 space-y-3 animate-fade-in">
-          <div className="flex items-center justify-between select-none">
-            <span className="text-[12px] font-bold text-muted-foreground">HUMANIZED TEXT</span>
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(humanizedText);
-                alert("Copied to clipboard!");
-              }}
-              className="text-[12px] font-bold hover:underline"
-            >
-              Copy
-            </button>
-          </div>
-          <p className="text-[14px] leading-relaxed text-foreground/90 font-medium" style={{ whiteSpace: "pre-wrap" }}>
-            {humanizedText}
-          </p>
-        </div>
-      )}
-
-      {detectorResult && (
-        <div className="rounded-[18px] border border-border bg-secondary/20 p-5 space-y-4 animate-fade-in select-none">
-          <div className="flex items-center gap-1.5 text-[12px] font-bold text-muted-foreground">
-            <Percent className="size-4" />
-            <span>PROBABILITY ANALYSIS</span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="rounded-[16px] border border-border bg-background p-4 text-center">
-              <span className="text-[11px] font-bold text-muted-foreground uppercase">AI Score</span>
-              <p className="text-[32px] font-black tracking-tight mt-1 text-red-500">{detectorResult.aiScore}%</p>
-            </div>
-            <div className="rounded-[16px] border border-border bg-background p-4 text-center">
-              <span className="text-[11px] font-bold text-muted-foreground uppercase">Human Score</span>
-              <p className="text-[32px] font-black tracking-tight mt-1 text-green-500">{detectorResult.humanScore}%</p>
-            </div>
-          </div>
-
-          <div className="rounded-[14px] border border-border bg-secondary/25 p-3 flex items-center gap-2">
-            <CheckCircle className="size-4.5 text-foreground opacity-60" />
-            <p className="text-[12px] font-bold text-muted-foreground">{detectorResult.message}</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
 
 /* ==========================================================================
-   Universal Media Downloader Tool
+   Universal Media Downloader Tool (Upgraded Media Card UI)
    ========================================================================== */
 function DownloaderTool() {
   const [url, setUrl] = useState("");
@@ -507,7 +565,6 @@ function DownloaderTool() {
         throw new Error(data.message || "Failed to download");
       }
 
-      // Unified parsing logic
       const title = data.title || data.result?.title || data.result?.caption || "Media File";
       const thumb = data.thumbnail || data.result?.thumbnail || data.result?.cover || null;
       
@@ -533,6 +590,24 @@ function DownloaderTool() {
       alert("Error: Failed to fetch download details. Please verify your link.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Badge styles
+  const getBadgeStyle = (source: string) => {
+    switch (source) {
+      case "yt":
+        return "bg-red-500/10 text-red-500 border-red-500/20";
+      case "tiktok":
+        return "bg-neutral-900 text-white border-neutral-800 dark:bg-white/10 dark:text-white";
+      case "instagram":
+        return "bg-pink-500/10 text-pink-500 border-pink-500/20";
+      case "facebook":
+        return "bg-blue-500/10 text-blue-500 border-blue-500/20";
+      case "spotifydl":
+        return "bg-green-500/10 text-green-500 border-green-500/20";
+      default:
+        return "bg-foreground/10 text-foreground border-foreground/20";
     }
   };
 
@@ -564,261 +639,50 @@ function DownloaderTool() {
         </button>
       </form>
 
-      {/* Result Box */}
+      {/* Upgraded Media Result Card */}
       {result && (
-        <div className="rounded-[20px] border border-border bg-secondary/20 p-4 flex flex-col md:flex-row gap-4 items-center animate-fade-in">
+        <div className="rounded-[20px] border border-border bg-secondary/10 p-5 flex flex-col md:flex-row gap-5 items-center relative overflow-hidden animate-fade-in">
+          {/* Blurred thumbnail background effect */}
+          {result.thumbnail && (
+            <div 
+              className="absolute inset-0 bg-cover bg-center filter blur-3xl opacity-[0.06] pointer-events-none select-none scale-110"
+              style={{ backgroundImage: `url(${result.thumbnail})` }}
+            />
+          )}
+
           {result.thumbnail ? (
             <img 
               src={result.thumbnail} 
               alt="Thumbnail" 
-              className="size-20 rounded-[12px] object-cover bg-black border border-border select-none"
+              className="size-24 rounded-[14px] object-cover bg-black border border-border select-none shadow-md z-10"
             />
           ) : (
-            <div className="size-20 rounded-[12px] bg-secondary flex items-center justify-center border border-border select-none">
-              {result.type === "audio" ? <Music className="size-6" /> : <Video className="size-6" />}
+            <div className="size-24 rounded-[14px] bg-secondary flex items-center justify-center border border-border select-none z-10">
+              {result.type === "audio" ? <Music className="size-7" /> : <Video className="size-7" />}
             </div>
           )}
 
-          <div className="flex-1 text-center md:text-left space-y-1">
-            <h5 className="text-[14px] font-bold line-clamp-2 pr-1">{result.title}</h5>
-            <span className="inline-block text-[11px] font-black uppercase bg-foreground/10 px-2 py-0.5 rounded-full select-none">
-              {result.source}
-            </span>
+          <div className="flex-1 text-center md:text-left space-y-2 z-10">
+            <h5 className="text-[15px] font-black line-clamp-2 leading-snug">{result.title}</h5>
+            <div className="flex items-center justify-center md:justify-start gap-2">
+              <span className={`text-[10px] font-black uppercase border px-2.5 py-0.5 rounded-full select-none ${getBadgeStyle(result.source || "")}`}>
+                {result.source === "spotifydl" ? "Spotify" : result.source}
+              </span>
+              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider select-none">
+                {result.type} file
+              </span>
+            </div>
           </div>
 
           <a
             href={result.downloadUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full md:w-auto h-11 px-5 rounded-full bg-foreground text-background font-bold text-[13px] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 select-none"
+            className="w-full md:w-auto h-12 px-6 rounded-full bg-foreground text-background font-black text-[13px] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 select-none shadow-lg z-10"
           >
-            <Download className="size-4" />
+            <Download className="size-4.5" />
             <span>Download Media</span>
           </a>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ==========================================================================
-   Helper Utilities Tool (Translate / CC Gen)
-   ========================================================================== */
-function UtilsTool() {
-  const [mode, setMode] = useState<"translate" | "ccgen">("translate");
-
-  // Translate states
-  const [transText, setTransText] = useState("");
-  const [lang, setLang] = useState("hi"); // Hindi default
-  const [transLoading, setTransLoading] = useState(false);
-  const [transResult, setTransResult] = useState<string | null>(null);
-
-  // CC Gen states
-  const [bin, setBin] = useState("400011");
-  const [ccLoading, setCcLoading] = useState(false);
-  const [ccResults, setCcResults] = useState<string[]>([]);
-
-  // Lang options
-  const langOptions = [
-    { code: "hi", name: "Hindi" },
-    { code: "es", name: "Spanish" },
-    { code: "fr", name: "French" },
-    { code: "de", name: "German" },
-    { code: "ar", name: "Arabic" },
-    { code: "ru", name: "Russian" }
-  ];
-
-  // Card BIN templates
-  const binsList = [
-    { name: "Visa (400011)", bin: "400011" },
-    { name: "Mastercard (510510)", bin: "510510" },
-    { name: "Amex (371244)", bin: "371244" },
-    { name: "Discover (601100)", bin: "601100" }
-  ];
-
-  const handleTranslate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!transText.trim() || transLoading) return;
-
-    setTransLoading(true);
-    setTransResult(null);
-
-    try {
-      const res = await fetch(`https://apis.davidcyril.name.ng/tools/translate?text=${encodeURIComponent(transText.trim())}&lang=${lang}`);
-      if (!res.ok) throw new Error("Translate failed");
-      const data = await res.json();
-      
-      const result = data.translated || data.result || "Translation error.";
-      setTransResult(result);
-    } catch (err) {
-      alert("Error: Translation request failed.");
-    } finally {
-      setTransLoading(false);
-    }
-  };
-
-  const handleCCGen = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!bin.trim() || ccLoading) return;
-
-    setCcLoading(true);
-    setCcResults([]);
-
-    try {
-      const res = await fetch(`https://apis.davidcyril.name.ng/tools/ccgen?bin=${bin.trim()}`);
-      if (!res.ok) throw new Error("CC Gen failed");
-      const data = await res.json();
-
-      if (!data.success && !data.result) {
-        throw new Error(data.message || "Failed to generate");
-      }
-
-      // Parse CC cards (DavidCyril CCGen API usually returns array of cards or raw list string)
-      const list = data.cards || data.result || [];
-      if (Array.isArray(list)) {
-        setCcResults(list.map(c => `${c.number} | ${c.expiry} | ${c.cvv}`));
-      } else if (typeof list === "string") {
-        setCcResults(list.split("\n").filter(Boolean));
-      } else {
-        setCcResults(["No cards generated. Please verify BIN."]);
-      }
-    } catch (err) {
-      alert("Error: Failed to generate cards. Try a different BIN (e.g. 400011).");
-    } finally {
-      setCcLoading(false);
-    }
-  };
-
-  return (
-    <div className="rounded-[24px] border border-border p-6 ios-glass ios-shadow animate-spring-scale space-y-6">
-      {/* Switch modes */}
-      <div className="grid grid-cols-2 gap-1 bg-secondary/40 p-1 rounded-[16px] border border-border/25 select-none">
-        <button
-          onClick={() => setMode("translate")}
-          className={`py-3 rounded-[12px] text-[13.5px] font-bold transition-all ${
-            mode === "translate" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
-          }`}
-        >
-          Google Translate
-        </button>
-        <button
-          onClick={() => setMode("ccgen")}
-          className={`py-3 rounded-[12px] text-[13.5px] font-bold transition-all ${
-            mode === "ccgen" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
-          }`}
-        >
-          CC Profile Generator
-        </button>
-      </div>
-
-      {mode === "translate" ? (
-        <div className="space-y-5">
-          <form onSubmit={handleTranslate} className="space-y-4">
-            <div className="flex gap-2 select-none">
-              <textarea
-                placeholder="Translate text..."
-                value={transText}
-                onChange={(e) => setTransText(e.target.value)}
-                rows={4}
-                className="flex-1 bg-secondary/35 text-[14px] font-semibold border border-border/30 rounded-[18px] px-4 py-3 outline-none focus:border-foreground/50 transition-all resize-none placeholder:font-medium"
-              />
-            </div>
-
-            <div className="flex flex-col md:flex-row gap-3 items-center justify-between select-none">
-              <div className="flex items-center gap-2.5 w-full md:w-auto">
-                <Languages className="size-5 text-muted-foreground" />
-                <select
-                  value={lang}
-                  onChange={(e) => setLang(e.target.value)}
-                  className="bg-secondary/45 border border-border rounded-[12px] px-3 py-2 text-[13px] font-bold outline-none cursor-pointer"
-                >
-                  {langOptions.map((opt) => (
-                    <option key={opt.code} value={opt.code}>{opt.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <button
-                type="submit"
-                disabled={transLoading || !transText.trim()}
-                className="w-full md:w-auto h-11 px-6 rounded-full bg-foreground text-background font-bold text-[13.5px] active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
-              >
-                {transLoading ? "Translating..." : "Translate"}
-              </button>
-            </div>
-          </form>
-
-          {transResult && (
-            <div className="rounded-[18px] border border-border bg-secondary/25 p-4 space-y-1">
-              <span className="text-[11px] font-bold text-muted-foreground select-none">TRANSLATION RESULT</span>
-              <p className="text-[14px] leading-relaxed font-bold">{transResult}</p>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="space-y-5">
-          <form onSubmit={handleCCGen} className="space-y-4 select-none">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Enter 6-digit BIN (e.g. 400011)"
-                value={bin}
-                onChange={(e) => setBin(e.target.value)}
-                maxLength={6}
-                className="flex-1 bg-secondary/35 text-[14px] font-bold border border-border/30 rounded-[16px] px-4 py-3 outline-none focus:border-foreground/50 transition-all"
-              />
-            </div>
-
-            <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
-              <div className="flex flex-wrap gap-1.5 w-full md:w-auto">
-                {binsList.map((tpl) => (
-                  <button
-                    key={tpl.bin}
-                    type="button"
-                    onClick={() => setBin(tpl.bin)}
-                    className="px-3 py-1.5 rounded-[10px] bg-secondary border border-border text-[11px] font-bold hover:bg-secondary/85 transition-all"
-                  >
-                    {tpl.name}
-                  </button>
-                ))}
-              </div>
-
-              <button
-                type="submit"
-                disabled={ccLoading || !bin.trim()}
-                className="w-full md:w-auto h-11 px-6 rounded-full bg-foreground text-background font-bold text-[13.5px] active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
-              >
-                {ccLoading ? "Generating..." : "Generate Profiles"}
-              </button>
-            </div>
-          </form>
-
-          {ccResults.length > 0 && (
-            <div className="rounded-[18px] border border-border bg-secondary/25 p-4 space-y-3">
-              <div className="flex items-center justify-between select-none">
-                <div className="flex items-center gap-1 text-[11px] font-bold text-muted-foreground">
-                  <CreditCard className="size-4" />
-                  <span>GENERATED CARD NUMBERS | EXPIRY | CVV</span>
-                </div>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(ccResults.join("\n"));
-                    alert("Copied all profiles!");
-                  }}
-                  className="text-[11px] font-bold hover:underline"
-                >
-                  Copy All
-                </button>
-              </div>
-              <div className="font-mono text-[12.5px] font-semibold space-y-1 max-h-40 overflow-y-auto pr-1">
-                {ccResults.map((card, idx) => (
-                  <div key={idx} className="p-2 border-b border-border/10 last:border-b-0 hover:bg-secondary/15 transition-all">
-                    {card}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       )}
     </div>
