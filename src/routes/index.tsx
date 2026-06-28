@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useRef, useState, useEffect } from "react";
 import { 
   Upload, 
@@ -382,9 +382,16 @@ function Index() {
     <main className="min-h-screen bg-background text-foreground flex flex-col font-sans transition-colors duration-300 relative overflow-hidden">
       {/* Header */}
       <header className="px-6 py-6 flex items-center justify-between max-w-2xl mx-auto w-full border-b border-border/40 backdrop-blur-md sticky top-0 z-40">
-        <div className="flex items-center gap-1.5 select-none">
-          <span className="text-[20px] font-black tracking-tighter">CLOUD</span>
-          <span className="size-1.5 rounded-full bg-foreground"></span>
+        <div className="flex items-center gap-4">
+          <span className="text-[20px] font-black tracking-tighter select-none">
+            CLOUD
+          </span>
+          <Link
+            to="/note"
+            className="text-[20px] font-black tracking-tighter select-none opacity-40 hover:opacity-100 transition-opacity"
+          >
+            NOTES
+          </Link>
         </div>
         
         <button 

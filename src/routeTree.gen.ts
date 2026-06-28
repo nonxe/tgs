@@ -9,10 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as NoteRouteImport } from './routes/note'
 import { Route as FilenameRouteImport } from './routes/$filename'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as NoteNoteIdRouteImport } from './routes/note.$noteId'
 import { Route as ApiPublicUploadRouteImport } from './routes/api/public/upload'
 
+const NoteRoute = NoteRouteImport.update({
+  id: '/note',
+  path: '/note',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FilenameRoute = FilenameRouteImport.update({
   id: '/$filename',
   path: '/$filename',
@@ -23,6 +30,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NoteNoteIdRoute = NoteNoteIdRouteImport.update({
+  id: '/$noteId',
+  path: '/$noteId',
+  getParentRoute: () => NoteRoute,
+} as any)
 const ApiPublicUploadRoute = ApiPublicUploadRouteImport.update({
   id: '/api/public/upload',
   path: '/api/public/upload',
@@ -32,35 +44,56 @@ const ApiPublicUploadRoute = ApiPublicUploadRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$filename': typeof FilenameRoute
+  '/note': typeof NoteRouteWithChildren
+  '/note/$noteId': typeof NoteNoteIdRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$filename': typeof FilenameRoute
+  '/note': typeof NoteRouteWithChildren
+  '/note/$noteId': typeof NoteNoteIdRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$filename': typeof FilenameRoute
+  '/note': typeof NoteRouteWithChildren
+  '/note/$noteId': typeof NoteNoteIdRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$filename' | '/api/public/upload'
+  fullPaths:
+    '/' | '/$filename' | '/note' | '/note/$noteId' | '/api/public/upload'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$filename' | '/api/public/upload'
-  id: '__root__' | '/' | '/$filename' | '/api/public/upload'
+  to: '/' | '/$filename' | '/note' | '/note/$noteId' | '/api/public/upload'
+  id:
+    | '__root__'
+    | '/'
+    | '/$filename'
+    | '/note'
+    | '/note/$noteId'
+    | '/api/public/upload'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   FilenameRoute: typeof FilenameRoute
+  NoteRoute: typeof NoteRouteWithChildren
   ApiPublicUploadRoute: typeof ApiPublicUploadRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/note': {
+      id: '/note'
+      path: '/note'
+      fullPath: '/note'
+      preLoaderRoute: typeof NoteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/$filename': {
       id: '/$filename'
       path: '/$filename'
@@ -75,6 +108,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/note/$noteId': {
+      id: '/note/$noteId'
+      path: '/$noteId'
+      fullPath: '/note/$noteId'
+      preLoaderRoute: typeof NoteNoteIdRouteImport
+      parentRoute: typeof NoteRoute
+    }
     '/api/public/upload': {
       id: '/api/public/upload'
       path: '/api/public/upload'
@@ -85,9 +125,20 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface NoteRouteChildren {
+  NoteNoteIdRoute: typeof NoteNoteIdRoute
+}
+
+const NoteRouteChildren: NoteRouteChildren = {
+  NoteNoteIdRoute: NoteNoteIdRoute,
+}
+
+const NoteRouteWithChildren = NoteRoute._addFileChildren(NoteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   FilenameRoute: FilenameRoute,
+  NoteRoute: NoteRouteWithChildren,
   ApiPublicUploadRoute: ApiPublicUploadRoute,
 }
 export const routeTree = rootRouteImport
