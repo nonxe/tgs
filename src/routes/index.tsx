@@ -9,7 +9,6 @@ import {
   Trash2, 
   Clock, 
   HardDrive, 
-  ShieldAlert, 
   Sun, 
   Moon, 
   Info,
@@ -22,10 +21,8 @@ import {
   Image as ImageIcon,
   Sparkles,
   User,
-  Settings,
-  FolderMinus,
-  Maximize2,
-  Minimize2
+  LayoutGrid,
+  Minus
 } from "lucide-react";
 import { ConvertPage } from "./convert";
 import { MorePage } from "./more";
@@ -38,7 +35,7 @@ export const Route = createFileRoute("/")({
       { title: "CLOUD — Web OS Portal" },
       { name: "description", content: "Premium, responsive Web OS interface containing secure file sharing, notes, transcoders, and AI utilities." },
       { property: "og:title", content: "CLOUD — Web OS Portal" },
-      { property: "og:description", content: "Secure sharing, notes, converters, and chatbot inside a premium floating workspace." },
+      { property: "og:description", content: "Secure sharing, notes, converters, and chatbot inside a premium Stage Manager workspace." },
     ],
   }),
   component: Index,
@@ -97,6 +94,14 @@ function getFileIcon(type?: string) {
   return <FileIcon className="size-5" />;
 }
 
+const APPS_LIST = [
+  { id: "uploader", title: "File Cloud", desc: "Share files", icon: Upload },
+  { id: "notes", title: "Quick Notes", desc: "Anonymous notes", icon: FileText },
+  { id: "convert", title: "Media Convert", desc: "Local transcoders", icon: Archive },
+  { id: "ai", title: "AI Assistant", desc: "17 Models & Writer", icon: Sparkles },
+  { id: "owner", title: "Owner Info", desc: "AS Profile", icon: User }
+];
+
 function Index() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -114,39 +119,14 @@ function Index() {
 
   // Local storage history
   const [history, setHistory] = useState<HistoryItem[]>([]);
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const [theme, setTheme] = useState<"dark" | "dark">("dark");
 
   // Clock state
   const [timeStr, setTimeStr] = useState("");
 
-  // Window Manager States
-  const [isMobile, setIsMobile] = useState(false);
-  const [activeWindow, setActiveWindow] = useState<string | null>("uploader");
-  const [windowPositions, setWindowPositions] = useState<Record<string, { x: number; y: number; w: number; h: number; isMaximized: boolean; isMinimized: boolean; isOpen: boolean }>>({
-    uploader: { x: 50, y: 40, w: 750, h: 530, isMaximized: false, isMinimized: false, isOpen: true },
-    notes: { x: 100, y: 70, w: 760, h: 540, isMaximized: false, isMinimized: false, isOpen: false },
-    convert: { x: 150, y: 100, w: 800, h: 560, isMaximized: false, isMinimized: false, isOpen: false },
-    ai: { x: 200, y: 130, w: 760, h: 570, isMaximized: false, isMinimized: false, isOpen: false },
-    owner: { x: 250, y: 160, w: 700, h: 520, isMaximized: false, isMinimized: false, isOpen: false }
-  });
-
-  const [zIndices, setZIndices] = useState<Record<string, number>>({
-    uploader: 10,
-    notes: 1,
-    convert: 1,
-    ai: 1,
-    owner: 1
-  });
-
-  // Track responsive screen size
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  // Stage Manager Window States
+  const [openApps, setOpenApps] = useState<string[]>(["uploader"]); // File Cloud is open by default
+  const [activeApp, setActiveApp] = useState<string | null>("uploader");
 
   // Update Clock
   useEffect(() => {
@@ -175,75 +155,28 @@ function Index() {
     }
   }, []);
 
-  const focusWindow = (id: string) => {
-    setActiveWindow(id);
-    setZIndices(prev => {
-      const maxZ = Math.max(...Object.values(prev), 10);
-      return { ...prev, [id]: maxZ + 1 };
-    });
+  // App Launcher controls
+  const launchApp = (id: string) => {
+    if (!openApps.includes(id)) {
+      setOpenApps(prev => [...prev, id]);
+    }
+    setActiveApp(id);
   };
 
-  const openWindow = (id: string) => {
-    setWindowPositions(prev => ({
-      ...prev,
-      [id]: { ...prev[id], isOpen: true, isMinimized: false }
-    }));
-    focusWindow(id);
+  const closeApp = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const updated = openApps.filter(app => app !== id);
+    setOpenApps(updated);
+    if (activeApp === id) {
+      setActiveApp(updated.length > 0 ? updated[updated.length - 1] : null);
+    }
   };
 
-  const minimizeWindow = (id: string) => {
-    setWindowPositions(prev => ({
-      ...prev,
-      [id]: { ...prev[id], isMinimized: true }
-    }));
-  };
-
-  const toggleMaximize = (id: string) => {
-    setWindowPositions(prev => ({
-      ...prev,
-      [id]: { ...prev[id], isMaximized: !prev[id].isMaximized }
-    }));
-  };
-
-  const closeWindow = (id: string) => {
-    setWindowPositions(prev => ({
-      ...prev,
-      [id]: { ...prev[id], isOpen: false }
-    }));
-  };
-
-  // Drag handlers
-  const handleDragStart = (id: string, e: React.MouseEvent) => {
-    if (windowPositions[id].isMaximized || isMobile) return;
-    
-    focusWindow(id);
-    
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const initialX = windowPositions[id].x;
-    const initialY = windowPositions[id].y;
-    
-    const handleMouseMove = (moveEvent: MouseEvent) => {
-      const deltaX = moveEvent.clientX - startX;
-      const deltaY = moveEvent.clientY - startY;
-      
-      setWindowPositions(prev => ({
-        ...prev,
-        [id]: {
-          ...prev[id],
-          x: initialX + deltaX,
-          y: initialY + deltaY
-        }
-      }));
-    };
-    
-    const handleMouseUp = () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
-    
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
+  const minimizeApp = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (activeApp === id) {
+      setActiveApp(null);
+    }
   };
 
   const saveToHistory = (item: HistoryItem) => {
@@ -478,122 +411,20 @@ function Index() {
     if (inputRef.current) inputRef.current.value = "";
   };
 
-  // Window Builder
-  const renderWindow = (id: string, title: string, Icon: any, children: React.ReactNode) => {
-    const win = windowPositions[id];
-    if (!win.isOpen) return null;
-    
-    const isFocused = activeWindow === id;
-    
-    if (isMobile) {
-      return (
-        <div 
-          className={`fixed inset-x-0 bottom-0 top-12 bg-background border-t border-border/80 rounded-t-[24px] z-[99] flex flex-col transition-all duration-300 transform shadow-2xl ${
-            win.isMinimized ? "translate-y-full pointer-events-none" : "translate-y-0"
-          }`}
-        >
-          {/* iOS Header */}
-          <div className="h-12 flex items-center justify-between px-5 border-b border-border/20 flex-shrink-0 bg-secondary/10">
-            <span className="text-[14px] font-black tracking-tight flex items-center gap-2">
-              <Icon className="size-4.5 text-purple-500" />
-              {title}
-            </span>
-            <button
-              onClick={() => closeWindow(id)}
-              className="size-7 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-90"
-            >
-              <X className="size-4" />
-            </button>
-          </div>
-          
-          <div className="flex-1 overflow-y-auto p-4 select-text">
-            {children}
-          </div>
-        </div>
-      );
-    }
-    
-    return (
-      <div
-        onClick={() => focusWindow(id)}
-        style={{
-          zIndex: zIndices[id],
-          transform: `translate(${win.x}px, ${win.y}px)`,
-          width: win.isMaximized ? "100%" : `${win.w}px`,
-          height: win.isMaximized ? "calc(100vh - 84px)" : `${win.h}px`,
-          position: "absolute",
-          top: win.isMaximized ? 0 : undefined,
-          left: win.isMaximized ? 0 : undefined,
-          display: win.isMinimized ? "none" : "flex"
-        }}
-        className={`rounded-[24px] border flex flex-col overflow-hidden ios-glass ios-shadow transition-shadow duration-200 ${
-          isFocused ? "border-purple-500/40 shadow-purple-500/5 ring-1 ring-purple-500/10" : "border-border/40"
-        }`}
-      >
-        {/* Title Bar */}
-        <div
-          onMouseDown={(e) => handleDragStart(id, e)}
-          onDoubleClick={() => toggleMaximize(id)}
-          className="h-12 px-5 flex items-center justify-between border-b border-border/20 bg-secondary/15 cursor-move select-none flex-shrink-0"
-        >
-          {/* Controls */}
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                closeWindow(id);
-              }}
-              className="size-3 rounded-full bg-[#ff5f56] border border-[#e0443e] flex items-center justify-center text-[10px] font-black text-transparent hover:text-black/60 transition-colors"
-            >
-              ×
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                minimizeWindow(id);
-              }}
-              className="size-3 rounded-full bg-[#ffbd2e] border border-[#dea123] flex items-center justify-center text-[10px] font-black text-transparent hover:text-black/60 transition-colors"
-            >
-              -
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleMaximize(id);
-              }}
-              className="size-3 rounded-full bg-[#27c93f] border border-[#1aab29] flex items-center justify-center text-[10px] font-black text-transparent hover:text-black/60 transition-colors"
-            >
-              +
-            </button>
-          </div>
-          
-          <span className="text-[13px] font-black tracking-tight text-foreground flex items-center gap-1.5">
-            <Icon className="size-3.5 text-purple-500/80" />
-            {title}
-          </span>
-          
-          <div className="w-14" />
-        </div>
-        
-        <div className="flex-1 overflow-y-auto p-6 select-text">
-          {children}
-        </div>
-      </div>
-    );
-  };
+  const activeAppDetail = APPS_LIST.find(a => a.id === activeApp);
 
   return (
-    <main className="min-h-screen bg-background text-foreground flex flex-col font-sans transition-colors duration-300 relative overflow-hidden select-none">
+    <main className="min-h-screen max-h-screen bg-background text-foreground flex flex-col font-sans transition-colors duration-300 relative overflow-hidden select-none">
       {/* Ambient Moving Wallpaper Orbs */}
       <div className="orb orb-1" />
       <div className="orb orb-2" />
       <div className="orb orb-3" />
 
       {/* Top OS Menu Status Bar */}
-      <header className="px-6 h-12 flex items-center justify-between border-b border-border/20 backdrop-blur-md sticky top-0 z-[100] bg-background/30 select-none">
+      <header className="px-6 h-12 flex items-center justify-between border-b border-border/20 backdrop-blur-md sticky top-0 z-[100] bg-background/30 select-none flex-shrink-0">
         <div className="flex items-center gap-4">
           <span className="text-[14px] font-black tracking-wider text-purple-500">CLOUD OS</span>
-          <span className="text-[11px] font-bold text-muted-foreground/80 hidden sm:inline">Active Suite</span>
+          <span className="text-[11px] font-bold text-muted-foreground/80 hidden sm:inline">Stage Manager Workspace</span>
         </div>
         
         <div className="flex items-center gap-4">
@@ -602,293 +433,344 @@ function Index() {
       </header>
 
       {/* OS Desktop Workspace */}
-      <section className="flex-1 relative p-6 overflow-hidden flex flex-col">
-        {/* Desktop Icons Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-6 max-w-2xl z-10 select-none">
-          {[
-            { id: "uploader", title: "File Cloud", desc: "Share files", icon: Upload },
-            { id: "notes", title: "Quick Notes", desc: "Anonymous notes", icon: FileText },
-            { id: "convert", title: "Media Convert", desc: "Local transcoders", icon: Archive },
-            { id: "ai", title: "AI Assistant", desc: "17 Models & Writer", icon: Sparkles },
-            { id: "owner", title: "Owner Info", desc: "AS Profile", icon: User }
-          ].map((item) => {
-            const Icon = item.icon;
-            const isOpen = windowPositions[item.id].isOpen && !windowPositions[item.id].isMinimized;
-            return (
-              <button
-                key={item.id}
-                onClick={() => openWindow(item.id)}
-                className={`p-4 rounded-[22px] border bg-secondary/10 border-border/30 hover:border-purple-500/30 hover:bg-secondary/20 flex flex-col items-center text-center gap-3 transition-all duration-200 ios-tap-active ${
-                  isOpen ? "ring-1 ring-purple-500/20 bg-secondary/20 border-purple-500/20" : ""
-                }`}
-              >
-                <div className="size-12 rounded-[16px] border border-border bg-background flex items-center justify-center text-foreground hover:scale-105 transition-transform duration-200 shadow-md">
-                  <Icon className="size-5.5 text-purple-500" />
-                </div>
-                <div>
-                  <p className="text-[13px] font-black tracking-tight">{item.title}</p>
-                  <p className="text-[10px] text-muted-foreground/80 mt-0.5">{item.desc}</p>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Floating Windows Stack */}
-        <div className="absolute inset-0 top-24 bottom-24 pointer-events-none z-20">
-          <div className="relative w-full h-full pointer-events-auto">
-            
-            {/* 1. File Cloud / Uploader Window */}
-            {renderWindow("uploader", "File Cloud & Sharing", Upload, (
-              <div className="space-y-8">
-                <div className="text-center mb-6">
-                  <h3 className="text-[28px] font-black tracking-tight">Drop a file. Get a link.</h3>
-                  <p className="text-[14px] text-muted-foreground mt-1">Direct downloads, permanent or 72 hours temporary duration.</p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-start">
-                  <div className="md:col-span-3 space-y-4">
-                    {!result && !file && (
-                      <div
-                        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
-                        onDragLeave={() => setDragging(false)}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          setDragging(false);
-                          onFile(e.dataTransfer.files?.[0] ?? null);
-                        }}
-                        onClick={pick}
-                        className={`group cursor-pointer rounded-[20px] border border-dashed p-8 text-center transition-all ${
-                          dragging ? "border-foreground bg-foreground/5" : "border-border hover:border-foreground/30"
-                        }`}
-                      >
-                        <input
-                          ref={inputRef}
-                          type="file"
-                          className="hidden"
-                          onChange={(e) => onFile(e.target.files?.[0] ?? null)}
-                        />
-                        <div className="mx-auto mb-4 size-12 rounded-[16px] border border-border bg-secondary/40 flex items-center justify-center group-hover:scale-110 transition-transform">
-                          <Upload className="size-5 text-purple-500" />
-                        </div>
-                        <p className="text-[15px] font-black">Tap to choose or drag here</p>
-                        <p className="text-[12px] text-muted-foreground mt-0.5">Indefinite or temporary. Supports up to 1GB.</p>
-                      </div>
-                    )}
-
-                    {file && !result && (
-                      <div className="rounded-[20px] border border-border p-5 space-y-5 bg-secondary/5">
-                        <div className="flex items-center gap-3 bg-secondary/30 p-3 rounded-[14px] border border-border/10">
-                          <div className="size-10 rounded-[10px] bg-foreground/5 flex items-center justify-center text-purple-500 border border-border/10">
-                            {getFileIcon(file.type)}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-[14px] font-black truncate">{file.name}</p>
-                            <p className="text-[12px] text-muted-foreground">{formatBytes(file.size)}</p>
-                          </div>
-                          <button onClick={reset} disabled={busy} className="size-8 rounded-full hover:bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground">
-                            <X className="size-4" />
-                          </button>
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <label className="text-[12px] font-bold text-muted-foreground">Storage Duration</label>
-                          <div className="grid grid-cols-2 gap-1 bg-secondary/50 p-1 rounded-[14px] border border-border/15">
-                            <button
-                              onClick={() => setRetention("permanent")}
-                              disabled={busy}
-                              className={`h-9 rounded-[10px] text-[12.5px] font-bold transition-all ${
-                                retention === "permanent" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
-                              }`}
-                            >
-                              Permanent
-                            </button>
-                            <button
-                              onClick={() => setRetention("72h")}
-                              disabled={busy}
-                              className={`h-9 rounded-[10px] text-[12.5px] font-bold transition-all ${
-                                retention === "72h" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
-                              }`}
-                            >
-                              Temporary (72h)
-                            </button>
-                          </div>
-                        </div>
-
-                        <button
-                          onClick={() => upload(file)}
-                          disabled={busy}
-                          className="w-full h-11 rounded-[14px] bg-foreground text-background font-black text-[13.5px] hover:scale-[1.01] active:scale-[0.98] transition-all disabled:opacity-40"
-                        >
-                          {busy ? `Uploading (${progress}%)` : "Upload File"}
-                        </button>
-                      </div>
-                    )}
-
-                    {result && result.success && (
-                      <div className="rounded-[20px] border border-border p-5 bg-secondary/10 space-y-4">
-                        <div className="text-center">
-                          <span className="text-[11px] font-black uppercase text-green-500 tracking-wider">Upload Success</span>
-                          <h4 className="text-[15px] font-black truncate mt-1">{result.filename}</h4>
-                        </div>
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            readOnly
-                            value={result.url}
-                            className="flex-1 bg-secondary/40 border border-border/30 rounded-[14px] px-3.5 text-[12.5px] font-bold text-muted-foreground outline-none"
-                          />
-                          <button
-                            onClick={() => copyLink(result.url)}
-                            className="h-10 px-4 rounded-[14px] bg-foreground text-background font-bold text-[12.5px] flex items-center gap-1.5"
-                          >
-                            {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-                            <span>{copied ? "Copied" : "Copy"}</span>
-                          </button>
-                        </div>
-                        <button onClick={reset} className="w-full h-10 rounded-[14px] border border-border hover:bg-secondary/40 text-[13px] font-bold">
-                          Upload Another File
-                        </button>
-                      </div>
-                    )}
-
-                    {error && (
-                      <div className="rounded-[16px] border border-destructive/20 bg-destructive/5 text-destructive text-[13px] font-bold p-3.5 text-center">
-                        Error: {error}
-                      </div>
-                    )}
+      <section className="flex-1 relative p-4 md:p-6 overflow-hidden flex flex-col md:flex-row gap-6 h-[calc(100vh-128px)]">
+        
+        {/* Left Stage Manager Sidebar (PC/Desktop only, hidden on mobile) */}
+        {openApps.length > 0 && (
+          <div className="hidden md:flex flex-col gap-3.5 w-32 py-4 justify-center items-center select-none z-30 flex-shrink-0">
+            {openApps.map(appId => {
+              const app = APPS_LIST.find(a => a.id === appId);
+              if (!app) return null;
+              const AppIcon = app.icon;
+              const isActive = activeApp === appId;
+              
+              return (
+                <button
+                  key={appId}
+                  onClick={() => setActiveApp(appId)}
+                  className={`group relative w-[90px] h-[75px] rounded-[18px] border bg-secondary/15 flex flex-col items-center justify-center gap-1.5 transition-all duration-200 hover:scale-105 active:scale-95 ${
+                    isActive 
+                      ? "border-purple-500/40 bg-secondary/30 ring-1 ring-purple-500/10 shadow-lg shadow-purple-500/5" 
+                      : "border-border/30 hover:border-border"
+                  }`}
+                >
+                  <div className="size-8 rounded-[10px] bg-background border border-border/20 flex items-center justify-center shadow-sm">
+                    <AppIcon className="size-4.5 text-purple-500" />
                   </div>
+                  <span className="text-[10px] font-black tracking-tight truncate max-w-[80px] text-muted-foreground group-hover:text-foreground">
+                    {app.title}
+                  </span>
 
-                  <div className="md:col-span-2 space-y-4">
-                    <div className="flex items-center justify-between border-b border-border/20 pb-2">
-                      <span className="text-[12px] font-black tracking-tight uppercase text-muted-foreground">Upload History</span>
-                      {history.length > 0 && (
-                        <button onClick={clearHistory} className="text-[11px] font-black text-red-500 hover:underline">
-                          Clear
-                        </button>
-                      )}
+                  {/* Close app action directly from Stage manager stack */}
+                  <button
+                    onClick={(e) => closeApp(appId, e)}
+                    className="absolute -top-1.5 -right-1.5 size-5 rounded-full bg-secondary/80 border border-border/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] font-black text-muted-foreground hover:text-red-500 hover:bg-secondary transition-all"
+                  >
+                    ×
+                  </button>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Center Stage Workspace Area */}
+        <div className="flex-1 relative flex items-center justify-center z-20 h-full w-full">
+          {activeApp ? (
+            /* Render Focused App Window */
+            <div className="w-full max-w-4xl h-full flex flex-col rounded-[24px] border border-border/60 bg-[#060608]/75 backdrop-blur-2xl ios-shadow overflow-hidden animate-spring-scale">
+              
+              {/* Window Title Bar header */}
+              <div className="h-12 px-5 flex items-center justify-between border-b border-border/20 bg-secondary/15 select-none flex-shrink-0">
+                {/* Control Action bullets */}
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={(e) => closeApp(activeApp, e)}
+                    title="Close"
+                    className="size-3 rounded-full bg-[#ff5f56] border border-[#e0443e] flex items-center justify-center text-[10px] font-black text-transparent hover:text-black/60 transition-colors"
+                  >
+                    ×
+                  </button>
+                  <button
+                    onClick={(e) => minimizeApp(activeApp, e)}
+                    title="Minimize"
+                    className="size-3 rounded-full bg-[#ffbd2e] border border-[#dea123] flex items-center justify-center text-[10px] font-black text-transparent hover:text-black/60 transition-colors"
+                  >
+                    -
+                  </button>
+                </div>
+                
+                {/* Title */}
+                {activeAppDetail && (
+                  <span className="text-[13px] font-black tracking-tight text-foreground flex items-center gap-2">
+                    <activeAppDetail.icon className="size-4 text-purple-500" />
+                    {activeAppDetail.title}
+                  </span>
+                )}
+                
+                {/* Right Space placeholder */}
+                <div className="w-14" />
+              </div>
+              
+              {/* Window Scrollable content viewport */}
+              <div className="flex-1 overflow-y-auto p-5 md:p-6 select-text h-[calc(100%-48px)]">
+                {activeApp === "uploader" && (
+                  <div className="space-y-8 max-w-3xl mx-auto">
+                    <div className="text-center mb-4">
+                      <h3 className="text-[28px] md:text-[34px] font-black tracking-tight">Drop a file. Get a link.</h3>
+                      <p className="text-[14px] text-muted-foreground mt-1">Direct high-speed uploads. Storage duration: permanent or temporary.</p>
                     </div>
-                    {history.length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground select-none">
-                        <HardDrive className="size-7 mx-auto opacity-30 mb-1" />
-                        <p className="text-[12px] font-bold">History is empty</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                        {history.map((item, idx) => (
-                          <div key={idx} className="flex items-center justify-between p-2.5 rounded-[12px] border border-border/20 bg-secondary/5 text-[12.5px]">
-                            <div className="min-w-0 flex-1 pr-2">
-                              <p className="font-bold truncate text-foreground">{item.filename}</p>
-                              <p className="text-[11px] text-muted-foreground mt-0.5">
-                                {formatBytes(item.size)} • {getRelativeTime(item.timestamp)}
-                              </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-start">
+                      <div className="md:col-span-3 space-y-4">
+                        {!result && !file && (
+                          <div
+                            onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+                            onDragLeave={() => setDragging(false)}
+                            onDrop={(e) => {
+                              e.preventDefault();
+                              setDragging(false);
+                              onFile(e.dataTransfer.files?.[0] ?? null);
+                            }}
+                            onClick={pick}
+                            className={`group cursor-pointer rounded-[20px] border border-dashed p-8 text-center transition-all ${
+                              dragging ? "border-foreground bg-foreground/5" : "border-border hover:border-foreground/30"
+                            }`}
+                          >
+                            <input
+                              ref={inputRef}
+                              type="file"
+                              className="hidden"
+                              onChange={(e) => onFile(e.target.files?.[0] ?? null)}
+                            />
+                            <div className="mx-auto mb-4 size-12 rounded-[16px] border border-border bg-secondary/40 flex items-center justify-center group-hover:scale-110 transition-transform">
+                              <Upload className="size-5 text-purple-500" />
                             </div>
-                            <div className="flex items-center gap-1">
-                              <a href={item.url} target="_blank" rel="noopener noreferrer" className="size-8 rounded-full hover:bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground">
-                                <ExternalLink className="size-3.5" />
-                              </a>
-                              <button onClick={() => deleteFromHistory(item.url)} className="size-8 rounded-full hover:bg-secondary flex items-center justify-center text-muted-foreground hover:text-red-500">
-                                <Trash2 className="size-3.5" />
+                            <p className="text-[15px] font-black">Tap to choose or drag here</p>
+                            <p className="text-[12px] text-muted-foreground mt-0.5">Supports any formats up to 1GB limit.</p>
+                          </div>
+                        )}
+
+                        {file && !result && (
+                          <div className="rounded-[20px] border border-border p-5 space-y-5 bg-secondary/5">
+                            <div className="flex items-center gap-3 bg-secondary/30 p-3 rounded-[14px] border border-border/10">
+                              <div className="size-10 rounded-[10px] bg-foreground/5 flex items-center justify-center text-purple-500 border border-border/10">
+                                {getFileIcon(file.type)}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-[14px] font-black truncate">{file.name}</p>
+                                <p className="text-[12px] text-muted-foreground">{formatBytes(file.size)}</p>
+                              </div>
+                              <button onClick={reset} disabled={busy} className="size-8 rounded-full hover:bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground">
+                                <X className="size-4" />
                               </button>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
 
-                {/* FAQs Info */}
-                <div className="space-y-3 pt-4 border-t border-border/10">
-                  <h4 className="text-[13px] font-black uppercase text-muted-foreground tracking-wider">FAQs & Upload Help</h4>
-                  <div className="space-y-1.5">
-                    {[
-                      { q: "How long are uploaded files kept?", a: "Files selected as Permanent are saved indefinitely. Files selected as Temporary are automatically purged after 72 hours." },
-                      { q: "What is the maximum size allowed?", a: "You can upload any file format up to 200 MB for Permanent storage, and up to 1 GB for Temporary (72h) storage." }
-                    ].map((faq, i) => {
-                      const isOpen = faqOpen === i;
-                      return (
-                        <div key={i} className="rounded-[12px] border border-border/20 bg-secondary/5 overflow-hidden">
-                          <button onClick={() => setFaqOpen(isOpen ? null : i)} className="w-full px-4 py-2.5 flex items-center justify-between text-left text-[12px] font-bold text-foreground">
-                            <span>{faq.q}</span>
-                            <ChevronDown className={`size-3 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} />
-                          </button>
-                          {isOpen && (
-                            <p className="px-4 pb-3 text-[11px] leading-relaxed text-muted-foreground">{faq.a}</p>
+                            <div className="space-y-1.5">
+                              <label className="text-[12px] font-bold text-muted-foreground">Storage Duration</label>
+                              <div className="grid grid-cols-2 gap-1 bg-secondary/50 p-1 rounded-[14px] border border-border/15">
+                                <button
+                                  onClick={() => setRetention("permanent")}
+                                  disabled={busy}
+                                  className={`h-9 rounded-[10px] text-[12.5px] font-bold transition-all ${
+                                    retention === "permanent" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+                                  }`}
+                                >
+                                  Permanent
+                                </button>
+                                <button
+                                  onClick={() => setRetention("72h")}
+                                  disabled={busy}
+                                  className={`h-9 rounded-[10px] text-[12.5px] font-bold transition-all ${
+                                    retention === "72h" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+                                  }`}
+                                >
+                                  Temporary (72h)
+                                </button>
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={() => upload(file)}
+                              disabled={busy}
+                              className="w-full h-11 rounded-[14px] bg-foreground text-background font-black text-[13.5px] hover:scale-[1.01] active:scale-[0.98] transition-all disabled:opacity-40"
+                            >
+                              {busy ? `Uploading (${progress}%)` : "Upload File"}
+                            </button>
+                          </div>
+                        )}
+
+                        {result && result.success && (
+                          <div className="rounded-[20px] border border-border p-5 bg-secondary/10 space-y-4">
+                            <div className="text-center">
+                              <span className="text-[11px] font-black uppercase text-green-500 tracking-wider">Upload Success</span>
+                              <h4 className="text-[15px] font-black truncate mt-1">{result.filename}</h4>
+                            </div>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                readOnly
+                                value={result.url}
+                                className="flex-1 bg-secondary/40 border border-border/30 rounded-[14px] px-3.5 text-[12.5px] font-bold text-muted-foreground outline-none"
+                              />
+                              <button
+                                onClick={() => copyLink(result.url)}
+                                className="h-10 px-4 rounded-[14px] bg-foreground text-background font-bold text-[12.5px] flex items-center gap-1.5"
+                              >
+                                {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+                                <span>{copied ? "Copied" : "Copy"}</span>
+                              </button>
+                            </div>
+                            <button onClick={reset} className="w-full h-10 rounded-[14px] border border-border hover:bg-secondary/40 text-[13px] font-bold">
+                              Upload Another File
+                            </button>
+                          </div>
+                        )}
+
+                        {error && (
+                          <div className="rounded-[16px] border border-destructive/20 bg-destructive/5 text-destructive text-[13px] font-bold p-3.5 text-center">
+                            Error: {error}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="md:col-span-2 space-y-4">
+                        <div className="flex items-center justify-between border-b border-border/20 pb-2">
+                          <span className="text-[12px] font-black tracking-tight uppercase text-muted-foreground">Upload History</span>
+                          {history.length > 0 && (
+                            <button onClick={clearHistory} className="text-[11px] font-black text-red-500 hover:underline">
+                              Clear
+                            </button>
                           )}
                         </div>
-                      );
-                    })}
+                        {history.length === 0 ? (
+                          <div className="text-center py-8 text-muted-foreground select-none">
+                            <HardDrive className="size-7 mx-auto opacity-30 mb-1" />
+                            <p className="text-[12px] font-bold">History is empty</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                            {history.map((item, idx) => (
+                              <div key={idx} className="flex items-center justify-between p-2.5 rounded-[12px] border border-border/20 bg-secondary/5 text-[12.5px]">
+                                <div className="min-w-0 flex-1 pr-2">
+                                  <p className="font-bold truncate text-foreground">{item.filename}</p>
+                                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                                    {formatBytes(item.size)} • {getRelativeTime(item.timestamp)}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <a href={item.url} target="_blank" rel="noopener noreferrer" className="size-8 rounded-full hover:bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground">
+                                    <ExternalLink className="size-3.5" />
+                                  </a>
+                                  <button onClick={() => deleteFromHistory(item.url)} className="size-8 rounded-full hover:bg-secondary flex items-center justify-center text-muted-foreground hover:text-red-500">
+                                    <Trash2 className="size-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* FAQs Info */}
+                    <div className="space-y-3 pt-4 border-t border-border/10">
+                      <h4 className="text-[13px] font-black uppercase text-muted-foreground tracking-wider">FAQs & Upload Help</h4>
+                      <div className="space-y-1.5">
+                        {[
+                          { q: "How long are uploaded files kept?", a: "Files selected as Permanent are saved indefinitely. Files selected as Temporary are automatically purged after 72 hours." },
+                          { q: "What is the maximum size allowed?", a: "You can upload any file format up to 200 MB for Permanent storage, and up to 1 GB for Temporary (72h) storage." }
+                        ].map((faq, i) => {
+                          const isOpen = faqOpen === i;
+                          return (
+                            <div key={i} className="rounded-[12px] border border-border/20 bg-secondary/5 overflow-hidden">
+                              <button onClick={() => setFaqOpen(isOpen ? null : i)} className="w-full px-4 py-2.5 flex items-center justify-between text-left text-[12px] font-bold text-foreground">
+                                <span>{faq.q}</span>
+                                <ChevronDown className={`size-3 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                              </button>
+                              {isOpen && (
+                                <p className="px-4 pb-3 text-[11px] leading-relaxed text-muted-foreground">{faq.a}</p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {activeApp === "notes" && <NoteComposer />}
+                {activeApp === "convert" && <ConvertPage embed={true} />}
+                {activeApp === "ai" && <MorePage embed={true} />}
+                {activeApp === "owner" && <OwnerPage embed={true} />}
               </div>
-            ))}
-
-            {/* 2. Quick Notes Window */}
-            {renderWindow("notes", "Quick Notes Manager", FileText, (
-              <NoteComposer />
-            ))}
-
-            {/* 3. Media Convert Window */}
-            {renderWindow("convert", "Media Converts Workspace", Archive, (
-              <ConvertPage embed={true} />
-            ))}
-
-            {/* 4. AI Assistant Window */}
-            {renderWindow("ai", "AI Assistant Suite", Sparkles, (
-              <MorePage embed={true} />
-            ))}
-
-            {/* 5. Owner Info Window */}
-            {renderWindow("owner", "Owner Information", User, (
-              <OwnerPage embed={true} />
-            ))}
-
-          </div>
+            </div>
+          ) : (
+            /* Render Empty Desktop Icons Grid */
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 max-w-3xl select-none text-center animate-fade-in">
+              {APPS_LIST.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => launchApp(item.id)}
+                    className="p-5 rounded-[24px] border bg-[#08080a]/50 border-border/30 hover:border-purple-500/30 hover:bg-[#0c0c10]/70 flex flex-col items-center gap-3 transition-all duration-200 hover:scale-105 active:scale-95 shadow-xl"
+                  >
+                    <div className="size-14 rounded-[18px] border border-border bg-[#101014] flex items-center justify-center text-foreground transition-transform shadow-md">
+                      <Icon className="size-6 text-purple-500" />
+                    </div>
+                    <div>
+                      <p className="text-[14px] font-black tracking-tight">{item.title}</p>
+                      <p className="text-[10px] text-muted-foreground/80 mt-0.5">{item.desc}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
 
-      {/* bottom Dock Toolbar (macOS Style) */}
-      <footer className="h-20 w-full flex items-center justify-center select-none z-[100] pb-4 px-4 sticky bottom-0 pointer-events-none">
-        <div className="h-16 px-4 rounded-[24px] border border-white/10 bg-[#0c0c0e]/80 backdrop-blur-2xl flex items-center gap-3.5 shadow-2xl pointer-events-auto select-none max-w-md w-full justify-center">
-          {[
-            { id: "uploader", title: "File Cloud", icon: Upload },
-            { id: "notes", title: "Notes", icon: FileText },
-            { id: "convert", title: "Convert", icon: Archive },
-            { id: "ai", title: "AI", icon: Sparkles },
-            { id: "owner", title: "Owner", icon: User }
-          ].map((item) => {
+      {/* Bottom macOS Style Launcher Dock */}
+      <footer className="h-20 w-full flex items-center justify-center select-none z-[100] pb-4 px-4 sticky bottom-0 flex-shrink-0">
+        <div className="h-16 px-4 rounded-[22px] border border-white/10 bg-[#0c0c0e]/85 backdrop-blur-2xl flex items-center gap-3 shadow-2xl w-full max-w-sm justify-center">
+          
+          {/* Desktop Launcher Icon */}
+          <button
+            onClick={() => setActiveApp(null)}
+            title="Desktop Dashboard"
+            className={`group relative size-11 flex flex-col items-center justify-center rounded-[12px] bg-secondary/35 border transition-all duration-150 active:scale-90 ${
+              activeApp === null ? "border-purple-500/40 bg-secondary/70" : "border-border/25 hover:border-purple-500/25"
+            }`}
+          >
+            <LayoutGrid className={`size-4.5 ${activeApp === null ? "text-purple-500" : "text-foreground"}`} />
+            {activeApp === null && (
+              <span className="absolute bottom-1 size-1 rounded-full bg-purple-500 shadow-md shadow-purple-500/60" />
+            )}
+          </button>
+
+          <div className="h-8 w-[1px] bg-border/40 mx-1" />
+
+          {APPS_LIST.map((item) => {
             const Icon = item.icon;
-            const isOpen = windowPositions[item.id].isOpen;
-            const isMin = windowPositions[item.id].isMinimized;
-            const isFocused = activeWindow === item.id && isOpen && !isMin;
+            const isOpen = openApps.includes(item.id);
+            const isActive = activeApp === item.id;
             
             return (
               <button
                 key={item.id}
-                onClick={() => {
-                  if (isOpen) {
-                    if (isMin) {
-                      setWindowPositions(prev => ({ ...prev, [item.id]: { ...prev[item.id], isMinimized: false } }));
-                      focusWindow(item.id);
-                    } else if (isFocused) {
-                      minimizeWindow(item.id);
-                    } else {
-                      focusWindow(item.id);
-                    }
-                  } else {
-                    openWindow(item.id);
-                  }
-                }}
+                onClick={() => launchApp(item.id)}
                 title={item.title}
-                className="group relative size-11 flex flex-col items-center justify-center rounded-[14px] bg-secondary/35 border border-border/25 hover:border-purple-500/25 hover:bg-secondary/70 transition-all duration-150 active:scale-90 pointer-events-auto"
+                className={`group relative size-11 flex flex-col items-center justify-center rounded-[12px] bg-secondary/35 border transition-all duration-150 active:scale-90 ${
+                  isActive ? "border-purple-500/40 bg-secondary/70" : "border-border/25 hover:border-purple-500/25 hover:bg-secondary/70"
+                }`}
               >
-                <Icon className={`size-4.5 transition-transform ${isFocused ? "text-purple-500 scale-105" : "text-foreground group-hover:scale-110"}`} />
+                <Icon className={`size-4.5 transition-transform ${isActive ? "text-purple-500 scale-105" : "text-foreground group-hover:scale-110"}`} />
                 
-                {/* Status Indicator lights */}
+                {/* Active/Open indicator lights */}
                 {isOpen && (
                   <span className={`absolute bottom-1 size-1 rounded-full ${
-                    isFocused ? "bg-purple-500 shadow-md shadow-purple-500/60" : "bg-muted-foreground/60"
+                    isActive ? "bg-purple-500 shadow-md shadow-purple-500/60" : "bg-muted-foreground/60"
                   }`} />
                 )}
               </button>
