@@ -514,7 +514,7 @@ function Index() {
                             : "text-muted-foreground hover:text-foreground"
                         }`}
                       >
-                        Permanent (Catbox)
+                        Permanent
                       </button>
                       <button
                         onClick={() => setRetention("72h")}
@@ -714,7 +714,7 @@ function Index() {
                 {[
                   {
                     q: "How long are uploaded files kept?",
-                    a: "Files selected as Permanent are saved indefinitely via Catbox. Files selected as Temporary are automatically purged after 72 hours via Litterbox."
+                    a: "Files selected as Permanent are saved indefinitely. Files selected as Temporary are automatically purged after 72 hours."
                   },
                   {
                     q: "What is the maximum file size limit?",

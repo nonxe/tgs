@@ -119,17 +119,17 @@ function OwnerPage() {
 
             <div className="space-y-4 text-[14px] md:text-[15px] leading-relaxed text-muted-foreground font-medium max-w-lg">
               <p>
-                The EWON Law was first identified, articulated, and documented by <strong className="text-foreground">AS</strong>. Through keen observation of human behavior patterns, AS recognized this recurring phenomenon — a law that operates silently in the minds of many, driving them toward absolute desire and, consequently, absolute emptiness.
+                CLOUD was built and designed by <strong className="text-foreground">AS</strong>. Driven by the goal to make digital utility tools, audio-visual converters, and note sharing premium, simple, and accessible, AS designed this platform to merge minimal aesthetics with robust tools.
               </p>
               <p>
-                AS brought this law into language, giving a name to what millions experience but few understand. The EWON Law stands as a contribution to the understanding of human psychology — a lens through which we can examine our own patterns of desire and decision.
+                AS handles all core architecture, secure file storage integrations, and UI features for CLOUD. The goal remains: absolute clarity of design, seamless speed, and a modern iOS-styled user experience.
               </p>
             </div>
 
             {/* Actions */}
             <div className="pt-2 select-none">
               <a 
-                href="mailto:contact@cloud.dev" 
+                href="mailto:skycho@proton.me" 
                 className="inline-flex items-center gap-2 h-11 px-5 rounded-full bg-foreground text-background font-bold text-[13px] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md"
               >
                 <Mail className="size-4" />
