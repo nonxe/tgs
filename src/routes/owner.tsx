@@ -141,16 +141,24 @@ export function OwnerPage({ embed = false }: { embed?: boolean }) {
                 <circle cx="100" cy="100" r="88" fill="none" stroke="rgba(167,139,250,0.08)" strokeWidth="1" strokeDasharray="4 8" />
                 
                 {/* Triangle 1: clockwise */}
-                <polygon className="tri-spin-cw-12" points="100,22 160,138 40,138" fill="none" stroke="url(#triGrad1)" strokeWidth="2" filter="url(#triGlow)" />
+                <g style={{ transformOrigin: "100px 100px", animation: "triSpinCW 12s linear infinite" }}>
+                  <polygon points="100,22 160,138 40,138" fill="none" stroke="url(#triGrad1)" strokeWidth="2" filter="url(#triGlow)" />
+                </g>
                 
                 {/* Triangle 2: counter-clockwise */}
-                <polygon className="tri-spin-ccw-12" points="100,22 160,138 40,138" fill="none" stroke="url(#triGrad2)" strokeWidth="1.5" filter="url(#triGlow)" />
+                <g style={{ transformOrigin: "100px 100px", animation: "triSpinCCW 12s linear infinite" }}>
+                  <polygon points="100,22 160,138 40,138" fill="none" stroke="url(#triGrad2)" strokeWidth="1.5" filter="url(#triGlow)" />
+                </g>
                 
                 {/* Triangle 3: slow clockwise, larger */}
-                <polygon className="tri-spin-cw-24" points="100,15 170,145 30,145" fill="none" stroke="url(#triGrad3)" strokeWidth="1" opacity="0.4" />
+                <g style={{ transformOrigin: "100px 100px", animation: "triSpinCW 24s linear infinite" }}>
+                  <polygon points="100,15 170,145 30,145" fill="none" stroke="url(#triGrad3)" strokeWidth="1" opacity="0.4" />
+                </g>
                 
                 {/* Triangle 4: fast counter-clockwise, smaller */}
-                <polygon className="tri-spin-ccw-6" points="100,35 145,128 55,128" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
+                <g style={{ transformOrigin: "100px 100px", animation: "triSpinCCW 6s linear infinite" }}>
+                  <polygon points="100,35 145,128 55,128" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
+                </g>
                 
                 {/* Center dot */}
                 <circle cx="100" cy="100" r="3" fill="rgba(167,139,250,0.5)">
