@@ -12,16 +12,17 @@ export const Route = createFileRoute("/owner")({
   component: OwnerPage,
 });
 
-function OwnerPage() {
+export function OwnerPage({ embed = false }: { embed?: boolean }) {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
 
   // Global theme sync
   useEffect(() => {
+    if (embed) return;
     const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
     const initialTheme = savedTheme || "dark";
     setTheme(initialTheme);
     document.documentElement.classList.toggle("dark", initialTheme === "dark");
-  }, []);
+  }, [embed]);
 
   const toggleTheme = () => {
     const next = theme === "dark" ? "light" : "dark";
@@ -30,21 +31,20 @@ function OwnerPage() {
     document.documentElement.classList.toggle("dark", next === "dark");
   };
 
-  return (
-    <main className="min-h-screen bg-background text-foreground flex flex-col font-sans transition-colors duration-300 relative overflow-hidden">
-      {/* CSS Keyframes injected dynamically */}
+  const content = (
+    <>
       <style>{`
         @keyframes triSpinCW {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
         @keyframes triSpinCCW {
-          from { transform: rotate(360deg); }
-          to { transform: rotate(0deg); }
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(-360deg); }
         }
         @keyframes ownerPulse {
-          0%, 100% { transform: scale(1); opacity: 0.4; }
-          50% { transform: scale(1.15); opacity: 0.8; }
+          0%, 100% { opacity: 0.3; transform: scale(1); }
+          50% { opacity: 0.6; transform: scale(1.15); }
         }
         .tri-spin-cw-12 {
           transform-origin: 100px 100px;
@@ -67,37 +67,8 @@ function OwnerPage() {
         }
       `}</style>
 
-      {/* Header */}
-      <header className="px-6 py-6 flex items-center justify-between max-w-2xl md:max-w-6xl mx-auto w-full border-b border-border/40 backdrop-blur-md sticky top-0 z-40">
-        <div className="flex items-center gap-4">
-          <Link to="/" className="text-[20px] font-black tracking-tighter select-none opacity-40 hover:opacity-100 transition-opacity">
-            CLOUD
-          </Link>
-          <Link to="/note" className="text-[20px] font-black tracking-tighter select-none opacity-40 hover:opacity-100 transition-opacity">
-            NOTES
-          </Link>
-          <Link to="/convert" className="text-[20px] font-black tracking-tighter select-none opacity-40 hover:opacity-100 transition-opacity">
-            CONVERTS
-          </Link>
-          <Link to="/more" className="text-[20px] font-black tracking-tighter select-none opacity-40 hover:opacity-100 transition-opacity">
-            MORE
-          </Link>
-          <span className="text-[20px] font-black tracking-tighter select-none">
-            OWNER INFO
-          </span>
-        </div>
-
-        <button 
-          onClick={toggleTheme}
-          className="size-10 rounded-full border border-border flex items-center justify-center hover:bg-secondary transition-all active:scale-90"
-          aria-label="Toggle theme"
-        >
-          {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
-        </button>
-      </header>
-
       {/* Workspace */}
-      <section className="flex-1 flex flex-col px-4 py-12 max-w-4xl mx-auto w-full gap-8 justify-center">
+      <section className={`flex-1 flex flex-col w-full gap-8 justify-center ${embed ? "py-2" : "px-4 py-12 max-w-4xl mx-auto"}`}>
         {/* Owner Card Container */}
         <div className="rounded-[32px] border border-border bg-secondary/15 p-8 md:p-12 relative overflow-hidden ios-glass ios-shadow animate-spring-scale flex flex-col md:flex-row items-center gap-10 md:gap-16">
           
@@ -208,6 +179,43 @@ function OwnerPage() {
 
         </div>
       </section>
+    </>
+  );
+
+  if (embed) return content;
+
+  return (
+    <main className="min-h-screen bg-background text-foreground flex flex-col font-sans transition-colors duration-300 relative overflow-hidden">
+      {/* Header */}
+      <header className="px-6 py-6 flex items-center justify-between max-w-2xl md:max-w-6xl mx-auto w-full border-b border-border/40 backdrop-blur-md sticky top-0 z-40">
+        <div className="flex items-center gap-4">
+          <Link to="/" className="text-[20px] font-black tracking-tighter select-none opacity-40 hover:opacity-100 transition-opacity">
+            CLOUD
+          </Link>
+          <Link to="/note" className="text-[20px] font-black tracking-tighter select-none opacity-40 hover:opacity-100 transition-opacity">
+            NOTES
+          </Link>
+          <Link to="/convert" className="text-[20px] font-black tracking-tighter select-none opacity-40 hover:opacity-100 transition-opacity">
+            CONVERTS
+          </Link>
+          <Link to="/more" className="text-[20px] font-black tracking-tighter select-none opacity-40 hover:opacity-100 transition-opacity">
+            MORE
+          </Link>
+          <Link to="/owner" className="text-[20px] font-black tracking-tighter select-none">
+            OWNER INFO
+          </Link>
+        </div>
+
+        <button 
+          onClick={toggleTheme}
+          className="size-10 rounded-full border border-border flex items-center justify-center hover:bg-secondary transition-all active:scale-90"
+          aria-label="Toggle theme"
+        >
+          {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
+        </button>
+      </header>
+
+      {content}
     </main>
   );
 }

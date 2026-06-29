@@ -20,7 +20,7 @@ export const Route = createFileRoute("/note/")({
   component: NoteComposer,
 });
 
-function NoteComposer() {
+export function NoteComposer() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [busy, setBusy] = useState(false);

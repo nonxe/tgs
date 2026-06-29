@@ -6,19 +6,13 @@ import {
   Sparkles,
   MessageSquare,
   PenTool,
-  Download,
   Send,
   Trash2,
   User,
   Bot,
   Percent,
   CheckCircle,
-  HelpCircle,
-  Video,
-  Music,
-  ArrowRight,
   ChevronRight,
-  ExternalLink,
   Info
 } from "lucide-react";
 
@@ -26,7 +20,7 @@ export const Route = createFileRoute("/more")({
   component: MorePage,
 });
 
-type TabType = "chat" | "writer" | "downloader";
+type TabType = "chat" | "writer";
 
 interface Message {
   role: "user" | "assistant";
@@ -54,17 +48,18 @@ const AI_MODELS = [
   { id: "writecream", name: "Writecream", provider: "Writecream", desc: "Copywriting & helper tasks", badgeColor: "bg-yellow-600/10 text-yellow-600 border-yellow-600/20" }
 ];
 
-function MorePage() {
+export function MorePage({ embed = false }: { embed?: boolean }) {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [activeTab, setActiveTab] = useState<TabType>("chat");
 
   // Global theme sync
   useEffect(() => {
+    if (embed) return;
     const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
     const initialTheme = savedTheme || "dark";
     setTheme(initialTheme);
     document.documentElement.classList.toggle("dark", initialTheme === "dark");
-  }, []);
+  }, [embed]);
 
   const toggleTheme = () => {
     const next = theme === "dark" ? "light" : "dark";
@@ -72,6 +67,60 @@ function MorePage() {
     localStorage.setItem("theme", next);
     document.documentElement.classList.toggle("dark", next === "dark");
   };
+
+  const content = (
+    <section className={`flex-1 flex flex-col w-full gap-6 ${embed ? "py-2" : "px-4 py-8 max-w-2xl md:max-w-6xl mx-auto"}`}>
+      {/* Intro */}
+      {!embed && (
+        <div className="text-center md:text-left">
+          <h2 className="text-[34px] md:text-[44px] font-black tracking-tight leading-[1.1] select-none">
+            Premium External APIs.
+            <br />
+            <span className="opacity-40">Dynamic chatbot & tools.</span>
+          </h2>
+          <p className="mt-2 text-[15px] text-muted-foreground max-w-md">
+            Interactive, fully integrated external micro-services loaded dynamically inside your browser.
+          </p>
+        </div>
+      )}
+
+      {/* Responsive Workspace Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-start w-full">
+        {/* Left Column: Tab Selector */}
+        <div className="md:col-span-1 flex md:flex-col gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-none w-full select-none">
+          {[
+            { id: "chat", label: "AI Chatbot", icon: MessageSquare },
+            { id: "writer", label: "AI Writing Tools", icon: PenTool }
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as TabType)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-[16px] border font-bold text-[14px] whitespace-nowrap transition-all ios-tap-active ${
+                  isActive 
+                    ? "bg-foreground text-background border-foreground shadow-sm"
+                    : "border-border hover:bg-secondary/40 text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Icon className="size-4.5" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Right Column: Active Tool Workspace */}
+        <div className="md:col-span-4 w-full">
+          {activeTab === "chat" && <ChatTool />}
+          {activeTab === "writer" && <WriterTool />}
+        </div>
+      </div>
+    </section>
+  );
+
+  if (embed) return content;
 
   return (
     <main className="min-h-screen bg-background text-foreground flex flex-col font-sans transition-colors duration-300 relative overflow-hidden">
@@ -104,56 +153,7 @@ function MorePage() {
         </button>
       </header>
 
-      {/* Workspace */}
-      <section className="flex-1 flex flex-col px-4 py-8 max-w-2xl md:max-w-6xl mx-auto w-full gap-8">
-        {/* Intro */}
-        <div className="text-center md:text-left">
-          <h2 className="text-[34px] md:text-[44px] font-black tracking-tight leading-[1.1] select-none">
-            Premium External APIs.
-            <br />
-            <span className="opacity-40">Dynamic chatbot & tools.</span>
-          </h2>
-          <p className="mt-2 text-[15px] text-muted-foreground max-w-md">
-            Interactive, fully integrated external micro-services loaded dynamically inside your browser.
-          </p>
-        </div>
-
-        {/* Responsive Workspace Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-8 items-start w-full">
-          {/* Left Column: Tab Selector */}
-          <div className="md:col-span-1 flex md:flex-col gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-none w-full select-none">
-            {[
-              { id: "chat", label: "AI Chatbot", icon: MessageSquare },
-              { id: "writer", label: "AI Writing Tools", icon: PenTool },
-              { id: "downloader", label: "Media Downloader", icon: Download }
-            ].map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as TabType)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-[16px] border font-bold text-[14px] whitespace-nowrap transition-all ios-tap-active ${
-                    isActive 
-                      ? "bg-foreground text-background border-foreground shadow-sm"
-                      : "border-border hover:bg-secondary/40 text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <Icon className="size-4.5" />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Right Column: Active Tool Workspace */}
-          <div className="md:col-span-4 w-full">
-            {activeTab === "chat" && <ChatTool />}
-            {activeTab === "writer" && <WriterTool />}
-            {activeTab === "downloader" && <DownloaderTool />}
-          </div>
-        </div>
-      </section>
+      {content}
     </main>
   );
 }
@@ -206,7 +206,7 @@ function ChatTool() {
   };
 
   return (
-    <div className="rounded-[24px] border border-border p-5 ios-glass ios-shadow animate-spring-scale flex flex-col h-[580px] relative overflow-hidden">
+    <div className="rounded-[24px] border border-border p-5 ios-glass ios-shadow flex flex-col h-[520px] relative overflow-hidden">
       {/* Model Selector Header */}
       <div className="flex items-center justify-between pb-4 border-b border-border/20 select-none flex-shrink-0 relative">
         <div className="flex items-center gap-3">
@@ -215,9 +215,9 @@ function ChatTool() {
             className="flex items-center gap-2 px-3 py-2 rounded-[14px] bg-secondary/60 border border-border hover:bg-secondary transition-all text-left"
           >
             <div>
-              <p className="text-[12px] font-bold text-muted-foreground leading-tight">ACTIVE MODEL</p>
+              <p className="text-[10px] font-bold text-muted-foreground leading-tight">ACTIVE MODEL</p>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="text-[14px] font-black tracking-tight">{activeModel.name}</span>
+                <span className="text-[13px] font-black tracking-tight">{activeModel.name}</span>
                 <ChevronRight className={`size-3.5 text-muted-foreground transition-transform ${showModelsList ? "rotate-90" : ""}`} />
               </div>
             </div>
@@ -265,13 +265,13 @@ function ChatTool() {
       <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-1 scrollbar-thin">
         {messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground p-8 select-none">
-            <Sparkles className="size-9 text-foreground opacity-30 mb-2 animate-pulse" />
-            <p className="text-[15px] font-bold">Start a conversation</p>
-            <p className="text-[12px] opacity-75 mt-0.5">Select from 17 external API models to get answers.</p>
+            <Sparkles className="size-8 text-foreground opacity-30 mb-2 animate-pulse" />
+            <p className="text-[14px] font-bold">Start a conversation</p>
+            <p className="text-[11px] opacity-75 mt-0.5">Select from 17 external AI models to get answers.</p>
             <div className="mt-4 p-3 rounded-[16px] bg-secondary/20 border border-border/20 max-w-xs text-left flex gap-2">
-              <Info className="size-4.5 text-muted-foreground flex-shrink-0 mt-0.5" />
-              <p className="text-[11.5px] leading-relaxed text-muted-foreground">
-                <strong>Model Note:</strong> DeepSeek V3 and Gemini usually offer the fastest responses.
+              <Info className="size-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+              <p className="text-[11px] leading-relaxed text-muted-foreground">
+                DeepSeek V3 and Gemini usually offer the fastest responses.
               </p>
             </div>
           </div>
@@ -395,7 +395,7 @@ function WriterTool() {
   };
 
   return (
-    <div className="rounded-[24px] border border-border p-6 ios-glass ios-shadow animate-spring-scale space-y-6">
+    <div className="rounded-[24px] border border-border p-6 ios-glass ios-shadow space-y-6">
       {/* Switch mode */}
       <div className="grid grid-cols-2 gap-1 bg-secondary/40 p-1 rounded-[16px] border border-border/25 select-none">
         <button
@@ -437,7 +437,7 @@ function WriterTool() {
                   ? "Paste AI generated text here to make it sound human..."
                   : "Paste your text here (minimum 100 words required) to detect AI probability..."
               }
-              rows={8}
+              rows={6}
               className="w-full bg-secondary/35 text-[14px] font-medium border border-border/30 rounded-[18px] px-4 py-3.5 outline-none focus:border-foreground/50 transition-all resize-none placeholder:font-medium"
             />
             <span className="absolute bottom-3 right-3 text-[11px] font-bold text-muted-foreground select-none">
@@ -457,13 +457,13 @@ function WriterTool() {
         {/* Right Side: Output Results */}
         <div className="md:col-span-2">
           {loading ? (
-            <div className="h-full min-h-[220px] rounded-[18px] border border-dashed border-border flex flex-col items-center justify-center text-center p-6 select-none animate-pulse">
+            <div className="h-full min-h-[180px] rounded-[18px] border border-dashed border-border flex flex-col items-center justify-center text-center p-6 select-none animate-pulse">
               <Sparkles className="size-6 text-foreground/40 mb-1.5" />
               <p className="text-[13px] font-bold">API processing active</p>
               <p className="text-[11px] text-muted-foreground mt-0.5">Parsing AI structures client-side...</p>
             </div>
           ) : !humanizedText && !detectorResult ? (
-            <div className="h-full min-h-[220px] rounded-[18px] border border-dashed border-border flex flex-col items-center justify-center text-center p-6 select-none text-muted-foreground">
+            <div className="h-full min-h-[180px] rounded-[18px] border border-dashed border-border flex flex-col items-center justify-center text-center p-6 select-none text-muted-foreground">
               <Info className="size-6 text-foreground/20 mb-1.5" />
               <p className="text-[13px] font-bold">Result Panel</p>
               <p className="text-[11px] opacity-75 mt-0.5">Your processed results will be rendered here.</p>
@@ -474,7 +474,7 @@ function WriterTool() {
                 <div className="rounded-[18px] border border-border bg-secondary/20 p-4 space-y-3 animate-fade-in flex flex-col h-full justify-between">
                   <div>
                     <span className="text-[11px] font-bold text-muted-foreground select-none">HUMANIZED RESULT</span>
-                    <p className="text-[13px] leading-relaxed text-foreground/90 font-medium mt-2 max-h-52 overflow-y-auto pr-1">
+                    <p className="text-[13px] leading-relaxed text-foreground/90 font-medium mt-2 max-h-40 overflow-y-auto pr-1">
                       {humanizedText}
                     </p>
                   </div>
@@ -500,11 +500,11 @@ function WriterTool() {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="rounded-[16px] border border-border bg-background p-3.5 text-center">
                       <span className="text-[10px] font-bold text-muted-foreground uppercase">AI Content</span>
-                      <p className="text-[28px] font-black tracking-tight mt-1 text-red-500">{detectorResult.aiScore}%</p>
+                      <p className="text-[24px] font-black tracking-tight mt-1 text-red-500">{detectorResult.aiScore}%</p>
                     </div>
                     <div className="rounded-[16px] border border-border bg-background p-3.5 text-center">
                       <span className="text-[10px] font-bold text-muted-foreground uppercase">Human content</span>
-                      <p className="text-[28px] font-black tracking-tight mt-1 text-green-500">{detectorResult.humanScore}%</p>
+                      <p className="text-[24px] font-black tracking-tight mt-1 text-green-500">{detectorResult.humanScore}%</p>
                     </div>
                   </div>
 
@@ -518,197 +518,6 @@ function WriterTool() {
           )}
         </div>
       </div>
-    </div>
-  );
-}
-
-/* ==========================================================================
-   Universal Media Downloader Tool (Upgraded Media Card UI)
-   ========================================================================== */
-function DownloaderTool() {
-  const [url, setUrl] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{
-    title?: string;
-    thumbnail?: string;
-    links: { label: string; url: string }[];
-    type?: "video" | "audio" | "image";
-    source?: string;
-  } | null>(null);
-
-  const handleDownload = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!url.trim() || loading) return;
-
-    setLoading(true);
-    setResult(null);
-
-    // Platform matcher
-    let endpoint = "download/aio";
-    const lowerUrl = url.toLowerCase();
-    
-    if (lowerUrl.includes("youtube.com") || lowerUrl.includes("youtu.be")) {
-      endpoint = "download/yt";
-    } else if (lowerUrl.includes("tiktok.com")) {
-      endpoint = "download/tiktok";
-    } else if (lowerUrl.includes("instagram.com")) {
-      endpoint = "instagram";
-    } else if (lowerUrl.includes("facebook.com")) {
-      endpoint = "facebook";
-    } else if (lowerUrl.includes("spotify.com")) {
-      endpoint = "spotifydl";
-    }
-
-    try {
-      const res = await fetch(`https://apis.davidcyril.name.ng/${endpoint}?url=${encodeURIComponent(url.trim())}`);
-      if (!res.ok) throw new Error("Fetch failed");
-      const data = await res.json();
-
-      if (!data.success && !data.result) {
-        throw new Error(data.message || "Failed to download");
-      }
-
-      const title = data.title || data.result?.title || data.result?.caption || "Media File";
-      const thumb = data.thumbnail || data.result?.thumbnail || data.result?.cover || null;
-      
-      const linksList: { label: string; url: string }[] = [];
-      const resData = data.result || {};
-
-      if (endpoint === "download/tiktok") {
-        if (resData.video) linksList.push({ label: "Download Video", url: resData.video });
-        if (resData.music) linksList.push({ label: "Download Audio Track", url: resData.music });
-      } else if (endpoint === "facebook") {
-        if (resData.downloads?.hd?.url) linksList.push({ label: "Download HD Video", url: resData.downloads.hd.url });
-        if (resData.downloads?.sd?.url) linksList.push({ label: "Download SD Video", url: resData.downloads.sd.url });
-      } else {
-        // Fallback for YouTube, Instagram, Spotify, etc.
-        const singleUrl = 
-          data.downloadUrl || 
-          data.download_url || 
-          resData.download_url || 
-          resData.downloadUrl || 
-          resData.url || 
-          resData.link || 
-          null;
-
-        if (singleUrl) {
-          linksList.push({ label: "Download Media", url: singleUrl });
-        }
-      }
-
-      if (linksList.length === 0) throw new Error("No download URL found");
-
-      setResult({
-        title,
-        thumbnail: thumb,
-        links: linksList,
-        type: endpoint === "spotifydl" ? "audio" : "video",
-        source: endpoint.replace("download/", "")
-      });
-    } catch (err) {
-      alert("Error: Failed to fetch download details. Please verify that your link is correct and public.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Badge styles
-  const getBadgeStyle = (source: string) => {
-    switch (source) {
-      case "yt":
-        return "bg-red-500/10 text-red-500 border-red-500/20";
-      case "tiktok":
-        return "bg-neutral-900 text-white border-neutral-800 dark:bg-white/10 dark:text-white";
-      case "instagram":
-        return "bg-pink-500/10 text-pink-500 border-pink-500/20";
-      case "facebook":
-        return "bg-blue-500/10 text-blue-500 border-blue-500/20";
-      case "spotifydl":
-        return "bg-green-500/10 text-green-500 border-green-500/20";
-      default:
-        return "bg-foreground/10 text-foreground border-foreground/20";
-    }
-  };
-
-  return (
-    <div className="rounded-[24px] border border-border p-6 ios-glass ios-shadow animate-spring-scale space-y-6">
-      <div className="space-y-2 select-none">
-        <h4 className="text-[16px] font-bold">Universal Downloader</h4>
-        <p className="text-[12px] text-muted-foreground">
-          Download videos, images, or audio tracks from YouTube, TikTok, Instagram, Facebook, and Spotify.
-        </p>
-      </div>
-
-      <form onSubmit={handleDownload} className="flex gap-2 select-none">
-        <input
-          type="url"
-          required
-          placeholder="Paste URL link here..."
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          disabled={loading}
-          className="flex-1 bg-secondary/35 text-[14px] font-bold border border-border/30 rounded-[16px] px-4 py-3 outline-none focus:border-foreground/50 transition-all placeholder:font-medium"
-        />
-        <button
-          type="submit"
-          disabled={loading || !url.trim()}
-          className="h-12 px-6 rounded-[16px] bg-foreground text-background font-bold text-[14px] active:scale-[0.98] transition-all flex items-center gap-1.5 select-none"
-        >
-          {loading ? "Resolving..." : "Resolve"}
-        </button>
-      </form>
-
-      {/* Upgraded Media Result Card */}
-      {result && (
-        <div className="rounded-[20px] border border-border bg-secondary/10 p-5 flex flex-col md:flex-row gap-5 items-center relative overflow-hidden animate-fade-in">
-          {/* Blurred thumbnail background effect */}
-          {result.thumbnail && (
-            <div 
-              className="absolute inset-0 bg-cover bg-center filter blur-3xl opacity-[0.06] pointer-events-none select-none scale-110"
-              style={{ backgroundImage: `url(${result.thumbnail})` }}
-            />
-          )}
-
-          {result.thumbnail ? (
-            <img 
-              src={result.thumbnail} 
-              alt="Thumbnail" 
-              className="size-24 rounded-[14px] object-cover bg-black border border-border select-none shadow-md z-10"
-            />
-          ) : (
-            <div className="size-24 rounded-[14px] bg-secondary flex items-center justify-center border border-border select-none z-10">
-              {result.type === "audio" ? <Music className="size-7" /> : <Video className="size-7" />}
-            </div>
-          )}
-
-          <div className="flex-1 text-center md:text-left space-y-2 z-10">
-            <h5 className="text-[15px] font-black line-clamp-2 leading-snug">{result.title}</h5>
-            <div className="flex items-center justify-center md:justify-start gap-2">
-              <span className={`text-[10px] font-black uppercase border px-2.5 py-0.5 rounded-full select-none ${getBadgeStyle(result.source || "")}`}>
-                {result.source === "spotifydl" ? "Spotify" : result.source}
-              </span>
-              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider select-none">
-                {result.type} file
-              </span>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2 w-full md:w-auto z-10">
-            {result.links.map((linkItem, lIdx) => (
-              <a
-                key={lIdx}
-                href={linkItem.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="h-11 px-5 rounded-full bg-foreground text-background font-black text-[12.5px] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 select-none shadow-lg whitespace-nowrap"
-              >
-                <Download className="size-4" />
-                <span>{linkItem.label}</span>
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
