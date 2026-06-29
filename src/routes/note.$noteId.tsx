@@ -129,16 +129,12 @@ function ViewNotePage() {
         return <br key={i} />;
       }
 
-      const Tag = tag as keyof JSX.IntrinsicElements;
-      try {
-        return (
-          <Tag key={i}>
-            {renderNodes(node.children)}
-          </Tag>
-        );
-      } catch {
-        return <span key={i}>{renderNodes(node.children)}</span>;
-      }
+      const Tag = tag as any;
+      return (
+        <Tag key={i}>
+          {renderNodes(node.children)}
+        </Tag>
+      );
     });
   };
 
