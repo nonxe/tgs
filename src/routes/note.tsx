@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Sun, Moon } from "lucide-react";
 
@@ -8,6 +8,7 @@ export const Route = createFileRoute("/note")({
 
 function NoteLayout() {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const location = useLocation();
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
@@ -22,6 +23,12 @@ function NoteLayout() {
     localStorage.setItem("theme", next);
     document.documentElement.classList.toggle("dark", next === "dark");
   };
+
+  const isReaderPage = location.pathname !== "/note" && location.pathname !== "/note/";
+
+  if (isReaderPage) {
+    return <Outlet />;
+  }
 
   return (
     <main className="min-h-screen bg-background text-foreground flex flex-col font-sans transition-colors duration-300 relative overflow-hidden">

@@ -70,15 +70,15 @@ export function OwnerPage({ embed = false }: { embed?: boolean }) {
       {/* Workspace */}
       <section className={`flex-1 flex flex-col w-full gap-8 justify-center ${embed ? "py-2" : "px-4 py-12 max-w-4xl mx-auto"}`}>
         {/* Owner Card Container */}
-        <div className="rounded-[32px] border border-border bg-secondary/15 p-8 md:p-12 relative overflow-hidden ios-glass ios-shadow animate-spring-scale flex flex-col md:flex-row items-center gap-10 md:gap-16">
+        <div className="rounded-[32px] border border-border bg-secondary/15 p-5 sm:p-8 md:p-12 relative overflow-hidden ios-glass ios-shadow animate-spring-scale flex flex-col md:flex-row items-center gap-6 md:gap-16">
           
           {/* Left Side: Owner Information */}
-          <div className="flex-1 space-y-6 text-center md:text-left z-10">
+          <div className="flex-1 space-y-6 text-center md:text-left z-10 w-full">
             <div>
               <span className="text-[11px] font-black tracking-[3px] uppercase text-muted-foreground">
                 The Observer
               </span>
-              <h2 className="text-[48px] md:text-[56px] font-black tracking-tighter leading-tight bg-gradient-to-r from-foreground to-purple-500 bg-clip-text text-transparent mt-2">
+              <h2 className="text-[44px] md:text-[56px] font-black tracking-tighter leading-tight bg-gradient-to-r from-foreground to-purple-500 bg-clip-text text-transparent mt-2">
                 AS
               </h2>
               <p className="text-[14px] md:text-[15px] font-bold text-muted-foreground mt-1 uppercase tracking-wider">
@@ -88,7 +88,7 @@ export function OwnerPage({ embed = false }: { embed?: boolean }) {
 
             <div className="w-12 h-[2px] bg-purple-500 mx-auto md:mx-0" />
 
-            <div className="space-y-4 text-[14px] md:text-[15px] leading-relaxed text-muted-foreground font-medium max-w-lg">
+            <div className="space-y-4 text-[13.5px] md:text-[15px] leading-relaxed text-muted-foreground font-medium max-w-lg">
               <p>
                 CLOUD was built and designed by <strong className="text-foreground">AS</strong>. Driven by the goal to make digital utility tools, audio-visual converters, and note sharing premium, simple, and accessible, AS designed this platform to merge minimal aesthetics with robust tools.
               </p>
@@ -110,11 +110,11 @@ export function OwnerPage({ embed = false }: { embed?: boolean }) {
           </div>
 
           {/* Right Side: Visual Spinning Triangle Animation (Exact clone of ewon's visual) */}
-          <div className="flex-shrink-0 w-52 h-52 flex items-center justify-center relative z-10 select-none">
-            <div className="relative w-40 h-40 flex items-center justify-center">
+          <div className="flex-shrink-0 w-44 h-44 md:w-52 md:h-52 flex items-center justify-center relative z-10 select-none">
+            <div className="relative w-36 h-36 md:w-40 md:h-40 flex items-center justify-center">
               
               {/* Outer Ring */}
-              <svg className="absolute w-40 h-40" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+              <svg className="absolute w-36 h-36 md:w-40 md:h-40" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
                 <defs>
                   <linearGradient id="triGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" style={{ stopColor: "#a78bfa" }} />

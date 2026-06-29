@@ -5,7 +5,10 @@ import {
   Plus, 
   Copy,
   Calendar,
-  User
+  User,
+  Eye,
+  Type,
+  BookOpen
 } from "lucide-react";
 
 interface TelegraphNode {
@@ -39,28 +42,36 @@ export const Route = createFileRoute("/note/$noteId")({
   },
   component: ViewNotePage,
   errorComponent: ({ error }) => (
-    <section className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-      <div className="max-w-md space-y-4">
-        <h1 className="text-[32px] font-black tracking-tight text-destructive">Note not found</h1>
-        <p className="text-[15px] text-muted-foreground">
-          The note you're trying to read doesn't exist, was deleted, or the link is incorrect.
+    <main className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-6 text-center relative overflow-hidden select-none">
+      <div className="orb orb-1" />
+      <div className="orb orb-2" />
+      <div className="orb orb-3" />
+      
+      <div className="max-w-md space-y-5 z-10 p-8 rounded-[24px] border border-border bg-[#08080c]/60 backdrop-blur-2xl ios-glass">
+        <h1 className="text-[28px] font-black tracking-tight text-red-500">Note Not Found</h1>
+        <p className="text-[14px] text-muted-foreground leading-relaxed">
+          The anonymous note you are looking for does not exist, was deleted, or the sharing link is incorrect.
         </p>
         <div className="pt-2">
           <Link
-            to="/note"
-            className="inline-flex h-11 items-center justify-center rounded-full bg-foreground text-background px-6 font-bold text-[14px] hover:scale-[1.02] active:scale-[0.98] transition-all"
+            to="/"
+            className="inline-flex h-11 items-center justify-center rounded-full bg-foreground text-background px-6 font-bold text-[13.5px] hover:scale-[1.02] active:scale-[0.98] transition-all"
           >
-            Create New Note
+            Go to Cloud OS
           </Link>
         </div>
       </div>
-    </section>
+    </main>
   ),
 });
 
 function ViewNotePage() {
   const { note } = useLoaderData({ from: "/note/$noteId" });
   const [copied, setCopied] = useState(false);
+  
+  // Immersive customization states
+  const [fontSize, setFontSize] = useState<"sm" | "md" | "lg">("md");
+  const [fontFamily, setFontFamily] = useState<"serif" | "sans">("serif");
 
   const copyUrl = async () => {
     await navigator.clipboard.writeText(window.location.href);
@@ -78,7 +89,7 @@ function ViewNotePage() {
       
       if (tag === "p") {
         return (
-          <p key={i} className="mb-4 text-[17px] leading-[1.7] text-foreground/90">
+          <p key={i} className="mb-5 leading-[1.8] text-foreground/90">
             {renderNodes(node.children)}
           </p>
         );
@@ -96,7 +107,6 @@ function ViewNotePage() {
         return <br key={i} />;
       }
 
-      // Fallback renderer
       const Tag = tag as keyof JSX.IntrinsicElements;
       try {
         return (
@@ -110,60 +120,105 @@ function ViewNotePage() {
     });
   };
 
+  const fontClass = fontFamily === "serif" ? "font-serif" : "font-sans";
+  const sizeClass = 
+    fontSize === "sm" ? "text-[16px] md:text-[18px]" :
+    fontSize === "md" ? "text-[18px] md:text-[21px]" :
+    "text-[21px] md:text-[24px]";
+
   return (
-    <article className="flex-1 px-4 py-10 max-w-2xl md:max-w-3xl mx-auto w-full space-y-6 animate-slide-up md:py-16">
-      {/* Sub Header / Action */}
-      <div className="flex items-center justify-between gap-4">
+    <main className="min-h-screen bg-background text-foreground flex flex-col items-center py-8 px-4 md:py-16 md:px-6 relative overflow-y-auto select-text">
+      {/* Ambient Moving Wallpaper Orbs */}
+      <div className="orb orb-1" />
+      <div className="orb orb-2" />
+      <div className="orb orb-3" />
+
+      {/* Floating Header Controls */}
+      <div className="w-full max-w-2xl flex items-center justify-between mb-8 select-none z-30">
         <Link
-          to="/note"
-          className="h-10 px-4 rounded-full border border-border/70 hover:bg-secondary flex items-center gap-1.5 font-bold text-[13px] active:scale-95 transition-all select-none"
+          to="/"
+          className="h-10 px-4 rounded-full border border-border/70 bg-[#08080a]/60 backdrop-blur-md hover:bg-secondary flex items-center gap-1.5 font-bold text-[12.5px] active:scale-95 transition-all select-none"
         >
           <ArrowLeft className="size-4" />
-          <span>All Notes</span>
+          <span>Dashboard</span>
         </Link>
 
-        <button
-          onClick={copyUrl}
-          className="h-10 px-4 rounded-full border border-border/70 hover:bg-secondary flex items-center gap-1.5 font-bold text-[13px] active:scale-95 transition-all select-none"
-        >
-          <Copy className="size-4" />
-          <span>{copied ? "Copied!" : "Copy Link"}</span>
-        </button>
-      </div>
+        {/* Reading Preference Toggles */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setFontFamily(prev => prev === "serif" ? "sans" : "serif")}
+            title="Toggle Font Family"
+            className="size-10 rounded-full border border-border/70 bg-[#08080a]/60 backdrop-blur-md hover:bg-secondary flex items-center justify-center active:scale-90 transition-all"
+          >
+            <Type className="size-4 text-purple-400" />
+          </button>
+          
+          <button
+            onClick={() => setFontSize(prev => prev === "sm" ? "md" : prev === "md" ? "lg" : "sm")}
+            title="Adjust Size"
+            className="size-10 rounded-full border border-border/70 bg-[#08080a]/60 backdrop-blur-md hover:bg-secondary flex items-center justify-center font-black text-[12px] text-purple-400 active:scale-90 transition-all"
+          >
+            {fontSize.toUpperCase()}
+          </button>
 
-      {/* Title */}
-      <h1 className="text-[34px] md:text-[46px] font-black tracking-tight leading-[1.1] select-none text-foreground pt-4 md:pt-8">
-        {note.title}
-      </h1>
-
-      {/* Meta details */}
-      <div className="flex flex-wrap items-center gap-4 text-[13px] text-muted-foreground border-y border-border/30 py-3.5 select-none">
-        <div className="flex items-center gap-1.5">
-          <User className="size-4 opacity-60" />
-          <span>{note.author_name || "Anonymous"}</span>
+          <button
+            onClick={copyUrl}
+            className="h-10 px-4 rounded-full border border-border/70 bg-[#08080a]/60 backdrop-blur-md hover:bg-secondary flex items-center gap-1.5 font-bold text-[12.5px] active:scale-95 transition-all select-none"
+          >
+            <Copy className="size-4" />
+            <span>{copied ? "Copied!" : "Copy Link"}</span>
+          </button>
         </div>
-        <div className="size-1 rounded-full bg-border" />
-        <div className="flex items-center gap-1.5">
-          <Calendar className="size-4 opacity-60" />
-          <span>Published on Cloud</span>
+      </div>
+
+      {/* Main Glass Reader Slate */}
+      <article className="w-full max-w-2xl rounded-[32px] border border-border bg-[#050508]/80 backdrop-blur-3xl p-6 md:p-10 space-y-6 z-10 shadow-2xl relative overflow-hidden ios-glass">
+        
+        {/* Title */}
+        <h1 className="text-[32px] md:text-[42px] font-black tracking-tight leading-[1.1] text-foreground select-none">
+          {note.title}
+        </h1>
+
+        {/* Shared Note Metadata badge */}
+        <div className="flex flex-wrap items-center gap-4 text-[12.5px] text-muted-foreground border-y border-border/20 py-3.5 select-none">
+          <div className="flex items-center gap-1.5">
+            <User className="size-4 text-purple-500" />
+            <span>{note.author_name || "Anonymous"}</span>
+          </div>
+          <div className="size-1 rounded-full bg-border" />
+          <div className="flex items-center gap-1.5">
+            <Eye className="size-4 text-purple-500" />
+            <span>{note.views} views</span>
+          </div>
+          <div className="size-1 rounded-full bg-border" />
+          <div className="flex items-center gap-1.5">
+            <Calendar className="size-4 text-purple-500" />
+            <span>CLOUD Note</span>
+          </div>
         </div>
-      </div>
 
-      {/* Note Body */}
-      <div className="pt-4 text-foreground/95 select-text font-serif text-[18px] md:text-[20px] leading-[1.75] max-w-none prose dark:prose-invert">
-        {renderNodes(note.content)}
-      </div>
+        {/* Note Body with customized font preferences */}
+        <div className={`pt-4 text-foreground/95 select-text leading-relaxed max-w-none prose dark:prose-invert ${fontClass} ${sizeClass}`}>
+          {renderNodes(note.content)}
+        </div>
 
-      {/* Footer Actions */}
-      <div className="pt-12 border-t border-border/20 flex justify-center">
-        <Link
-          to="/note"
-          className="inline-flex h-12 items-center justify-center rounded-full bg-foreground text-background px-6 font-bold text-[14px] hover:scale-[1.02] active:scale-[0.98] transition-all gap-1.5"
-        >
-          <Plus className="size-4" />
-          <span>Create New Note</span>
-        </Link>
-      </div>
-    </article>
+        {/* Slate Bottom Banner */}
+        <div className="pt-8 border-t border-border/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 select-none">
+          <div className="flex items-center gap-2 text-[12px] text-muted-foreground font-semibold">
+            <BookOpen className="size-4 text-purple-500/80 animate-pulse" />
+            <span>Secure anonymous reader mode</span>
+          </div>
+          
+          <Link
+            to="/"
+            className="h-10 px-5 rounded-full bg-foreground text-background font-bold text-[12.5px] hover:scale-[1.01] active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 select-none"
+          >
+            <Plus className="size-3.5" />
+            <span>Create New Note</span>
+          </Link>
+        </div>
+
+      </article>
+    </main>
   );
 }
