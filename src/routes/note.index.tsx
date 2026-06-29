@@ -60,6 +60,25 @@ export function NoteComposer() {
     return token || "b968da50dcdb253c9e04a36e35ac26f5619621f6a13d1a52c3c4314c13a0";
   };
 
+  const CHARS_63 = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-";
+  const CHARS_62 = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+  const encodeSlug = (slug: string): string => {
+    let val = 1n; // Sentinel
+    for (let i = 0; i < slug.length; i++) {
+      const idx = BigInt(CHARS_63.indexOf(slug[i]));
+      val = val * 63n + idx;
+    }
+    
+    let res = "";
+    while (val > 0n) {
+      const rem = val % 62n;
+      res = CHARS_62[Number(rem)] + res;
+      val = val / 62n;
+    }
+    return res;
+  };
+
   const textToTelegraphNodes = (text: string) => {
     return text.split("\n").map((line) => ({
       tag: "p",
@@ -82,11 +101,19 @@ export function NoteComposer() {
 
     try {
       const token = await getTelegraphToken();
-      const nodes = textToTelegraphNodes(finalContent);
+      
+      // Prepend the title inside the content nodes array under an h1 element
+      const nodes = [
+        {
+          tag: "h1",
+          children: [finalTitle]
+        },
+        ...textToTelegraphNodes(finalContent)
+      ];
 
       const formData = new URLSearchParams();
       formData.append("access_token", token);
-      formData.append("title", finalTitle);
+      formData.append("title", "n"); // Short fixed title to guarantee ultra-short path slug
       formData.append("content", JSON.stringify(nodes));
       formData.append("return_content", "true");
 
@@ -98,18 +125,19 @@ export function NoteComposer() {
       const data = await response.json();
       if (data.ok && data.result?.path) {
         const path = data.result.path;
-        const finalUrl = `${window.location.origin}/note/${path}`;
+        const shortCode = encodeSlug(path);
+        const finalUrl = `${window.location.origin}/note/${shortCode}`;
         setPublishedUrl(finalUrl);
 
         // Save to local history
         const newHistoryItem: NoteHistoryItem = {
-          path,
+          path: shortCode,
           title: finalTitle,
           timestamp: Date.now(),
           wordCount: finalContent.split(/\s+/).filter(Boolean).length,
         };
 
-        const updatedHistory = [newHistoryItem, ...history.filter(h => h.path !== path)];
+        const updatedHistory = [newHistoryItem, ...history.filter(h => h.path !== shortCode)];
         setHistory(updatedHistory);
         localStorage.setItem("note_history", JSON.stringify(updatedHistory));
 

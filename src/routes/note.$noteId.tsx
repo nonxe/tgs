@@ -27,10 +27,32 @@ interface TelegraphPage {
   content?: (string | TelegraphNode)[];
 }
 
+const CHARS_63 = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-";
+const CHARS_62 = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+function decodeSlug(code: string): string {
+  let val = 0n;
+  for (let i = 0; i < code.length; i++) {
+    const idx = BigInt(CHARS_62.indexOf(code[i]));
+    val = val * 62n + idx;
+  }
+  
+  let res = "";
+  while (val > 1n) { // Stop at sentinel
+    const rem = val % 63n;
+    res = CHARS_63[Number(rem)] + res;
+    val = val / 63n;
+  }
+  return res;
+}
+
 export const Route = createFileRoute("/note/$noteId")({
   loader: async ({ params }) => {
     try {
-      const res = await fetch(`https://api.telegra.ph/getPage/${params.noteId}?return_content=true`);
+      // If it contains a hyphen, it's a legacy clear-text path slug. Otherwise, it's an encoded short code.
+      const targetPath = params.noteId.includes("-") ? params.noteId : decodeSlug(params.noteId);
+      
+      const res = await fetch(`https://api.telegra.ph/getPage/${targetPath}?return_content=true`);
       const data = await res.json();
       if (data.ok && data.result) {
         return { note: data.result as TelegraphPage };
@@ -120,6 +142,26 @@ function ViewNotePage() {
     });
   };
 
+  // Determine actual display title and content
+  let displayTitle = note.title;
+  let displayContent = note.content;
+
+  if (note.content && note.content.length > 0) {
+    const firstNode = note.content[0];
+    if (typeof firstNode !== "string" && (firstNode.tag === "h1" || firstNode.tag === "h2")) {
+      const extractedTitle = firstNode.children?.[0];
+      if (typeof extractedTitle === "string") {
+        displayTitle = extractedTitle;
+        displayContent = note.content.slice(1);
+      }
+    }
+  }
+
+  // Fallback to title n cleanup
+  if (displayTitle === "n") {
+    displayTitle = "Untitled Note";
+  }
+
   const fontClass = fontFamily === "serif" ? "font-serif" : "font-sans";
   const sizeClass = 
     fontSize === "sm" ? "text-[16px] md:text-[18px]" :
@@ -175,8 +217,8 @@ function ViewNotePage() {
       <article className="w-full max-w-2xl rounded-[32px] border border-border bg-[#050508]/80 backdrop-blur-3xl p-6 md:p-10 space-y-6 z-10 shadow-2xl relative overflow-hidden ios-glass">
         
         {/* Title */}
-        <h1 className="text-[32px] md:text-[42px] font-black tracking-tight leading-[1.1] text-foreground select-none">
-          {note.title}
+        <h1 className="text-[32px] md:text-[42px] font-black tracking-tight leading-[1.1] text-foreground">
+          {displayTitle}
         </h1>
 
         {/* Shared Note Metadata badge */}
@@ -199,7 +241,7 @@ function ViewNotePage() {
 
         {/* Note Body with customized font preferences */}
         <div className={`pt-4 text-foreground/95 select-text leading-relaxed max-w-none prose dark:prose-invert ${fontClass} ${sizeClass}`}>
-          {renderNodes(note.content)}
+          {renderNodes(displayContent)}
         </div>
 
         {/* Slate Bottom Banner */}
