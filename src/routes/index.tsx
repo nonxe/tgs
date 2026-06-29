@@ -404,6 +404,12 @@ function Index() {
           >
             MORE
           </Link>
+          <Link
+            to="/owner"
+            className="text-[20px] font-black tracking-tighter select-none opacity-40 hover:opacity-100 transition-opacity"
+          >
+            OWNER INFO
+          </Link>
         </div>
         
         <button 

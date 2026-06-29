@@ -87,9 +87,12 @@ function MorePage() {
           <Link to="/convert" className="text-[20px] font-black tracking-tighter select-none opacity-40 hover:opacity-100 transition-opacity">
             CONVERTS
           </Link>
-          <span className="text-[20px] font-black tracking-tighter select-none">
+          <Link to="/more" className="text-[20px] font-black tracking-tighter select-none">
             MORE
-          </span>
+          </Link>
+          <Link to="/owner" className="text-[20px] font-black tracking-tighter select-none opacity-40 hover:opacity-100 transition-opacity">
+            OWNER INFO
+          </Link>
         </div>
 
         <button 

@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as OwnerRouteImport } from './routes/owner'
 import { Route as NoteRouteImport } from './routes/note'
 import { Route as MoreRouteImport } from './routes/more'
 import { Route as ConvertRouteImport } from './routes/convert'
@@ -18,6 +19,11 @@ import { Route as NoteIndexRouteImport } from './routes/note.index'
 import { Route as NoteNoteIdRouteImport } from './routes/note.$noteId'
 import { Route as ApiPublicUploadRouteImport } from './routes/api/public/upload'
 
+const OwnerRoute = OwnerRouteImport.update({
+  id: '/owner',
+  path: '/owner',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NoteRoute = NoteRouteImport.update({
   id: '/note',
   path: '/note',
@@ -65,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/convert': typeof ConvertRoute
   '/more': typeof MoreRoute
   '/note': typeof NoteRouteWithChildren
+  '/owner': typeof OwnerRoute
   '/note/$noteId': typeof NoteNoteIdRoute
   '/note/': typeof NoteIndexRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
@@ -74,6 +81,7 @@ export interface FileRoutesByTo {
   '/$filename': typeof FilenameRoute
   '/convert': typeof ConvertRoute
   '/more': typeof MoreRoute
+  '/owner': typeof OwnerRoute
   '/note/$noteId': typeof NoteNoteIdRoute
   '/note': typeof NoteIndexRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
@@ -85,6 +93,7 @@ export interface FileRoutesById {
   '/convert': typeof ConvertRoute
   '/more': typeof MoreRoute
   '/note': typeof NoteRouteWithChildren
+  '/owner': typeof OwnerRoute
   '/note/$noteId': typeof NoteNoteIdRoute
   '/note/': typeof NoteIndexRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
     | '/convert'
     | '/more'
     | '/note'
+    | '/owner'
     | '/note/$noteId'
     | '/note/'
     | '/api/public/upload'
@@ -106,6 +116,7 @@ export interface FileRouteTypes {
     | '/$filename'
     | '/convert'
     | '/more'
+    | '/owner'
     | '/note/$noteId'
     | '/note'
     | '/api/public/upload'
@@ -116,6 +127,7 @@ export interface FileRouteTypes {
     | '/convert'
     | '/more'
     | '/note'
+    | '/owner'
     | '/note/$noteId'
     | '/note/'
     | '/api/public/upload'
@@ -127,11 +139,19 @@ export interface RootRouteChildren {
   ConvertRoute: typeof ConvertRoute
   MoreRoute: typeof MoreRoute
   NoteRoute: typeof NoteRouteWithChildren
+  OwnerRoute: typeof OwnerRoute
   ApiPublicUploadRoute: typeof ApiPublicUploadRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/owner': {
+      id: '/owner'
+      path: '/owner'
+      fullPath: '/owner'
+      preLoaderRoute: typeof OwnerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/note': {
       id: '/note'
       path: '/note'
@@ -209,6 +229,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConvertRoute: ConvertRoute,
   MoreRoute: MoreRoute,
   NoteRoute: NoteRouteWithChildren,
+  OwnerRoute: OwnerRoute,
   ApiPublicUploadRoute: ApiPublicUploadRoute,
 }
 export const routeTree = rootRouteImport
