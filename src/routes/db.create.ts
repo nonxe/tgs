@@ -27,6 +27,56 @@ const encodeSlug = (slug: string): string => {
   return res;
 };
 
+// Warm in-memory cache for Telegraph tokens on serverless instance
+let cachedToken: string | null = null;
+
+async function getTelegraphToken(): Promise<string> {
+  if (cachedToken) return cachedToken;
+  
+  try {
+    const res = await fetch("https://api.telegra.ph/createAccount?short_name=ssDB&author_name=Anonymous");
+    const data = await res.json();
+    if (data.ok && data.result?.access_token) {
+      cachedToken = data.result.access_token;
+      return cachedToken!;
+    }
+  } catch (e) {
+    console.error("Dynamic Telegraph account generation failed:", e);
+  }
+  
+  // Return a fresh fallback or dynamic generation
+  return "b968da50dcdb253c9e04a36e35ac26f5619621f6a13d1a52c3c4314c13a0";
+}
+
+async function publishToTelegraph(nodes: any[]): Promise<any> {
+  let activeToken = await getTelegraphToken();
+
+  const attempt = async (token: string) => {
+    const formData = new URLSearchParams();
+    formData.append("access_token", token);
+    formData.append("title", "n"); // Short fixed title for short code path
+    formData.append("content", JSON.stringify(nodes));
+
+    const response = await fetch("https://api.telegra.ph/createPage", {
+      method: "POST",
+      body: formData,
+    });
+    return await response.json();
+  };
+
+  let result = await attempt(activeToken);
+
+  // Self-Healing: If token has expired or is revoked, clear cache, generate new token and retry
+  if (!result.ok && result.error === "ACCOUNT_NOT_FOUND") {
+    console.warn("Telegraph token was revoked (ACCOUNT_NOT_FOUND). Recreating account...");
+    cachedToken = null; // Invalidate cached token
+    const newToken = await getTelegraphToken();
+    result = await attempt(newToken);
+  }
+
+  return result;
+}
+
 async function handleCreateDb(request: Request) {
   try {
     const body = await request.json() as any;
@@ -43,10 +93,7 @@ async function handleCreateDb(request: Request) {
 
     const payloadString = typeof dataPayload === "object" ? JSON.stringify(dataPayload) : dataPayload.toString();
 
-    // Construct content nodes. 
-    // H1 stores the Title
-    // H2 stores the URL (if provided)
-    // All other text is stored as P nodes
+    // Construct content nodes
     const nodes: any[] = [
       {
         tag: "h1",
@@ -66,23 +113,11 @@ async function handleCreateDb(request: Request) {
       children: [line || " "]
     })));
 
-    const token = "b968da50dcdb253c9e04a36e35ac26f5619621f6a13d1a52c3c4314c13a0";
-
-    const formData = new URLSearchParams();
-    formData.append("access_token", token);
-    formData.append("title", "n"); // Short fixed title for short code path
-    formData.append("content", JSON.stringify(nodes));
-
-    const response = await fetch("https://api.telegra.ph/createPage", {
-      method: "POST",
-      body: formData,
-    });
-
-    const tgData = await response.json();
+    // Publish using robust retry logic
+    const tgData = await publishToTelegraph(nodes);
+    
     if (tgData.ok && tgData.result?.path) {
       const shortCode = encodeSlug(tgData.result.path);
-      
-      // Get request origin to return full link
       const origin = request.headers.get("origin") || new URL(request.url).origin;
 
       return new Response(JSON.stringify({

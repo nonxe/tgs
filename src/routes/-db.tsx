@@ -99,26 +99,60 @@ export function DbConsole() {
 
     setBusy(true);
     try {
-      const response = await fetch("/db/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title: title.trim() || "ssDB Node",
-          url: associatedUrl.trim(),
-          data: cleanPayload
-        }),
-      });
+      let token = await getTelegraphToken();
+      
+      // Wrap note data in Telegra.ph structure
+      // H1 = Title, H2 = Associated URL (optional), remaining text = P tags
+      const nodes: any[] = [
+        {
+          tag: "h1",
+          children: [title.trim() || "ssDB Node"]
+        }
+      ];
 
-      const data = await response.json();
-      if (response.ok && data.success) {
-        setDbKey(data.key);
+      if (associatedUrl.trim()) {
+        nodes.push({
+          tag: "h2",
+          children: [associatedUrl.trim()]
+        });
+      }
+
+      nodes.push(...cleanPayload.split("\n").map(line => ({
+        tag: "p",
+        children: [line || " "]
+      })));
+
+      const attempt = async (activeToken: string) => {
+        const formData = new URLSearchParams();
+        formData.append("access_token", activeToken);
+        formData.append("title", "n"); // Short fixed title for short code path
+        formData.append("content", JSON.stringify(nodes));
+
+        const response = await fetch("https://api.telegra.ph/createPage", {
+          method: "POST",
+          body: formData,
+        });
+        return await response.json();
+      };
+
+      let data = await attempt(token);
+
+      // Self-Healing: If token is invalid (ACCOUNT_NOT_FOUND), clear bad token and retry with a new one
+      if (!data.ok && data.error === "ACCOUNT_NOT_FOUND") {
+        console.warn("Telegraph token was invalid. Refreshing token...");
+        localStorage.removeItem("tg_token");
+        const newToken = await getTelegraphToken();
+        data = await attempt(newToken);
+      }
+
+      if (data.ok && data.result?.path) {
+        const shortCode = encodeSlug(data.result.path);
+        setDbKey(shortCode);
         setTitle("");
         setAssociatedUrl("");
         setPayload("{\n  \n}");
       } else {
-        throw new Error(data.error || "Failed to publish node to edge store.");
+        throw new Error(data.error || "Telegra.ph rejected request");
       }
     } catch (err: any) {
       setError(err.message || "Failed to create database node.");

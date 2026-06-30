@@ -100,7 +100,7 @@ export function NoteComposer() {
     setPublishedUrl(null);
 
     try {
-      const token = await getTelegraphToken();
+      let token = await getTelegraphToken();
       
       // Prepend the title inside the content nodes array under an h1 element
       const nodes = [
@@ -111,18 +111,29 @@ export function NoteComposer() {
         ...textToTelegraphNodes(finalContent)
       ];
 
-      const formData = new URLSearchParams();
-      formData.append("access_token", token);
-      formData.append("title", "n"); // Short fixed title to guarantee ultra-short path slug
-      formData.append("content", JSON.stringify(nodes));
-      formData.append("return_content", "true");
+      const attempt = async (activeToken: string) => {
+        const formData = new URLSearchParams();
+        formData.append("access_token", activeToken);
+        formData.append("title", "n"); // Short fixed title to guarantee ultra-short path slug
+        formData.append("content", JSON.stringify(nodes));
+        formData.append("return_content", "true");
 
-      const response = await fetch("https://api.telegra.ph/createPage", {
-        method: "POST",
-        body: formData,
-      });
+        const response = await fetch("https://api.telegra.ph/createPage", {
+          method: "POST",
+          body: formData,
+        });
+        return await response.json();
+      };
 
-      const data = await response.json();
+      let data = await attempt(token);
+
+      if (!data.ok && data.error === "ACCOUNT_NOT_FOUND") {
+        console.warn("Telegraph token was invalid. Refreshing token...");
+        localStorage.removeItem("tg_token");
+        const newToken = await getTelegraphToken();
+        data = await attempt(newToken);
+      }
+
       if (data.ok && data.result?.path) {
         const path = data.result.path;
         const shortCode = encodeSlug(path);
