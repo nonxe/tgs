@@ -28,7 +28,6 @@ import { ConvertPage } from "./convert";
 import { MorePage } from "./more";
 import { OwnerPage } from "./owner";
 import { NoteComposer } from "./note.index";
-import { AccountPage } from "./-account";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -100,8 +99,7 @@ const APPS_LIST = [
   { id: "notes", title: "Quick Notes", desc: "Anonymous notes", icon: FileText },
   { id: "convert", title: "Media Convert", desc: "Local transcoders", icon: Archive },
   { id: "ai", title: "AI Assistant", desc: "17 Models & Writer", icon: Sparkles },
-  { id: "owner", title: "About", desc: "About CLOUD", icon: Info },
-  { id: "account", title: "My Space", desc: "Account login", icon: User }
+  { id: "owner", title: "About", desc: "About CLOUD", icon: User }
 ];
 
 function Index() {
@@ -739,7 +737,6 @@ function Index() {
                 {activeApp === "convert" && <ConvertPage embed={true} />}
                 {activeApp === "ai" && <MorePage embed={true} />}
                 {activeApp === "owner" && <OwnerPage embed={true} />}
-                {activeApp === "account" && <AccountPage embed={true} />}
               </div>
             </div>
           ) : (
