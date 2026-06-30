@@ -99,48 +99,26 @@ export function DbConsole() {
 
     setBusy(true);
     try {
-      const token = await getTelegraphToken();
-      
-      // Wrap note data in Telegra.ph structure
-      // H1 = Title, H2 = Associated URL (optional), remaining text = P tags
-      const nodes: any[] = [
-        {
-          tag: "h1",
-          children: [title.trim() || "ssDB Node"]
-        }
-      ];
-
-      if (associatedUrl.trim()) {
-        nodes.push({
-          tag: "h2",
-          children: [associatedUrl.trim()]
-        });
-      }
-
-      nodes.push(...cleanPayload.split("\n").map(line => ({
-        tag: "p",
-        children: [line || " "]
-      })));
-
-      const formData = new URLSearchParams();
-      formData.append("access_token", token);
-      formData.append("title", "n"); // Short fixed title for short code path
-      formData.append("content", JSON.stringify(nodes));
-
-      const response = await fetch("https://api.telegra.ph/createPage", {
+      const response = await fetch("/db/create", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: title.trim() || "ssDB Node",
+          url: associatedUrl.trim(),
+          data: cleanPayload
+        }),
       });
 
       const data = await response.json();
-      if (data.ok && data.result?.path) {
-        const shortCode = encodeSlug(data.result.path);
-        setDbKey(shortCode);
+      if (response.ok && data.success) {
+        setDbKey(data.key);
         setTitle("");
         setAssociatedUrl("");
         setPayload("{\n  \n}");
       } else {
-        throw new Error(data.error || "Telegra.ph rejected request");
+        throw new Error(data.error || "Failed to publish node to edge store.");
       }
     } catch (err: any) {
       setError(err.message || "Failed to create database node.");

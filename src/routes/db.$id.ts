@@ -395,12 +395,48 @@ function renderHtmlViewer(responseBody: any, origin: string) {
 </html>`;
 }
 
+// Bypasses regional blocks by wrapping fetch requests in a multi-tier fallback proxy
+async function fetchTelegraphPage(targetPath: string): Promise<any> {
+  const targetUrl = `https://api.telegra.ph/getPage/${targetPath}?return_content=true`;
+  
+  // Tier 1: Direct Fetch with 3.5s Timeout
+  try {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), 3500);
+    const res = await fetch(targetUrl, { signal: controller.signal });
+    clearTimeout(id);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.ok) return data;
+    }
+  } catch (e) {
+    console.warn("Direct Telegraph fetch timed out/failed. Escalating to proxy...", e);
+  }
+
+  // Tier 2: AllOrigins JSON Wrapper Proxy
+  try {
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+    const res = await fetch(proxyUrl);
+    if (res.ok) {
+      const wrapper = await res.json();
+      if (wrapper && wrapper.contents) {
+        const data = JSON.parse(wrapper.contents);
+        if (data.ok) return data;
+      }
+    }
+  } catch (e) {
+    console.error("AllOrigins proxy fetch failed:", e);
+  }
+
+  throw new Error("Failed to connect to edge storage nodes. Regional network block detected.");
+}
+
 async function fetchDbValue(request: Request, id: string) {
   try {
     const targetPath = id.includes("-") ? id : decodeSlug(id);
     
-    const res = await fetch(`https://api.telegra.ph/getPage/${targetPath}?return_content=true`);
-    const data = await res.json();
+    // Fetch using robust multi-tier connection handler
+    const data = await fetchTelegraphPage(targetPath);
     
     if (!data.ok || !data.result) {
       return new Response(JSON.stringify({ success: false, error: "Database key not found" }), {
