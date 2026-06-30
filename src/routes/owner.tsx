@@ -94,10 +94,91 @@ export function OwnerPage({ embed = false }: { embed?: boolean }) {
           color: #ffb7c5;
           text-shadow: 0 0 6px rgba(255, 183, 197, 0.6);
         }
+        @keyframes triSpinCW {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        @keyframes triSpinCCW {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(-360deg); }
+        }
+        @keyframes ownerPulse {
+          0%, 100% { opacity: 0.3; transform: scale(1); }
+          50% { opacity: 0.6; transform: scale(1.15); }
+        }
+        .owner-pulse-anim {
+          animation: ownerPulse 4s ease-in-out infinite;
+        }
       `}</style>
 
       <section className={`flex-1 flex flex-col w-full gap-6 relative ${embed ? "py-2" : "px-4 py-8 sm:py-12 max-w-3xl mx-auto"}`}>
         
+        {/* Centerpiece Visual Spinning Triangle Animation (EWON) */}
+        <div className="flex justify-center items-center select-none py-2 relative z-10">
+          <div className="relative w-40 h-40 flex items-center justify-center">
+            
+            <svg className="absolute w-40 h-40" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="triGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style={{ stopColor: "#a78bfa" }} />
+                  <stop offset="100%" style={{ stopColor: "#f87171" }} />
+                </linearGradient>
+                <linearGradient id="triGrad2" x1="100%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" style={{ stopColor: "#c4b5fd" }} />
+                  <stop offset="100%" style={{ stopColor: "#818cf8" }} />
+                </linearGradient>
+                <linearGradient id="triGrad3" x1="50%" y1="0%" x2="50%" y2="100%">
+                  <stop offset="0%" style={{ stopColor: "#f9a8d4" }} />
+                  <stop offset="100%" style={{ stopColor: "#a78bfa" }} />
+                </linearGradient>
+                <filter id="triGlow">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              <circle cx="100" cy="100" r="88" fill="none" stroke="rgba(167,139,250,0.08)" strokeWidth="1" strokeDasharray="4 8" />
+              
+              <g style={{ transformOrigin: "100px 100px", animation: "triSpinCW 12s linear infinite" }}>
+                <polygon points="100,22 160,138 40,138" fill="none" stroke="url(#triGrad1)" strokeWidth="2" filter="url(#triGlow)" />
+              </g>
+              
+              <g style={{ transformOrigin: "100px 100px", animation: "triSpinCCW 12s linear infinite" }}>
+                <polygon points="100,22 160,138 40,138" fill="none" stroke="url(#triGrad2)" strokeWidth="1.5" filter="url(#triGlow)" />
+              </g>
+              
+              <g style={{ transformOrigin: "100px 100px", animation: "triSpinCW 24s linear infinite" }}>
+                <polygon points="100,15 170,145 30,145" fill="none" stroke="url(#triGrad3)" strokeWidth="1" opacity="0.4" />
+              </g>
+              
+              <g style={{ transformOrigin: "100px 100px", animation: "triSpinCCW 6s linear infinite" }}>
+                <polygon points="100,35 145,128 55,128" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
+              </g>
+              
+              <circle cx="100" cy="100" r="3" fill="rgba(167,139,250,0.5)">
+                <animate attributeName="r" values="3;5;3" dur="3s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.5;1;0.5" dur="3s" repeatCount="indefinite" />
+              </circle>
+
+              <g style={{ transformOrigin: "100px 100px", animation: "triSpinCW 8s linear infinite" }}>
+                <circle cx="100" cy="12" r="2" fill="#a78bfa" />
+              </g>
+              <g style={{ transformOrigin: "100px 100px", animation: "triSpinCCW 12s linear infinite" }}>
+                <circle cx="100" cy="12" r="1.5" fill="#f87171" />
+              </g>
+            </svg>
+
+            <span className="relative z-30 font-black text-[32px] tracking-[3px] bg-gradient-to-br from-purple-400 to-white bg-clip-text text-transparent select-none">
+              AS
+            </span>
+          </div>
+
+          <div className="absolute w-48 h-48 rounded-full bg-purple-500/5 filter blur-xl owner-pulse-anim -z-10" />
+        </div>
+
         {/* Hero */}
         <div className="space-y-4 text-center">
           <h2 className="text-[36px] sm:text-[44px] md:text-[52px] font-black tracking-tighter leading-[1.05] bg-gradient-to-r from-foreground via-purple-400 to-foreground bg-clip-text text-transparent">
@@ -169,7 +250,7 @@ export function OwnerPage({ embed = false }: { embed?: boolean }) {
         {/* Modal: Create Private Account Request */}
         {showAccountModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md animate-fade-in">
-            <div className="w-full max-w-md rounded-[24px] border border-border bg-secondary/95 p-6 shadow-2xl relative overflow-hidden ios-glass animate-spring-scale">
+            <div className="w-full max-w-md rounded-[24px] border border-border bg-secondary/95 p-6 shadow-2xl relative overflow-hidden ios-glass animate-spring-scale select-text">
               <button 
                 onClick={() => setShowAccountModal(false)}
                 className="absolute top-4 right-4 size-8 rounded-full bg-background/50 border border-border/40 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
@@ -241,7 +322,7 @@ export function OwnerPage({ embed = false }: { embed?: boolean }) {
               </h4>
               
               <p className="text-[14px] text-pink-100/90 mt-3 leading-relaxed font-bold px-2">
-                Blossom cherry, that username is reserved for the QUEEN 🌸👑
+                This username is reserved in honor of Her Majesty the Queen. 🌸👑
               </p>
 
               <button

@@ -948,7 +948,7 @@ function Index() {
             </h4>
             
             <p className="text-[14px] text-pink-100/90 mt-3 leading-relaxed font-bold px-2">
-              Blossom cherry, that username is reserved for the QUEEN 🌸👑
+              This username is reserved in honor of Her Majesty the Queen. 🌸👑
             </p>
 
             <button
