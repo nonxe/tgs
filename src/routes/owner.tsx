@@ -120,11 +120,11 @@ export function OwnerPage({
 
       <section className={`flex-1 flex flex-col w-full gap-6 relative ${embed ? "py-2" : "px-4 py-8 sm:py-12 max-w-3xl mx-auto"}`}>
         
-        {/* Centerpiece Visual Spinning Triangle Animation (EWON) */}
+        {/* Centerpiece Visual Spinning Triangle Animation (EWON) - Responsive Sizing */}
         <div className="flex justify-center items-center select-none py-2 relative z-10">
-          <div className="relative w-40 h-40 flex items-center justify-center">
+          <div className="relative w-28 h-28 sm:w-40 sm:h-40 flex items-center justify-center">
             
-            <svg className="absolute w-40 h-40" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <svg className="absolute w-28 h-28 sm:w-40 sm:h-40" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <linearGradient id="triGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" style={{ stopColor: "#a78bfa" }} />
@@ -178,12 +178,12 @@ export function OwnerPage({
               </g>
             </svg>
 
-            <span className="relative z-30 font-black text-[32px] tracking-[3px] bg-gradient-to-br from-purple-400 to-white bg-clip-text text-transparent select-none">
+            <span className="relative z-30 font-black text-[22px] sm:text-[32px] tracking-[3px] bg-gradient-to-br from-purple-400 to-white bg-clip-text text-transparent select-none">
               AS
             </span>
           </div>
 
-          <div className="absolute w-48 h-48 rounded-full bg-purple-500/5 filter blur-xl owner-pulse-anim -z-10" />
+          <div className="absolute w-36 h-36 sm:w-48 sm:h-48 rounded-full bg-purple-500/5 filter blur-xl owner-pulse-anim -z-10" />
         </div>
 
         {/* Hero */}
@@ -363,8 +363,8 @@ export function OwnerPage({
   if (embed) return content;
 
   return (
-    <main className="min-h-screen bg-background text-foreground flex flex-col font-sans transition-colors duration-300 relative overflow-hidden">
-      <header className="px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between max-w-2xl md:max-w-6xl mx-auto w-full border-b border-border/40 backdrop-blur-md sticky top-0 z-40">
+    <main className="min-h-screen max-h-screen overflow-y-auto overflow-x-hidden bg-background text-foreground flex flex-col font-sans transition-colors duration-300 relative">
+      <header className="px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between max-w-2xl md:max-w-6xl mx-auto w-full border-b border-border/40 backdrop-blur-md sticky top-0 z-40 bg-background/80">
         <div className="flex items-center gap-3 sm:gap-4 overflow-x-auto">
           <Link to="/" className="text-[16px] sm:text-[20px] font-black tracking-tighter select-none opacity-40 hover:opacity-100 transition-opacity flex-shrink-0">
             CLOUD
