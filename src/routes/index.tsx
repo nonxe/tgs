@@ -22,7 +22,9 @@ import {
   Sparkles,
   User,
   LayoutGrid,
-  Minus
+  Minus,
+  UserPlus,
+  Crown
 } from "lucide-react";
 import { ConvertPage } from "./convert";
 import { MorePage } from "./more";
@@ -99,6 +101,7 @@ const APPS_LIST = [
   { id: "notes", title: "Quick Notes", desc: "Anonymous notes", icon: FileText },
   { id: "convert", title: "Media Convert", desc: "Local transcoders", icon: Archive },
   { id: "ai", title: "AI Assistant", desc: "17 Models & Writer", icon: Sparkles },
+  { id: "request-account", title: "Private Account", desc: "Request account", icon: UserPlus },
   { id: "owner", title: "About", desc: "About CLOUD", icon: User }
 ];
 
@@ -114,6 +117,11 @@ function Index() {
   const [copiedMirror, setCopiedMirror] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [retention, setRetention] = useState<"permanent" | "72h">("permanent");
+  
+  // Private Account Request States
+  const [showAccountModal, setShowAccountModal] = useState(false);
+  const [usernameInput, setUsernameInput] = useState("");
+  const [showQueenPopup, setShowQueenPopup] = useState(false);
   
   // FAQs accordion
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
@@ -158,6 +166,10 @@ function Index() {
 
   // App Launcher controls
   const launchApp = (id: string) => {
+    if (id === "request-account") {
+      setShowAccountModal(true);
+      return;
+    }
     if (!openApps.includes(id)) {
       setOpenApps(prev => [...prev, id]);
     }
@@ -178,6 +190,27 @@ function Index() {
     if (activeApp === id) {
       setActiveApp(null);
     }
+  };
+
+  const handleRequestAccount = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanUsername = usernameInput.trim();
+    if (!cleanUsername) return;
+
+    if (cleanUsername.toLowerCase() === "suhu") {
+      setShowQueenPopup(true);
+      return;
+    }
+
+    const email = "skycho@proton.me";
+    const subject = encodeURIComponent(`Private Account Request: ${cleanUsername}`);
+    const body = encodeURIComponent(
+      `Hello AS,\n\nI would like to request a private CLOUD account with the requested username:\n\nUsername: ${cleanUsername}\n\nPlease let me know when it is ready.\n\nBest regards.`
+    );
+    
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+    setShowAccountModal(false);
+    setUsernameInput("");
   };
 
   const saveToHistory = (item: HistoryItem) => {
@@ -812,6 +845,125 @@ function Index() {
           })}
         </div>
       </footer>
+
+      <style>{`
+        @keyframes blossomFall {
+          0% {
+            transform: translateY(-20px) translateX(0) rotate(0deg) scale(0.6);
+            opacity: 0;
+          }
+          10% {
+            opacity: 0.8;
+          }
+          90% {
+            opacity: 0.8;
+          }
+          100% {
+            transform: translateY(250px) translateX(50px) rotate(360deg) scale(1.1);
+            opacity: 0;
+          }
+        }
+        .blossom-petal {
+          position: absolute;
+          animation: blossomFall 4s linear infinite;
+          pointer-events: none;
+          color: #ffb7c5;
+          text-shadow: 0 0 6px rgba(255, 183, 197, 0.6);
+          z-index: 100;
+        }
+      `}</style>
+
+      {/* Modal: Create Private Account Request */}
+      {showAccountModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-background/80 backdrop-blur-md animate-fade-in">
+          <div className="w-full max-w-md rounded-[24px] border border-border bg-secondary/95 p-6 shadow-2xl relative overflow-hidden ios-glass animate-spring-scale select-text">
+            <button 
+              onClick={() => setShowAccountModal(false)}
+              className="absolute top-4 right-4 size-8 rounded-full bg-background/50 border border-border/40 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <X className="size-4" />
+            </button>
+
+            <h3 className="text-[20px] font-black tracking-tight flex items-center gap-2 text-purple-400">
+              <UserPlus className="size-5" />
+              <span>Request Private Account</span>
+            </h3>
+            <p className="text-[12.5px] text-muted-foreground mt-2 leading-relaxed">
+              Choose your unique username. We will prepare an automated email request to AS to set up your account.
+            </p>
+
+            <form onSubmit={handleRequestAccount} className="mt-5 space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-black uppercase text-muted-foreground tracking-wider">Desired Username</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Enter username..."
+                  value={usernameInput}
+                  onChange={(e) => setUsernameInput(e.target.value)}
+                  className="w-full h-11 bg-background border border-border/40 rounded-[14px] px-4 text-[13px] font-bold text-foreground outline-none focus:border-purple-500/50 transition-colors"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full h-11 rounded-[14px] bg-purple-600 hover:bg-purple-500 text-white font-black text-[13px] hover:scale-[1.01] active:scale-[0.98] transition-all shadow-lg shadow-purple-500/10"
+              >
+                Generate Request Mail
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: reserved Queen Popup */}
+      {showQueenPopup && (
+        <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-background/90 backdrop-blur-md animate-fade-in">
+          <div className="w-full max-w-sm rounded-[24px] border border-pink-500/40 bg-[#160b10]/95 p-6 shadow-2xl relative overflow-hidden ios-glass animate-spring-scale text-center border-t-2 border-t-pink-500 select-text">
+            
+            {/* Falling Cherry Blossoms */}
+            {Array.from({ length: 15 }).map((_, i) => (
+              <span 
+                key={i} 
+                className="blossom-petal"
+                style={{
+                  left: `${Math.random() * 85}%`,
+                  top: `${-20 - Math.random() * 30}px`,
+                  animationDelay: `${Math.random() * 3.5}s`,
+                  animationDuration: `${3 + Math.random() * 2}s`,
+                  fontSize: `${12 + Math.random() * 12}px`
+                }}
+              >
+                🌸
+              </span>
+            ))}
+
+            <div className="mx-auto size-14 rounded-full bg-pink-500/10 border border-pink-500/20 flex items-center justify-center mb-4">
+              <Crown className="size-7 text-pink-400 animate-pulse" />
+            </div>
+
+            <h4 className="text-[17px] font-black tracking-tight text-pink-300 flex items-center justify-center gap-1.5">
+              <Sparkles className="size-4 text-pink-400" />
+              Reserved Username
+            </h4>
+            
+            <p className="text-[14px] text-pink-100/90 mt-3 leading-relaxed font-bold px-2">
+              Blossom cherry, that username is reserved for the QUEEN 🌸👑
+            </p>
+
+            <button
+              onClick={() => {
+                setShowQueenPopup(false);
+                setShowAccountModal(false);
+                setUsernameInput("");
+              }}
+              className="mt-6 w-full h-10 rounded-[14px] bg-pink-600 hover:bg-pink-500 text-white font-bold text-[12.5px] transition-all hover:scale-[1.01] active:scale-[0.98]"
+            >
+              Accept Majesty
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
