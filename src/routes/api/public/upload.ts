@@ -14,23 +14,28 @@ function getOrigin(request: Request) {
   return new URL(request.url).origin;
 }
 
-// We forward to an upstream cloud and just keep the returned filename.
-// Permanent host first; falls back to a 72h host if the permanent one
-// rejects the request (some egress IPs are blocked by the permanent host).
-async function uploadToBackend(file: File, retention: string): Promise<string> {
+// Convert File/Blob to standard Blob to ensure correct multipart boundary serialization
+async function uploadToBackend(file: any, retention: string): Promise<string> {
   const filename = file.name || "upload";
+  const fileType = file.type || "application/octet-stream";
+  
+  // Read file data into ArrayBuffer and wrap in a clean Blob
+  const arrayBuffer = await file.arrayBuffer();
+  const blob = new Blob([arrayBuffer], { type: fileType });
 
   // If retention is permanent (or fallback), try Catbox first.
-  // If explicitly 72h, skip Catbox and go straight to Litterbox.
   if (retention !== "72h") {
     try {
       const fd = new FormData();
       fd.append("reqtype", "fileupload");
-      fd.append("fileToUpload", file, filename);
+      fd.append("fileToUpload", blob, filename);
+      
       const res = await fetch("https://catbox.moe/user/api.php", {
         method: "POST",
         body: fd,
-        headers: { "User-Agent": "Mozilla/5.0" },
+        headers: { 
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" 
+        },
       });
       const text = (await res.text()).trim();
       if (res.ok && text.startsWith("http")) {
@@ -46,11 +51,14 @@ async function uploadToBackend(file: File, retention: string): Promise<string> {
   const fd = new FormData();
   fd.append("reqtype", "fileupload");
   fd.append("time", "72h");
-  fd.append("fileToUpload", file, filename);
+  fd.append("fileToUpload", blob, filename);
+  
   const res = await fetch("https://litterbox.catbox.moe/resources/internals/api.php", {
     method: "POST",
     body: fd,
-    headers: { "User-Agent": "Mozilla/5.0" },
+    headers: { 
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" 
+    },
   });
   const text = (await res.text()).trim();
   if (!res.ok || !text.startsWith("http")) {
@@ -71,7 +79,7 @@ export const Route = createFileRoute("/api/public/upload")({
           const file = incoming.get("file");
           const retention = incoming.get("retention")?.toString() || "permanent";
 
-          if (!(file instanceof File)) {
+          if (!file || typeof (file as any).arrayBuffer !== "function") {
             return Response.json(
               { success: false, error: "No file provided" },
               { status: 400, headers: CORS },
@@ -86,8 +94,8 @@ export const Route = createFileRoute("/api/public/upload")({
               success: true,
               url: maskedUrl,
               filename,
-              size: file.size,
-              type: file.type,
+              size: (file as any).size,
+              type: (file as any).type,
             },
             { headers: CORS },
           );

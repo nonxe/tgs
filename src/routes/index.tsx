@@ -343,9 +343,10 @@ function Index() {
 
     try {
       let data: UploadResult;
-      const LARGE_FILE_THRESHOLD = 4.5 * 1024 * 1024;
 
-      if (retention === "72h" || f.size > LARGE_FILE_THRESHOLD) {
+      if (retention === "permanent") {
+        data = await uploadViaProxy(f);
+      } else {
         try {
           data = await uploadDirectLitterbox(f);
         } catch {
@@ -353,16 +354,6 @@ function Index() {
             data = await uploadDirectTmpfiles(f);
           } catch {
             data = await uploadViaProxy(f);
-          }
-        }
-      } else {
-        try {
-          data = await uploadViaProxy(f);
-        } catch {
-          try {
-            data = await uploadDirectLitterbox(f);
-          } catch {
-            data = await uploadDirectTmpfiles(f);
           }
         }
       }
@@ -643,7 +634,7 @@ function Index() {
                             </div>
 
                             {/* Link 2: Mirror */}
-                            {getMirrorUrl(result.url) && (
+                            {retention === "permanent" && getMirrorUrl(result.url) && (
                               <div className="space-y-1.5">
                                 <label className="text-[10.5px] font-black uppercase text-purple-500 tracking-wider">Mirror Link</label>
                                 <div className="flex gap-2">

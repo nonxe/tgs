@@ -9,7 +9,10 @@ import {
   Archive,
   Sparkles,
   Shield,
-  Zap
+  Zap,
+  UserPlus,
+  X,
+  Crown
 } from "lucide-react";
 
 export const Route = createFileRoute("/owner")({
@@ -18,6 +21,9 @@ export const Route = createFileRoute("/owner")({
 
 export function OwnerPage({ embed = false }: { embed?: boolean }) {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const [showAccountModal, setShowAccountModal] = useState(false);
+  const [usernameInput, setUsernameInput] = useState("");
+  const [showQueenPopup, setShowQueenPopup] = useState(false);
 
   useEffect(() => {
     if (embed) return;
@@ -34,6 +40,27 @@ export function OwnerPage({ embed = false }: { embed?: boolean }) {
     document.documentElement.classList.toggle("dark", next === "dark");
   };
 
+  const handleRequestAccount = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanUsername = usernameInput.trim();
+    if (!cleanUsername) return;
+
+    if (cleanUsername.toLowerCase() === "suhu") {
+      setShowQueenPopup(true);
+      return;
+    }
+
+    const email = "skycho@proton.me";
+    const subject = encodeURIComponent(`Private Account Request: ${cleanUsername}`);
+    const body = encodeURIComponent(
+      `Hello AS,\n\nI would like to request a private CLOUD account with the requested username:\n\nUsername: ${cleanUsername}\n\nPlease let me know when it is ready.\n\nBest regards.`
+    );
+    
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+    setShowAccountModal(false);
+    setUsernameInput("");
+  };
+
   const features = [
     { icon: Upload, title: "File Cloud", desc: "Upload any file and get instant shareable links with permanent or temporary storage." },
     { icon: FileText, title: "Quick Notes", desc: "Write and publish anonymous notes with short shareable links. No sign-up needed." },
@@ -43,7 +70,33 @@ export function OwnerPage({ embed = false }: { embed?: boolean }) {
 
   const content = (
     <>
-      <section className={`flex-1 flex flex-col w-full gap-6 ${embed ? "py-2" : "px-4 py-8 sm:py-12 max-w-3xl mx-auto"}`}>
+      <style>{`
+        @keyframes blossomFall {
+          0% {
+            transform: translateY(-20px) translateX(0) rotate(0deg) scale(0.6);
+            opacity: 0;
+          }
+          10% {
+            opacity: 0.8;
+          }
+          90% {
+            opacity: 0.8;
+          }
+          100% {
+            transform: translateY(250px) translateX(50px) rotate(360deg) scale(1.1);
+            opacity: 0;
+          }
+        }
+        .blossom-petal {
+          position: absolute;
+          animation: blossomFall 4s linear infinite;
+          pointer-events: none;
+          color: #ffb7c5;
+          text-shadow: 0 0 6px rgba(255, 183, 197, 0.6);
+        }
+      `}</style>
+
+      <section className={`flex-1 flex flex-col w-full gap-6 relative ${embed ? "py-2" : "px-4 py-8 sm:py-12 max-w-3xl mx-auto"}`}>
         
         {/* Hero */}
         <div className="space-y-4 text-center">
@@ -91,17 +144,119 @@ export function OwnerPage({ embed = false }: { embed?: boolean }) {
           </div>
         </div>
 
-        {/* Contact */}
-        <div className="text-center pt-2 select-none space-y-3">
+        {/* Actions & Contact */}
+        <div className="text-center pt-4 select-none space-y-4">
           <p className="text-[12px] text-muted-foreground font-bold">Built by <strong className="text-foreground">AS</strong></p>
-          <a 
-            href="mailto:skycho@proton.me" 
-            className="inline-flex items-center gap-2 h-11 px-5 rounded-full bg-foreground text-background font-bold text-[13px] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md"
-          >
-            <Mail className="size-4" />
-            <span>skycho@proton.me</span>
-          </a>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <a 
+              href="mailto:skycho@proton.me" 
+              className="inline-flex items-center gap-2 h-11 px-5 rounded-full bg-foreground text-background font-bold text-[13px] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md w-full sm:w-auto justify-center"
+            >
+              <Mail className="size-4" />
+              <span>skycho@proton.me</span>
+            </a>
+            
+            <button
+              onClick={() => setShowAccountModal(true)}
+              className="inline-flex items-center gap-2 h-11 px-5 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-400 font-bold text-[13px] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md w-full sm:w-auto justify-center"
+            >
+              <UserPlus className="size-4" />
+              <span>Create Private Account</span>
+            </button>
+          </div>
         </div>
+
+        {/* Modal: Create Private Account Request */}
+        {showAccountModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md animate-fade-in">
+            <div className="w-full max-w-md rounded-[24px] border border-border bg-secondary/95 p-6 shadow-2xl relative overflow-hidden ios-glass animate-spring-scale">
+              <button 
+                onClick={() => setShowAccountModal(false)}
+                className="absolute top-4 right-4 size-8 rounded-full bg-background/50 border border-border/40 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="size-4" />
+              </button>
+
+              <h3 className="text-[20px] font-black tracking-tight flex items-center gap-2 text-purple-400">
+                <UserPlus className="size-5" />
+                <span>Request Account</span>
+              </h3>
+              <p className="text-[12.5px] text-muted-foreground mt-2 leading-relaxed">
+                Choose your unique username. We will prepare an automated email request to AS to set up your account.
+              </p>
+
+              <form onSubmit={handleRequestAccount} className="mt-5 space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-black uppercase text-muted-foreground tracking-wider">Desired Username</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Enter username..."
+                    value={usernameInput}
+                    onChange={(e) => setUsernameInput(e.target.value)}
+                    className="w-full h-11 bg-background border border-border/40 rounded-[14px] px-4 text-[13px] font-bold text-foreground outline-none focus:border-purple-500/50 transition-colors"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full h-11 rounded-[14px] bg-purple-600 hover:bg-purple-500 text-white font-black text-[13px] hover:scale-[1.01] active:scale-[0.98] transition-all shadow-lg shadow-purple-500/10"
+                >
+                  Generate Request Mail
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: reserved Queen Popup */}
+        {showQueenPopup && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/90 backdrop-blur-md animate-fade-in">
+            <div className="w-full max-w-sm rounded-[24px] border border-pink-500/40 bg-[#160b10]/95 p-6 shadow-2xl relative overflow-hidden ios-glass animate-spring-scale text-center border-t-2 border-t-pink-500">
+              
+              {/* Falling Cherry Blossoms */}
+              {Array.from({ length: 15 }).map((_, i) => (
+                <span 
+                  key={i} 
+                  className="blossom-petal"
+                  style={{
+                    left: `${Math.random() * 85}%`,
+                    top: `${-20 - Math.random() * 30}px`,
+                    animationDelay: `${Math.random() * 3.5}s`,
+                    animationDuration: `${3 + Math.random() * 2}s`,
+                    fontSize: `${12 + Math.random() * 12}px`
+                  }}
+                >
+                  🌸
+                </span>
+              ))}
+
+              <div className="mx-auto size-14 rounded-full bg-pink-500/10 border border-pink-500/20 flex items-center justify-center mb-4">
+                <Crown className="size-7 text-pink-400 animate-pulse" />
+              </div>
+
+              <h4 className="text-[17px] font-black tracking-tight text-pink-300 flex items-center justify-center gap-1.5">
+                <Sparkles className="size-4 text-pink-400" />
+                Reserved Username
+              </h4>
+              
+              <p className="text-[14px] text-pink-100/90 mt-3 leading-relaxed font-bold px-2">
+                Blossom cherry, that username is reserved for the QUEEN 🌸👑
+              </p>
+
+              <button
+                onClick={() => {
+                  setShowQueenPopup(false);
+                  setShowAccountModal(false);
+                  setUsernameInput("");
+                }}
+                className="mt-6 w-full h-10 rounded-[14px] bg-pink-600 hover:bg-pink-500 text-white font-bold text-[12.5px] transition-all hover:scale-[1.01] active:scale-[0.98]"
+              >
+                Accept Majesty
+              </button>
+            </div>
+          </div>
+        )}
 
       </section>
     </>
