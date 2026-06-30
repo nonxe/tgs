@@ -363,7 +363,7 @@ export function OwnerPage({
   if (embed) return content;
 
   return (
-    <main className="min-h-screen max-h-screen overflow-y-auto overflow-x-hidden bg-background text-foreground flex flex-col font-sans transition-colors duration-300 relative">
+    <main className="min-h-screen bg-background text-foreground flex flex-col font-sans transition-colors duration-300 relative">
       <header className="px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between max-w-2xl md:max-w-6xl mx-auto w-full border-b border-border/40 backdrop-blur-md sticky top-0 z-40 bg-background/80">
         <div className="flex items-center gap-3 sm:gap-4 overflow-x-auto">
           <Link to="/" className="text-[16px] sm:text-[20px] font-black tracking-tighter select-none opacity-40 hover:opacity-100 transition-opacity flex-shrink-0">

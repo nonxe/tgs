@@ -555,7 +555,7 @@ function Index() {
               </div>
               
               {/* Window Scrollable content viewport */}
-              <div className="flex-1 overflow-y-auto p-5 md:p-6 select-text h-[calc(100%-48px)]">
+              <div className="flex-1 min-h-0 overflow-y-auto p-5 md:p-6 select-text">
                 {activeApp === "uploader" && (
                   <div className="space-y-8 max-w-3xl mx-auto">
                     <div className="text-center mb-4">
