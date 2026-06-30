@@ -111,6 +111,7 @@ function Index() {
   const [result, setResult] = useState<UploadResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [copiedMirror, setCopiedMirror] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [retention, setRetention] = useState<"permanent" | "72h">("permanent");
   
@@ -399,6 +400,20 @@ function Index() {
     setTimeout(() => setCopied(false), 1500);
   };
 
+  const copyMirrorLink = async (url?: string) => {
+    if (!url) return;
+    await navigator.clipboard.writeText(url);
+    setCopiedMirror(true);
+    setTimeout(() => setCopiedMirror(false), 1500);
+  };
+
+  const getMirrorUrl = (originalUrl?: string): string | null => {
+    if (!originalUrl) return null;
+    const filename = originalUrl.split('/').pop();
+    if (!filename) return null;
+    return `https://cloud.svro.workers.dev/${filename}`;
+  };
+
   const reset = () => {
     setFile(null);
     setResult(null);
@@ -414,17 +429,17 @@ function Index() {
   const activeAppDetail = APPS_LIST.find(a => a.id === activeApp);
 
   return (
-    <main className="min-h-screen max-h-screen bg-background text-foreground flex flex-col font-sans transition-colors duration-300 relative overflow-hidden select-none">
+    <main className="min-h-screen min-h-[100dvh] max-h-screen max-h-[100dvh] bg-background text-foreground flex flex-col font-sans transition-colors duration-300 relative overflow-hidden select-none">
       {/* Ambient Moving Wallpaper Orbs */}
       <div className="orb orb-1" />
       <div className="orb orb-2" />
       <div className="orb orb-3" />
 
       {/* Top OS Menu Status Bar */}
-      <header className="px-6 h-12 flex items-center justify-between border-b border-border/20 backdrop-blur-md sticky top-0 z-[100] bg-background/30 select-none flex-shrink-0">
-        <div className="flex items-center gap-4">
-          <span className="text-[14px] font-black tracking-wider text-purple-500">CLOUD OS</span>
-          <span className="text-[11px] font-bold text-muted-foreground/80 hidden sm:inline">Stage Manager Workspace</span>
+      <header className="px-4 sm:px-6 h-11 sm:h-12 flex items-center justify-between border-b border-border/20 backdrop-blur-md sticky top-0 z-[100] bg-background/30 select-none flex-shrink-0">
+        <div className="flex items-center gap-3">
+          <span className="text-[13px] sm:text-[14px] font-black tracking-wider text-purple-500">CLOUD OS</span>
+          <span className="text-[10px] font-bold text-muted-foreground/80 hidden sm:inline">Stage Manager</span>
         </div>
         
         <div className="flex items-center gap-4">
@@ -433,7 +448,7 @@ function Index() {
       </header>
 
       {/* OS Desktop Workspace */}
-      <section className="flex-1 relative p-4 md:p-6 overflow-hidden flex flex-col md:flex-row gap-6 h-[calc(100vh-128px)]">
+      <section className="flex-1 relative p-3 sm:p-4 md:p-6 overflow-hidden flex flex-col md:flex-row gap-4 md:gap-6 h-[calc(100dvh-120px)] sm:h-[calc(100dvh-128px)]">
         
         {/* Left Stage Manager Sidebar (PC/Desktop only, hidden on mobile) */}
         {openApps.length > 0 && (
@@ -478,7 +493,7 @@ function Index() {
         <div className="flex-1 relative flex items-center justify-center z-20 h-full w-full">
           {activeApp ? (
             /* Render Focused App Window */
-            <div className="w-full max-w-4xl h-full flex flex-col rounded-[24px] border border-border/60 bg-[#060608]/75 backdrop-blur-2xl ios-shadow overflow-hidden animate-spring-scale">
+            <div className="w-full max-w-4xl h-full flex flex-col rounded-[18px] sm:rounded-[24px] border border-border/60 bg-[#060608]/75 backdrop-blur-2xl ios-shadow overflow-hidden animate-spring-scale">
               
               {/* Window Title Bar header */}
               <div className="h-12 px-5 flex items-center justify-between border-b border-border/20 bg-secondary/15 select-none flex-shrink-0">
@@ -601,27 +616,55 @@ function Index() {
                         )}
 
                         {result && result.success && (
-                          <div className="rounded-[20px] border border-border p-5 bg-secondary/10 space-y-4">
+                          <div className="rounded-[20px] border border-border p-5 bg-secondary/10 space-y-5">
                             <div className="text-center">
                               <span className="text-[11px] font-black uppercase text-green-500 tracking-wider">Upload Success</span>
                               <h4 className="text-[15px] font-black truncate mt-1">{result.filename}</h4>
                             </div>
-                            <div className="flex gap-2">
-                              <input
-                                type="text"
-                                readOnly
-                                value={result.url}
-                                className="flex-1 bg-secondary/40 border border-border/30 rounded-[14px] px-3.5 text-[12.5px] font-bold text-muted-foreground outline-none"
-                              />
-                              <button
-                                onClick={() => copyLink(result.url)}
-                                className="h-10 px-4 rounded-[14px] bg-foreground text-background font-bold text-[12.5px] flex items-center gap-1.5"
-                              >
-                                {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-                                <span>{copied ? "Copied" : "Copy"}</span>
-                              </button>
+
+                            {/* Link 1: Primary */}
+                            <div className="space-y-1.5">
+                              <label className="text-[10.5px] font-black uppercase text-muted-foreground tracking-wider">Direct Link</label>
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  readOnly
+                                  value={result.url}
+                                  className="flex-1 h-10 bg-secondary/40 border border-border/30 rounded-[14px] px-3.5 text-[12px] font-bold text-muted-foreground outline-none min-w-0"
+                                />
+                                <button
+                                  onClick={() => copyLink(result.url)}
+                                  className="h-10 px-3.5 rounded-[14px] bg-foreground text-background font-bold text-[12px] flex items-center gap-1.5 flex-shrink-0"
+                                >
+                                  {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                                  <span className="hidden sm:inline">{copied ? "Copied" : "Copy"}</span>
+                                </button>
+                              </div>
                             </div>
-                            <button onClick={reset} className="w-full h-10 rounded-[14px] border border-border hover:bg-secondary/40 text-[13px] font-bold">
+
+                            {/* Link 2: Mirror */}
+                            {getMirrorUrl(result.url) && (
+                              <div className="space-y-1.5">
+                                <label className="text-[10.5px] font-black uppercase text-purple-500 tracking-wider">Mirror Link</label>
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    readOnly
+                                    value={getMirrorUrl(result.url)!}
+                                    className="flex-1 h-10 bg-secondary/40 border border-purple-500/20 rounded-[14px] px-3.5 text-[12px] font-bold text-muted-foreground outline-none min-w-0"
+                                  />
+                                  <button
+                                    onClick={() => copyMirrorLink(getMirrorUrl(result.url)!)}
+                                    className="h-10 px-3.5 rounded-[14px] bg-purple-600 text-white font-bold text-[12px] flex items-center gap-1.5 flex-shrink-0"
+                                  >
+                                    {copiedMirror ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                                    <span className="hidden sm:inline">{copiedMirror ? "Copied" : "Copy"}</span>
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+
+                            <button onClick={reset} className="w-full h-10 rounded-[14px] border border-border hover:bg-secondary/40 text-[13px] font-bold transition-colors">
                               Upload Another File
                             </button>
                           </div>
@@ -732,18 +775,18 @@ function Index() {
       </section>
 
       {/* Bottom macOS Style Launcher Dock */}
-      <footer className="h-20 w-full flex items-center justify-center select-none z-[100] pb-4 px-4 sticky bottom-0 flex-shrink-0">
-        <div className="h-16 px-4 rounded-[22px] border border-white/10 bg-[#0c0c0e]/85 backdrop-blur-2xl flex items-center gap-3 shadow-2xl w-full max-w-sm justify-center">
+      <footer className="h-16 sm:h-20 w-full flex items-center justify-center select-none z-[100] pb-2 sm:pb-4 px-3 sm:px-4 sticky bottom-0 flex-shrink-0">
+        <div className="h-14 sm:h-16 px-3 sm:px-4 rounded-[18px] sm:rounded-[22px] border border-white/10 bg-[#0c0c0e]/85 backdrop-blur-2xl flex items-center gap-2 sm:gap-3 shadow-2xl w-full max-w-sm justify-center">
           
           {/* Desktop Launcher Icon */}
           <button
             onClick={() => setActiveApp(null)}
             title="Desktop Dashboard"
-            className={`group relative size-11 flex flex-col items-center justify-center rounded-[12px] bg-secondary/35 border transition-all duration-150 active:scale-90 ${
+            className={`group relative size-10 sm:size-11 flex flex-col items-center justify-center rounded-[10px] sm:rounded-[12px] bg-secondary/35 border transition-all duration-150 active:scale-90 ${
               activeApp === null ? "border-purple-500/40 bg-secondary/70" : "border-border/25 hover:border-purple-500/25"
             }`}
           >
-            <LayoutGrid className={`size-4.5 ${activeApp === null ? "text-purple-500" : "text-foreground"}`} />
+            <LayoutGrid className={`size-4 sm:size-4.5 ${activeApp === null ? "text-purple-500" : "text-foreground"}`} />
             {activeApp === null && (
               <span className="absolute bottom-1 size-1 rounded-full bg-purple-500 shadow-md shadow-purple-500/60" />
             )}
@@ -761,11 +804,11 @@ function Index() {
                 key={item.id}
                 onClick={() => launchApp(item.id)}
                 title={item.title}
-                className={`group relative size-11 flex flex-col items-center justify-center rounded-[12px] bg-secondary/35 border transition-all duration-150 active:scale-90 ${
+                className={`group relative size-10 sm:size-11 flex flex-col items-center justify-center rounded-[10px] sm:rounded-[12px] bg-secondary/35 border transition-all duration-150 active:scale-90 ${
                   isActive ? "border-purple-500/40 bg-secondary/70" : "border-border/25 hover:border-purple-500/25 hover:bg-secondary/70"
                 }`}
               >
-                <Icon className={`size-4.5 transition-transform ${isActive ? "text-purple-500 scale-105" : "text-foreground group-hover:scale-110"}`} />
+                <Icon className={`size-4 sm:size-4.5 transition-transform ${isActive ? "text-purple-500 scale-105" : "text-foreground group-hover:scale-110"}`} />
                 
                 {/* Active/Open indicator lights */}
                 {isOpen && (
