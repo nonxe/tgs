@@ -99,7 +99,7 @@ const APPS_LIST = [
   { id: "notes", title: "Quick Notes", desc: "Anonymous notes", icon: FileText },
   { id: "convert", title: "Media Convert", desc: "Local transcoders", icon: Archive },
   { id: "ai", title: "AI Assistant", desc: "17 Models & Writer", icon: Sparkles },
-  { id: "owner", title: "Owner Info", desc: "AS Profile", icon: User }
+  { id: "owner", title: "About", desc: "About CLOUD", icon: User }
 ];
 
 function Index() {

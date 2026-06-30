@@ -191,19 +191,19 @@ export function NoteComposer() {
       <div className="grid grid-cols-1 md:grid-cols-5 gap-8 items-start flex-1 w-full">
         {/* Left Column: Note Editor */}
         <div className="md:col-span-3 flex flex-col gap-4 w-full h-full min-h-[400px]">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <input
               type="text"
               placeholder="Title (Optional)"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="flex-1 bg-secondary/35 text-[20px] md:text-[24px] font-black tracking-tight placeholder-foreground/30 border border-border/30 rounded-[20px] px-5 py-4 outline-none focus:border-foreground/50 transition-all focus:bg-secondary/60"
+              className="flex-1 bg-secondary/35 text-[18px] sm:text-[20px] md:text-[24px] font-black tracking-tight placeholder-foreground/30 border border-border/30 rounded-[16px] sm:rounded-[20px] px-4 sm:px-5 py-3.5 sm:py-4 outline-none focus:border-foreground/50 transition-all focus:bg-secondary/60"
               maxLength={100}
             />
             <button
               onClick={publishNote}
               disabled={busy || !content.trim()}
-              className="h-[60px] px-6 rounded-[20px] bg-foreground text-background font-bold text-[14.5px] hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-40 disabled:pointer-events-none ios-tap-active flex items-center gap-1.5"
+              className="w-full sm:w-auto h-12 sm:h-[60px] px-6 rounded-[16px] sm:rounded-[20px] bg-foreground text-background font-bold text-[14px] sm:text-[14.5px] hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-40 disabled:pointer-events-none ios-tap-active flex items-center justify-center gap-1.5 flex-shrink-0"
             >
               {busy ? "Saving..." : "Save Note"}
             </button>
