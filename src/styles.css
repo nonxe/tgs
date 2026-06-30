@@ -127,7 +127,6 @@
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
-    overscroll-behavior: none;
   }
 
   body {
@@ -138,7 +137,6 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     letter-spacing: -0.011em;
-    overscroll-behavior-y: none;
     touch-action: manipulation;
   }
 

@@ -27,6 +27,15 @@ function decodeSlug(code: string): string {
   return res;
 }
 
+function extractTitle(nodes: any[]): string {
+  if (!nodes) return "Untitled Node";
+  const h1Node = nodes.find((node: any) => node && node.tag === "h1");
+  if (h1Node && h1Node.children && h1Node.children[0]) {
+    return h1Node.children[0].toString().trim();
+  }
+  return "Untitled Node";
+}
+
 function extractText(nodes: any[]): string {
   if (!nodes) return "";
   let text = "";
@@ -55,7 +64,7 @@ function extractChildrenText(children: any[]): string {
 
 async function fetchDbValue(id: string) {
   try {
-    // If it contains a hyphen, it's a legacy clear-text path slug. Otherwise, it's an encoded short code.
+    // Decode short code to Telegraph page path
     const targetPath = id.includes("-") ? id : decodeSlug(id);
     
     const res = await fetch(`https://api.telegra.ph/getPage/${targetPath}?return_content=true`);
@@ -68,22 +77,36 @@ async function fetchDbValue(id: string) {
       });
     }
 
-    const title = data.result.title === "n" ? "Untitled" : data.result.title;
-    const rawContent = extractText(data.result.content || []);
+    const contentNodes = data.result.content || [];
+    const extractedTitle = extractTitle(contentNodes);
+    const rawContent = extractText(contentNodes);
+
+    // Calculate metadata
+    const characterCount = rawContent.length;
+    const wordCount = rawContent.split(/\s+/).filter(Boolean).length;
+    const sizeBytes = new Blob([rawContent]).size;
 
     let parsedContent: any;
+    let payloadType = "text";
     try {
       parsedContent = JSON.parse(rawContent);
+      payloadType = "json";
     } catch {
       parsedContent = rawContent;
+      payloadType = "text";
     }
 
     const responseBody = {
       success: true,
       key: id,
-      title: title,
+      title: extractedTitle,
+      type: payloadType,
+      size_bytes: sizeBytes,
+      character_count: characterCount,
+      word_count: wordCount,
       views: data.result.views,
       data: parsedContent,
+      raw: rawContent,
     };
 
     return new Response(JSON.stringify(responseBody), {

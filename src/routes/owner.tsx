@@ -20,13 +20,7 @@ export const Route = createFileRoute("/owner")({
   component: OwnerPage,
 });
 
-export function OwnerPage({ 
-  embed = false, 
-  onLaunchApp 
-}: { 
-  embed?: boolean; 
-  onLaunchApp?: (id: string) => void;
-}) {
+export function OwnerPage({ embed = false }: { embed?: boolean }) {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [usernameInput, setUsernameInput] = useState("");
@@ -252,15 +246,13 @@ export function OwnerPage({
               <span>Create Private Account</span>
             </button>
 
-            {onLaunchApp && (
-              <button
-                onClick={() => onLaunchApp("db-console")}
-                className="inline-flex items-center gap-2 h-11 px-5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-bold text-[13px] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md w-full sm:w-auto justify-center"
-              >
-                <Terminal className="size-4" />
-                <span>Developer Mode</span>
-              </button>
-            )}
+            <Link
+              to="/db-console"
+              className="inline-flex items-center gap-2 h-11 px-5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-bold text-[13px] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md w-full sm:w-auto justify-center"
+            >
+              <Terminal className="size-4" />
+              <span>Developer Mode</span>
+            </Link>
           </div>
         </div>
 

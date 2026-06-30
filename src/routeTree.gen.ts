@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as OwnerRouteImport } from './routes/owner'
 import { Route as NoteRouteImport } from './routes/note'
 import { Route as MoreRouteImport } from './routes/more'
+import { Route as MainRouteImport } from './routes/main'
+import { Route as DbConsoleRouteImport } from './routes/db-console'
 import { Route as ConvertRouteImport } from './routes/convert'
 import { Route as FilenameRouteImport } from './routes/$filename'
 import { Route as IndexRouteImport } from './routes/index'
@@ -33,6 +35,16 @@ const NoteRoute = NoteRouteImport.update({
 const MoreRoute = MoreRouteImport.update({
   id: '/more',
   path: '/more',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MainRoute = MainRouteImport.update({
+  id: '/main',
+  path: '/main',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DbConsoleRoute = DbConsoleRouteImport.update({
+  id: '/db-console',
+  path: '/db-console',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConvertRoute = ConvertRouteImport.update({
@@ -75,6 +87,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$filename': typeof FilenameRoute
   '/convert': typeof ConvertRoute
+  '/db-console': typeof DbConsoleRoute
+  '/main': typeof MainRoute
   '/more': typeof MoreRoute
   '/note': typeof NoteRouteWithChildren
   '/owner': typeof OwnerRoute
@@ -87,6 +101,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$filename': typeof FilenameRoute
   '/convert': typeof ConvertRoute
+  '/db-console': typeof DbConsoleRoute
+  '/main': typeof MainRoute
   '/more': typeof MoreRoute
   '/owner': typeof OwnerRoute
   '/db/$id': typeof DbIdRoute
@@ -99,6 +115,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/$filename': typeof FilenameRoute
   '/convert': typeof ConvertRoute
+  '/db-console': typeof DbConsoleRoute
+  '/main': typeof MainRoute
   '/more': typeof MoreRoute
   '/note': typeof NoteRouteWithChildren
   '/owner': typeof OwnerRoute
@@ -113,6 +131,8 @@ export interface FileRouteTypes {
     | '/'
     | '/$filename'
     | '/convert'
+    | '/db-console'
+    | '/main'
     | '/more'
     | '/note'
     | '/owner'
@@ -125,6 +145,8 @@ export interface FileRouteTypes {
     | '/'
     | '/$filename'
     | '/convert'
+    | '/db-console'
+    | '/main'
     | '/more'
     | '/owner'
     | '/db/$id'
@@ -136,6 +158,8 @@ export interface FileRouteTypes {
     | '/'
     | '/$filename'
     | '/convert'
+    | '/db-console'
+    | '/main'
     | '/more'
     | '/note'
     | '/owner'
@@ -149,6 +173,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   FilenameRoute: typeof FilenameRoute
   ConvertRoute: typeof ConvertRoute
+  DbConsoleRoute: typeof DbConsoleRoute
+  MainRoute: typeof MainRoute
   MoreRoute: typeof MoreRoute
   NoteRoute: typeof NoteRouteWithChildren
   OwnerRoute: typeof OwnerRoute
@@ -177,6 +203,20 @@ declare module '@tanstack/react-router' {
       path: '/more'
       fullPath: '/more'
       preLoaderRoute: typeof MoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/main': {
+      id: '/main'
+      path: '/main'
+      fullPath: '/main'
+      preLoaderRoute: typeof MainRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/db-console': {
+      id: '/db-console'
+      path: '/db-console'
+      fullPath: '/db-console'
+      preLoaderRoute: typeof DbConsoleRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/convert': {
@@ -247,6 +287,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   FilenameRoute: FilenameRoute,
   ConvertRoute: ConvertRoute,
+  DbConsoleRoute: DbConsoleRoute,
+  MainRoute: MainRoute,
   MoreRoute: MoreRoute,
   NoteRoute: NoteRouteWithChildren,
   OwnerRoute: OwnerRoute,
