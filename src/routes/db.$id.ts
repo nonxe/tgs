@@ -36,11 +36,20 @@ function extractTitle(nodes: any[]): string {
   return "Untitled Node";
 }
 
+function extractUrl(nodes: any[]): string | null {
+  if (!nodes) return null;
+  const h2Node = nodes.find((node: any) => node && node.tag === "h2");
+  if (h2Node && h2Node.children && h2Node.children[0]) {
+    return h2Node.children[0].toString().trim();
+  }
+  return null;
+}
+
 function extractText(nodes: any[]): string {
   if (!nodes) return "";
   let text = "";
   for (const node of nodes) {
-    if (node.tag === "h1") continue; // Skip title header
+    if (node.tag === "h1" || node.tag === "h2") continue; // Skip title and url headers
     if (typeof node === "string") {
       text += node + "\n";
     } else if (node.children) {
@@ -79,6 +88,7 @@ async function fetchDbValue(id: string) {
 
     const contentNodes = data.result.content || [];
     const extractedTitle = extractTitle(contentNodes);
+    const associatedUrl = extractUrl(contentNodes);
     const rawContent = extractText(contentNodes);
 
     // Calculate metadata
@@ -100,6 +110,7 @@ async function fetchDbValue(id: string) {
       success: true,
       key: id,
       title: extractedTitle,
+      url: associatedUrl,
       type: payloadType,
       size_bytes: sizeBytes,
       character_count: characterCount,

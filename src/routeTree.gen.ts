@@ -19,6 +19,7 @@ import { Route as FilenameRouteImport } from './routes/$filename'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as NoteIndexRouteImport } from './routes/note.index'
 import { Route as NoteNoteIdRouteImport } from './routes/note.$noteId'
+import { Route as DbCreateRouteImport } from './routes/db.create'
 import { Route as DbIdRouteImport } from './routes/db.$id'
 import { Route as ApiPublicUploadRouteImport } from './routes/api/public/upload'
 
@@ -72,6 +73,11 @@ const NoteNoteIdRoute = NoteNoteIdRouteImport.update({
   path: '/$noteId',
   getParentRoute: () => NoteRoute,
 } as any)
+const DbCreateRoute = DbCreateRouteImport.update({
+  id: '/db/create',
+  path: '/db/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DbIdRoute = DbIdRouteImport.update({
   id: '/db/$id',
   path: '/db/$id',
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/note': typeof NoteRouteWithChildren
   '/owner': typeof OwnerRoute
   '/db/$id': typeof DbIdRoute
+  '/db/create': typeof DbCreateRoute
   '/note/$noteId': typeof NoteNoteIdRoute
   '/note/': typeof NoteIndexRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByTo {
   '/more': typeof MoreRoute
   '/owner': typeof OwnerRoute
   '/db/$id': typeof DbIdRoute
+  '/db/create': typeof DbCreateRoute
   '/note/$noteId': typeof NoteNoteIdRoute
   '/note': typeof NoteIndexRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
@@ -121,6 +129,7 @@ export interface FileRoutesById {
   '/note': typeof NoteRouteWithChildren
   '/owner': typeof OwnerRoute
   '/db/$id': typeof DbIdRoute
+  '/db/create': typeof DbCreateRoute
   '/note/$noteId': typeof NoteNoteIdRoute
   '/note/': typeof NoteIndexRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/note'
     | '/owner'
     | '/db/$id'
+    | '/db/create'
     | '/note/$noteId'
     | '/note/'
     | '/api/public/upload'
@@ -150,6 +160,7 @@ export interface FileRouteTypes {
     | '/more'
     | '/owner'
     | '/db/$id'
+    | '/db/create'
     | '/note/$noteId'
     | '/note'
     | '/api/public/upload'
@@ -164,6 +175,7 @@ export interface FileRouteTypes {
     | '/note'
     | '/owner'
     | '/db/$id'
+    | '/db/create'
     | '/note/$noteId'
     | '/note/'
     | '/api/public/upload'
@@ -179,6 +191,7 @@ export interface RootRouteChildren {
   NoteRoute: typeof NoteRouteWithChildren
   OwnerRoute: typeof OwnerRoute
   DbIdRoute: typeof DbIdRoute
+  DbCreateRoute: typeof DbCreateRoute
   ApiPublicUploadRoute: typeof ApiPublicUploadRoute
 }
 
@@ -254,6 +267,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NoteNoteIdRouteImport
       parentRoute: typeof NoteRoute
     }
+    '/db/create': {
+      id: '/db/create'
+      path: '/db/create'
+      fullPath: '/db/create'
+      preLoaderRoute: typeof DbCreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/db/$id': {
       id: '/db/$id'
       path: '/db/$id'
@@ -293,6 +313,7 @@ const rootRouteChildren: RootRouteChildren = {
   NoteRoute: NoteRouteWithChildren,
   OwnerRoute: OwnerRoute,
   DbIdRoute: DbIdRoute,
+  DbCreateRoute: DbCreateRoute,
   ApiPublicUploadRoute: ApiPublicUploadRoute,
 }
 export const routeTree = rootRouteImport
