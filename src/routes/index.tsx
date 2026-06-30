@@ -24,12 +24,14 @@ import {
   LayoutGrid,
   Minus,
   UserPlus,
-  Crown
+  Crown,
+  Database
 } from "lucide-react";
 import { ConvertPage } from "./convert";
 import { MorePage } from "./more";
 import { OwnerPage } from "./owner";
 import { NoteComposer } from "./note.index";
+import { DbConsole } from "./-db";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -102,7 +104,8 @@ const APPS_LIST = [
   { id: "convert", title: "Media Convert", desc: "Local transcoders", icon: Archive },
   { id: "ai", title: "AI Assistant", desc: "17 Models & Writer", icon: Sparkles },
   { id: "request-account", title: "Private Account", desc: "Request account", icon: UserPlus },
-  { id: "owner", title: "About", desc: "About CLOUD", icon: User }
+  { id: "owner", title: "About", desc: "About CLOUD", icon: User },
+  { id: "db-console", title: "ssDB Dev Console", desc: "API & Data Nodes", icon: Database }
 ];
 
 function Index() {
@@ -769,13 +772,14 @@ function Index() {
                 {activeApp === "notes" && <NoteComposer />}
                 {activeApp === "convert" && <ConvertPage embed={true} />}
                 {activeApp === "ai" && <MorePage embed={true} />}
-                {activeApp === "owner" && <OwnerPage embed={true} />}
+                {activeApp === "owner" && <OwnerPage embed={true} onLaunchApp={launchApp} />}
+                {activeApp === "db-console" && <DbConsole />}
               </div>
             </div>
           ) : (
             /* Render Empty Desktop Icons Grid */
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 max-w-3xl select-none text-center animate-fade-in">
-              {APPS_LIST.map((item) => {
+              {APPS_LIST.filter(item => item.id !== "db-console").map((item) => {
                 const Icon = item.icon;
                 return (
                   <button
@@ -818,7 +822,7 @@ function Index() {
 
           <div className="h-8 w-[1px] bg-border/40 mx-1" />
 
-          {APPS_LIST.map((item) => {
+          {APPS_LIST.filter(item => item.id !== "db-console").map((item) => {
             const Icon = item.icon;
             const isOpen = openApps.includes(item.id);
             const isActive = activeApp === item.id;
