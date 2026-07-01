@@ -102,17 +102,17 @@ export function DbConsole() {
       let token = await getTelegraphToken();
       
       // Wrap note data in Telegra.ph structure
-      // H1 = Title, H2 = Associated URL (optional), remaining text = P tags
+      // H3 = Title, H4 = Associated URL (optional), remaining text = P tags
       const nodes: any[] = [
         {
-          tag: "h1",
+          tag: "h3",
           children: [title.trim() || "ssDB Node"]
         }
       ];
 
       if (associatedUrl.trim()) {
         nodes.push({
-          tag: "h2",
+          tag: "h4",
           children: [associatedUrl.trim()]
         });
       }

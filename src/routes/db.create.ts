@@ -96,14 +96,14 @@ async function handleCreateDb(request: Request) {
     // Construct content nodes
     const nodes: any[] = [
       {
-        tag: "h1",
+        tag: "h3",
         children: [title]
       }
     ];
 
     if (url) {
       nodes.push({
-        tag: "h2",
+        tag: "h4",
         children: [url]
       });
     }

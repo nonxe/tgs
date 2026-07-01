@@ -29,18 +29,18 @@ function decodeSlug(code: string): string {
 
 function extractTitle(nodes: any[]): string {
   if (!nodes) return "Untitled Node";
-  const h1Node = nodes.find((node: any) => node && node.tag === "h1");
-  if (h1Node && h1Node.children && h1Node.children[0]) {
-    return h1Node.children[0].toString().trim();
+  const h3Node = nodes.find((node: any) => node && node.tag === "h3");
+  if (h3Node && h3Node.children && h3Node.children[0]) {
+    return h3Node.children[0].toString().trim();
   }
   return "Untitled Node";
 }
 
 function extractUrl(nodes: any[]): string | null {
   if (!nodes) return null;
-  const h2Node = nodes.find((node: any) => node && node.tag === "h2");
-  if (h2Node && h2Node.children && h2Node.children[0]) {
-    return h2Node.children[0].toString().trim();
+  const h4Node = nodes.find((node: any) => node && node.tag === "h4");
+  if (h4Node && h4Node.children && h4Node.children[0]) {
+    return h4Node.children[0].toString().trim();
   }
   return null;
 }
@@ -49,7 +49,7 @@ function extractText(nodes: any[]): string {
   if (!nodes) return "";
   let text = "";
   for (const node of nodes) {
-    if (node.tag === "h1" || node.tag === "h2") continue; // Skip title and url headers
+    if (node.tag === "h3" || node.tag === "h4") continue; // Skip title and url headers
     if (typeof node === "string") {
       text += node + "\n";
     } else if (node.children) {
