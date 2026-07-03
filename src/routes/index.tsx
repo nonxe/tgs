@@ -12,7 +12,8 @@ import {
   ChevronRight,
   Info,
   X,
-  Crown
+  Crown,
+  Globe
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -93,11 +94,19 @@ function DashboardHome() {
     },
     { 
       id: "ai", 
-      title: "AI & X Viewer", 
-      desc: "17+ AI models and anonymous X/Twitter profile viewer.", 
+      title: "AI Assistant", 
+      desc: "Converse with 17+ advanced language models in real-time.", 
       icon: Sparkles, 
       link: "/more",
       color: "text-pink-400 border-pink-500/20 bg-pink-500/5 hover:border-pink-500/40"
+    },
+    { 
+      id: "xview", 
+      title: "X Viewer", 
+      desc: "Browse public X/Twitter profiles, tweets, and media anonymously.", 
+      icon: Globe, 
+      link: "/x",
+      color: "text-sky-400 border-sky-500/20 bg-sky-500/5 hover:border-sky-500/40"
     },
     { 
       id: "request", 

@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as XRouteImport } from './routes/x'
 import { Route as OwnerRouteImport } from './routes/owner'
 import { Route as NoteRouteImport } from './routes/note'
 import { Route as MoreRouteImport } from './routes/more'
@@ -23,6 +24,11 @@ import { Route as DbCreateRouteImport } from './routes/db.create'
 import { Route as DbIdRouteImport } from './routes/db.$id'
 import { Route as ApiPublicUploadRouteImport } from './routes/api/public/upload'
 
+const XRoute = XRouteImport.update({
+  id: '/x',
+  path: '/x',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OwnerRoute = OwnerRouteImport.update({
   id: '/owner',
   path: '/owner',
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/more': typeof MoreRoute
   '/note': typeof NoteRouteWithChildren
   '/owner': typeof OwnerRoute
+  '/x': typeof XRoute
   '/db/$id': typeof DbIdRoute
   '/db/create': typeof DbCreateRoute
   '/note/$noteId': typeof NoteNoteIdRoute
@@ -112,6 +119,7 @@ export interface FileRoutesByTo {
   '/main': typeof MainRoute
   '/more': typeof MoreRoute
   '/owner': typeof OwnerRoute
+  '/x': typeof XRoute
   '/db/$id': typeof DbIdRoute
   '/db/create': typeof DbCreateRoute
   '/note/$noteId': typeof NoteNoteIdRoute
@@ -128,6 +136,7 @@ export interface FileRoutesById {
   '/more': typeof MoreRoute
   '/note': typeof NoteRouteWithChildren
   '/owner': typeof OwnerRoute
+  '/x': typeof XRoute
   '/db/$id': typeof DbIdRoute
   '/db/create': typeof DbCreateRoute
   '/note/$noteId': typeof NoteNoteIdRoute
@@ -145,6 +154,7 @@ export interface FileRouteTypes {
     | '/more'
     | '/note'
     | '/owner'
+    | '/x'
     | '/db/$id'
     | '/db/create'
     | '/note/$noteId'
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/main'
     | '/more'
     | '/owner'
+    | '/x'
     | '/db/$id'
     | '/db/create'
     | '/note/$noteId'
@@ -174,6 +185,7 @@ export interface FileRouteTypes {
     | '/more'
     | '/note'
     | '/owner'
+    | '/x'
     | '/db/$id'
     | '/db/create'
     | '/note/$noteId'
@@ -190,6 +202,7 @@ export interface RootRouteChildren {
   MoreRoute: typeof MoreRoute
   NoteRoute: typeof NoteRouteWithChildren
   OwnerRoute: typeof OwnerRoute
+  XRoute: typeof XRoute
   DbIdRoute: typeof DbIdRoute
   DbCreateRoute: typeof DbCreateRoute
   ApiPublicUploadRoute: typeof ApiPublicUploadRoute
@@ -197,6 +210,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/x': {
+      id: '/x'
+      path: '/x'
+      fullPath: '/x'
+      preLoaderRoute: typeof XRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/owner': {
       id: '/owner'
       path: '/owner'
@@ -312,6 +332,7 @@ const rootRouteChildren: RootRouteChildren = {
   MoreRoute: MoreRoute,
   NoteRoute: NoteRouteWithChildren,
   OwnerRoute: OwnerRoute,
+  XRoute: XRoute,
   DbIdRoute: DbIdRoute,
   DbCreateRoute: DbCreateRoute,
   ApiPublicUploadRoute: ApiPublicUploadRoute,
