@@ -5,22 +5,31 @@ import {
   Moon, 
   Sparkles,
   MessageSquare,
-  PenTool,
   Send,
   Trash2,
   User,
   Bot,
-  Percent,
-  CheckCircle,
   ChevronRight,
-  Info
+  Info,
+  Search,
+  TrendingUp,
+  Download,
+  Users,
+  FileText,
+  ExternalLink,
+  ArrowRight,
+  RefreshCw,
+  Globe,
+  Twitter,
+  Hash,
+  Video
 } from "lucide-react";
 
 export const Route = createFileRoute("/more")({
   component: MorePage,
 });
 
-type TabType = "chat" | "writer";
+type TabType = "chat" | "xview";
 
 interface Message {
   role: "user" | "assistant";
@@ -74,12 +83,12 @@ export function MorePage({ embed = false }: { embed?: boolean }) {
       {!embed && (
         <div className="text-center md:text-left">
           <h2 className="text-[34px] md:text-[44px] font-black tracking-tight leading-[1.1] select-none">
-            Premium External APIs.
+            Premium Tools.
             <br />
-            <span className="opacity-40">Dynamic chatbot & tools.</span>
+            <span className="opacity-40">AI + Social Explorer.</span>
           </h2>
           <p className="mt-2 text-[15px] text-muted-foreground max-w-md">
-            Interactive, fully integrated external micro-services loaded dynamically inside your browser.
+            Interactive AI chatbot and anonymous X/Twitter viewer loaded directly inside your browser.
           </p>
         </div>
       )}
@@ -90,7 +99,7 @@ export function MorePage({ embed = false }: { embed?: boolean }) {
         <div className="md:col-span-1 flex md:flex-col gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-none w-full select-none">
           {[
             { id: "chat", label: "AI Chatbot", icon: MessageSquare },
-            { id: "writer", label: "AI Writing Tools", icon: PenTool }
+            { id: "xview", label: "X Viewer", icon: Globe }
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -114,7 +123,7 @@ export function MorePage({ embed = false }: { embed?: boolean }) {
         {/* Right Column: Active Tool Workspace */}
         <div className="md:col-span-4 w-full">
           {activeTab === "chat" && <ChatTool />}
-          {activeTab === "writer" && <WriterTool />}
+          {activeTab === "xview" && <XViewerTool />}
         </div>
       </div>
     </section>
@@ -331,192 +340,344 @@ function ChatTool() {
 }
 
 /* ==========================================================================
-   AI Writer & Assistant Tools (Split View Layout)
+   X / Twitter Viewer Tool (Client-side, user's IP)
    ========================================================================== */
-function WriterTool() {
-  const [toolMode, setToolMode] = useState<"humanizer" | "detector">("humanizer");
-  const [text, setText] = useState("");
-  const [loading, setLoading] = useState(false);
-  
-  // Results
-  const [humanizedText, setHumanizedText] = useState<string | null>(null);
-  const [detectorResult, setDetectorResult] = useState<{
-    aiScore: string;
-    humanScore: string;
-    message: string;
-  } | null>(null);
+type XViewMode = "home" | "browsing";
+type XSearchType = "user" | "tweet";
 
-  const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+const TWV_BASE = "https://twitterwebviewer.com";
 
-  const handleProcess = async () => {
-    if (!text.trim() || loading) return;
+function XViewerTool() {
+  const [query, setQuery] = useState("");
+  const [searchType, setSearchType] = useState<XSearchType>("user");
+  const [viewMode, setViewMode] = useState<XViewMode>("home");
+  const [iframeSrc, setIframeSrc] = useState("");
+  const [iframeLoading, setIframeLoading] = useState(false);
+  const [iframeError, setIframeError] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
-    if (toolMode === "detector" && wordCount < 100) {
-      alert("AI Text Detector requires at least 100 words.");
-      return;
+  const navigateTo = (url: string) => {
+    setIframeSrc(url);
+    setViewMode("browsing");
+    setIframeLoading(true);
+    setIframeError(false);
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = query.trim();
+    if (!q) return;
+
+    // If input starts with @ or looks like a username, go to profile directly
+    if (q.startsWith("@") || (!q.includes(" ") && !q.startsWith("#"))) {
+      const username = q.replace(/^@/, "");
+      navigateTo(`${TWV_BASE}/${username}`);
+    } else {
+      navigateTo(`${TWV_BASE}/search?q=${encodeURIComponent(q)}&type=${searchType}`);
     }
+  };
 
-    setLoading(true);
-    setHumanizedText(null);
-    setDetectorResult(null);
+  const goToProfile = (username: string) => {
+    setQuery(`@${username}`);
+    navigateTo(`${TWV_BASE}/${username}`);
+  };
 
-    try {
-      if (toolMode === "humanizer") {
-        const res = await fetch(`https://apis.davidcyril.name.ng/tools/humanize?text=${encodeURIComponent(text)}`);
-        if (!res.ok) throw new Error("API request failed");
-        const data = await res.json();
-        
-        const cleanText = (data.humanized || "")
-          .replace(/<\/?[^>]+(>|$)/g, "")
-          .replace(/&nbsp;/g, " ");
-        setHumanizedText(cleanText || "Successfully humanized.");
-      } else {
-        const res = await fetch(`https://apis.davidcyril.name.ng/api/detect?text=${encodeURIComponent(text)}`);
-        if (!res.ok) throw new Error("API request failed");
-        const data = await res.json();
-        
-        if (data.error) {
-          alert(data.error);
-          return;
-        }
+  const goToTrending = () => {
+    setQuery("");
+    navigateTo(`${TWV_BASE}/trending`);
+  };
 
-        const score = data.result || {};
-        setDetectorResult({
-          aiScore: score.ai_score || "0",
-          humanScore: score.human_score || "100",
-          message: data.message || "Detection complete."
-        });
-      }
-    } catch (err) {
-      alert("Failed to connect to API endpoint. Please try again.");
-    } finally {
-      setLoading(false);
+  const goToHashtag = (tag: string) => {
+    setQuery(`#${tag}`);
+    navigateTo(`${TWV_BASE}/search?q=${encodeURIComponent(`#${tag}`)}&type=tweet`);
+  };
+
+  const goHome = () => {
+    setViewMode("home");
+    setIframeSrc("");
+    setQuery("");
+    setIframeError(false);
+  };
+
+  const openExternal = () => {
+    if (iframeSrc) {
+      window.open(iframeSrc, "_blank", "noopener,noreferrer");
+    }
+  };
+
+  const refreshFrame = () => {
+    if (iframeRef.current && iframeSrc) {
+      setIframeLoading(true);
+      setIframeError(false);
+      iframeRef.current.src = iframeSrc;
     }
   };
 
   return (
-    <div className="rounded-[24px] border border-border p-6 ios-glass ios-shadow space-y-6">
-      {/* Switch mode */}
-      <div className="grid grid-cols-2 gap-1 bg-secondary/40 p-1 rounded-[16px] border border-border/25 select-none">
-        <button
-          onClick={() => {
-            setToolMode("humanizer");
-            setHumanizedText(null);
-            setDetectorResult(null);
-          }}
-          className={`py-3 rounded-[12px] text-[13.5px] font-bold transition-all ${
-            toolMode === "humanizer" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
-          }`}
-        >
-          AI Humanizer
-        </button>
-        <button
-          onClick={() => {
-            setToolMode("detector");
-            setHumanizedText(null);
-            setDetectorResult(null);
-          }}
-          className={`py-3 rounded-[12px] text-[13.5px] font-bold transition-all ${
-            toolMode === "detector" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
-          }`}
-        >
-          AI Text Detector
-        </button>
-      </div>
+    <div className="rounded-[24px] border border-border ios-glass ios-shadow flex flex-col overflow-hidden" style={{ minHeight: "580px" }}>
+      
+      {/* Branded Header Bar */}
+      <div className="px-5 pt-5 pb-4 border-b border-border/20 space-y-4 select-none flex-shrink-0">
+        {/* Top Bar */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="size-9 rounded-full bg-sky-500/10 border border-sky-500/20 flex items-center justify-center">
+              <svg viewBox="0 0 24 24" className="size-4.5 text-sky-500 fill-current">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-[16px] font-black tracking-tight leading-tight">X Viewer</h3>
+              <p className="text-[10px] text-muted-foreground font-bold">Anonymous • No Login Required</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-1.5">
+            {viewMode === "browsing" && (
+              <>
+                <button
+                  onClick={refreshFrame}
+                  className="size-8 rounded-full border border-border hover:bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-all active:scale-90"
+                  title="Refresh"
+                >
+                  <RefreshCw className="size-3.5" />
+                </button>
+                <button
+                  onClick={openExternal}
+                  className="size-8 rounded-full border border-border hover:bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-all active:scale-90"
+                  title="Open in new tab"
+                >
+                  <ExternalLink className="size-3.5" />
+                </button>
+                <button
+                  onClick={goHome}
+                  className="h-8 px-3 rounded-full border border-border hover:bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-all active:scale-95 text-[11px] font-bold gap-1"
+                >
+                  <ArrowRight className="size-3 rotate-180" />
+                  Back
+                </button>
+              </>
+            )}
+          </div>
+        </div>
 
-      {/* Split pane workspace layout */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-        {/* Left Side: Input Form */}
-        <div className="md:col-span-3 space-y-4">
-          <div className="relative">
-            <textarea
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder={
-                toolMode === "humanizer"
-                  ? "Paste AI generated text here to make it sound human..."
-                  : "Paste your text here (minimum 100 words required) to detect AI probability..."
-              }
-              rows={6}
-              className="w-full bg-secondary/35 text-[14px] font-medium border border-border/30 rounded-[18px] px-4 py-3.5 outline-none focus:border-foreground/50 transition-all resize-none placeholder:font-medium"
+        {/* Search Bar */}
+        <form onSubmit={handleSearch} className="flex gap-2">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search @username, keywords, or #hashtag..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-full h-11 bg-secondary/35 text-[13.5px] font-bold border border-border/30 rounded-[14px] pl-10 pr-4 outline-none focus:border-sky-500/50 transition-all placeholder:font-medium"
             />
-            <span className="absolute bottom-3 right-3 text-[11px] font-bold text-muted-foreground select-none">
-              {wordCount} words
-            </span>
+          </div>
+
+          {/* Search Type Toggle */}
+          <div className="flex bg-secondary/40 rounded-[12px] border border-border/25 p-0.5 gap-0.5 flex-shrink-0">
+            <button
+              type="button"
+              onClick={() => setSearchType("user")}
+              className={`px-2.5 py-2 rounded-[10px] text-[11px] font-bold transition-all ${
+                searchType === "user" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+              }`}
+            >
+              <Users className="size-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setSearchType("tweet")}
+              className={`px-2.5 py-2 rounded-[10px] text-[11px] font-bold transition-all ${
+                searchType === "tweet" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
+              }`}
+            >
+              <FileText className="size-3.5" />
+            </button>
           </div>
 
           <button
-            onClick={handleProcess}
-            disabled={loading || !text.trim() || (toolMode === "detector" && wordCount < 100)}
-            className="w-full h-12 rounded-[16px] bg-foreground text-background font-bold text-[14px] hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:scale-100 select-none"
+            type="submit"
+            disabled={!query.trim()}
+            className="h-11 px-4 rounded-[14px] bg-sky-500 text-white font-black text-[13px] flex items-center gap-1.5 hover:bg-sky-400 active:scale-95 disabled:opacity-40 transition-all flex-shrink-0"
           >
-            {loading ? "Processing..." : toolMode === "humanizer" ? "Humanize Text" : "Analyze AI Probability"}
+            <Search className="size-3.5" />
+            <span className="hidden sm:inline">Go</span>
           </button>
-        </div>
+        </form>
+      </div>
 
-        {/* Right Side: Output Results */}
-        <div className="md:col-span-2">
-          {loading ? (
-            <div className="h-full min-h-[180px] rounded-[18px] border border-dashed border-border flex flex-col items-center justify-center text-center p-6 select-none animate-pulse">
-              <Sparkles className="size-6 text-foreground/40 mb-1.5" />
-              <p className="text-[13px] font-bold">API processing active</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">Parsing AI structures client-side...</p>
+      {/* Content Area */}
+      <div className="flex-1 relative" style={{ minHeight: "420px" }}>
+        {viewMode === "home" ? (
+          /* ===== HOME VIEW: Quick Actions & Featured ===== */
+          <div className="p-5 space-y-5 animate-slide-up">
+            
+            {/* Quick Actions Grid */}
+            <div>
+              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider mb-3">Quick Actions</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                {[
+                  { 
+                    label: "Trending", 
+                    desc: "Hot topics now",
+                    icon: TrendingUp,
+                    color: "text-orange-500 bg-orange-500/8 border-orange-500/15 hover:border-orange-500/30",
+                    onClick: goToTrending
+                  },
+                  { 
+                    label: "Download Video", 
+                    desc: "Save X videos",
+                    icon: Download,
+                    color: "text-emerald-500 bg-emerald-500/8 border-emerald-500/15 hover:border-emerald-500/30",
+                    onClick: () => navigateTo(`${TWV_BASE}/download`)
+                  },
+                  { 
+                    label: "Browse Users", 
+                    desc: "Search profiles",
+                    icon: Users,
+                    color: "text-violet-500 bg-violet-500/8 border-violet-500/15 hover:border-violet-500/30",
+                    onClick: () => { setSearchType("user"); document.querySelector<HTMLInputElement>('input[placeholder*="Search @"]')?.focus(); }
+                  },
+                  { 
+                    label: "Search Posts", 
+                    desc: "Find tweets",
+                    icon: FileText,
+                    color: "text-sky-500 bg-sky-500/8 border-sky-500/15 hover:border-sky-500/30",
+                    onClick: () => { setSearchType("tweet"); document.querySelector<HTMLInputElement>('input[placeholder*="Search @"]')?.focus(); }
+                  }
+                ].map((action) => {
+                  const Icon = action.icon;
+                  return (
+                    <button
+                      key={action.label}
+                      onClick={action.onClick}
+                      className={`flex flex-col gap-2 p-4 rounded-[18px] border transition-all active:scale-[0.97] text-left ${action.color}`}
+                    >
+                      <Icon className="size-5" />
+                      <div>
+                        <p className="text-[12.5px] font-black leading-tight">{action.label}</p>
+                        <p className="text-[10px] opacity-60 font-medium mt-0.5">{action.desc}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          ) : !humanizedText && !detectorResult ? (
-            <div className="h-full min-h-[180px] rounded-[18px] border border-dashed border-border flex flex-col items-center justify-center text-center p-6 select-none text-muted-foreground">
-              <Info className="size-6 text-foreground/20 mb-1.5" />
-              <p className="text-[13px] font-bold">Result Panel</p>
-              <p className="text-[11px] opacity-75 mt-0.5">Your processed results will be rendered here.</p>
-            </div>
-          ) : (
-            <div className="space-y-4 h-full">
-              {humanizedText && (
-                <div className="rounded-[18px] border border-border bg-secondary/20 p-4 space-y-3 animate-fade-in flex flex-col h-full justify-between">
-                  <div>
-                    <span className="text-[11px] font-bold text-muted-foreground select-none">HUMANIZED RESULT</span>
-                    <p className="text-[13px] leading-relaxed text-foreground/90 font-medium mt-2 max-h-40 overflow-y-auto pr-1">
-                      {humanizedText}
-                    </p>
-                  </div>
+
+            {/* Popular Profiles */}
+            <div>
+              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider mb-3">Popular Profiles</p>
+              <div className="flex flex-wrap gap-2">
+                {["elonmusk", "NASA", "MKBHD", "Apple", "Google", "SpaceX", "tsaborern", "veraborisova"].map((username) => (
                   <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(humanizedText);
-                      alert("Copied to clipboard!");
-                    }}
-                    className="w-full mt-3 h-10 rounded-[12px] bg-secondary border border-border text-[12.5px] font-bold hover:bg-secondary/80 transition-all select-none"
+                    key={username}
+                    onClick={() => goToProfile(username)}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-secondary/30 border border-border/20 hover:bg-secondary/60 hover:border-border/40 transition-all active:scale-95 text-[12px] font-bold text-muted-foreground hover:text-foreground"
                   >
-                    Copy Text
+                    <span className="text-sky-500">@</span>
+                    {username}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Trending Hashtags */}
+            <div>
+              <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider mb-3">Explore Hashtags</p>
+              <div className="flex flex-wrap gap-2">
+                {["technology", "AI", "crypto", "sports", "gaming", "music"].map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => goToHashtag(tag)}
+                    className="flex items-center gap-1 px-3 py-2 rounded-full bg-sky-500/5 border border-sky-500/15 hover:bg-sky-500/10 hover:border-sky-500/30 transition-all active:scale-95 text-[12px] font-bold text-sky-500/80 hover:text-sky-500"
+                  >
+                    <Hash className="size-3" />
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Info Banner */}
+            <div className="rounded-[16px] border border-border/20 bg-secondary/10 p-4 flex gap-3 items-start">
+              <Info className="size-4.5 text-muted-foreground flex-shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-[12px] font-bold text-foreground/80">Anonymous Viewer</p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Browse public X/Twitter profiles, tweets, trending topics, and download videos — completely anonymous, no login required. All requests are handled directly from your browser.
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* ===== BROWSING VIEW: iFrame ===== */
+          <div className="w-full h-full relative" style={{ minHeight: "420px" }}>
+            {/* Loading Overlay */}
+            {iframeLoading && (
+              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
+                <div className="flex items-center gap-2 mb-2">
+                  <RefreshCw className="size-5 text-sky-500 animate-spin" />
+                  <span className="text-[13px] font-bold text-foreground">Loading content...</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground">Fetching from X via your network</p>
+              </div>
+            )}
+
+            {/* Error Fallback */}
+            {iframeError && (
+              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/90 backdrop-blur-sm p-8 text-center">
+                <div className="size-14 rounded-full bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mb-4">
+                  <Info className="size-6 text-orange-500" />
+                </div>
+                <h4 className="text-[15px] font-black mb-1">Content Blocked</h4>
+                <p className="text-[12px] text-muted-foreground max-w-xs mb-4 leading-relaxed">
+                  This site prevents embedding in iframes. You can still view the content by opening it directly in a new tab.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={openExternal}
+                    className="h-10 px-5 rounded-[14px] bg-sky-500 text-white font-bold text-[12.5px] flex items-center gap-1.5 hover:bg-sky-400 active:scale-95 transition-all"
+                  >
+                    <ExternalLink className="size-3.5" />
+                    Open in New Tab
+                  </button>
+                  <button
+                    onClick={goHome}
+                    className="h-10 px-4 rounded-[14px] border border-border font-bold text-[12.5px] hover:bg-secondary active:scale-95 transition-all"
+                  >
+                    Go Back
                   </button>
                 </div>
-              )}
+              </div>
+            )}
 
-              {detectorResult && (
-                <div className="rounded-[18px] border border-border bg-secondary/20 p-5 space-y-4 animate-fade-in select-none">
-                  <div className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground">
-                    <Percent className="size-4" />
-                    <span>PROBABILITY GRAPH</span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-[16px] border border-border bg-background p-3.5 text-center">
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase">AI Content</span>
-                      <p className="text-[24px] font-black tracking-tight mt-1 text-red-500">{detectorResult.aiScore}%</p>
-                    </div>
-                    <div className="rounded-[16px] border border-border bg-background p-3.5 text-center">
-                      <span className="text-[10px] font-bold text-muted-foreground uppercase">Human content</span>
-                      <p className="text-[24px] font-black tracking-tight mt-1 text-green-500">{detectorResult.humanScore}%</p>
-                    </div>
-                  </div>
-
-                  <div className="rounded-[12px] border border-border bg-secondary/25 p-3 flex items-start gap-2">
-                    <CheckCircle className="size-4 text-foreground/60 mt-0.5 flex-shrink-0" />
-                    <p className="text-[11px] font-bold text-muted-foreground leading-normal">{detectorResult.message}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+            <iframe
+              ref={iframeRef}
+              src={iframeSrc}
+              className="w-full border-0 bg-white rounded-b-[24px]"
+              style={{ height: "480px", minHeight: "420px" }}
+              sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+              loading="lazy"
+              onLoad={() => {
+                setIframeLoading(false);
+                // Check if iframe loaded properly (if accessible)
+                try {
+                  const doc = iframeRef.current?.contentDocument;
+                  if (doc && doc.body && doc.body.innerHTML.length < 50) {
+                    setIframeError(true);
+                  }
+                } catch {
+                  // Cross-origin — can't access, but that means it loaded
+                }
+              }}
+              onError={() => {
+                setIframeLoading(false);
+                setIframeError(true);
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

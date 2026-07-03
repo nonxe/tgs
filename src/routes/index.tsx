@@ -93,8 +93,8 @@ function DashboardHome() {
     },
     { 
       id: "ai", 
-      title: "AI Assistant", 
-      desc: "Converse with 17+ advanced language models in real-time.", 
+      title: "AI & X Viewer", 
+      desc: "17+ AI models and anonymous X/Twitter profile viewer.", 
       icon: Sparkles, 
       link: "/more",
       color: "text-pink-400 border-pink-500/20 bg-pink-500/5 hover:border-pink-500/40"
