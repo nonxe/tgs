@@ -11,7 +11,8 @@ import {
   Bot,
   ChevronRight,
   Info,
-  Globe
+  Globe,
+  Instagram
 } from "lucide-react";
 
 export const Route = createFileRoute("/more")({
@@ -88,6 +89,7 @@ export function MorePage({ embed = false }: { embed?: boolean }) {
         <div className="md:col-span-1 flex md:flex-col gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-none w-full select-none">
           {[
             { id: "chat", label: "AI Chatbot", icon: MessageSquare },
+            { id: "igview", label: "IG Viewer", icon: Instagram },
             { id: "xview", label: "X Viewer", icon: Globe }
           ].map((tab) => {
             const Icon = tab.icon;
@@ -98,6 +100,8 @@ export function MorePage({ embed = false }: { embed?: boolean }) {
                 onClick={() => {
                   if (tab.id === "xview") {
                     window.open("/x", "_blank");
+                  } else if (tab.id === "igview") {
+                    window.open("/instagram", "_blank");
                   } else {
                     setActiveTab(tab.id as TabType);
                   }

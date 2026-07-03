@@ -13,7 +13,8 @@ import {
   Info,
   X,
   Crown,
-  Globe
+  Globe,
+  Instagram
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -107,6 +108,14 @@ function DashboardHome() {
       icon: Globe, 
       link: "/x",
       color: "text-sky-400 border-sky-500/20 bg-sky-500/5 hover:border-sky-500/40"
+    },
+    { 
+      id: "igview", 
+      title: "Instagram Viewer", 
+      desc: "Browse public Instagram profiles, posts, reels, and stories anonymously.", 
+      icon: Instagram, 
+      link: "/instagram",
+      color: "text-pink-400 border-pink-500/20 bg-pink-500/5 hover:border-pink-500/40"
     },
     { 
       id: "request", 
