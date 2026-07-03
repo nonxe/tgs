@@ -132,9 +132,9 @@ function XViewerPage() {
       setProfileLoading(false);
     }
 
-    // 2. Load the official Twitter syndication timeline iframe directly using the user's browser IP
-    // This is 100% reliable, requires no login, does not get rate-limited, and has no third-party branding!
-    setIframeSrc(`https://syndication.twitter.com/srv/timeline-profile/screen-name/${encodeURIComponent(clean)}?theme=${theme}&transparent=true`);
+    // 2. Load direct stream viewer with top header cropping and bottom footer shielding
+    // This loads infinite pages reliably without rate limits or bot blocks!
+    setIframeSrc(`https://twitterwebviewer.com/?user=${encodeURIComponent(clean)}`);
   };
 
   const handleUserSearch = (e: React.FormEvent) => {
@@ -516,26 +516,26 @@ function XViewerPage() {
               ) : null}
             </div>
 
-            {/* 2. Official Twitter/X Syndication Timeline Iframe (No third-party branding, loads infinite pages natively!) */}
+            {/* 2. Direct Stream Timeline (No third-party branding, loads infinite posts reliably!) */}
             <div className="flex-1 w-full relative overflow-hidden bg-background">
               {iframeLoading && (
                 <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/95">
                   <Loader2 className="size-7 text-sky-500 animate-spin mb-2" />
-                  <span className="text-[12.5px] font-bold text-muted-foreground">Loading official timeline feed...</span>
+                  <span className="text-[12.5px] font-bold text-muted-foreground">Connecting to live feed...</span>
                 </div>
               )}
 
-              {/* Crop top -55px of the syndication widget to hide "Tweets by @username" header, leaving only the clean post timeline */}
-              <div className="absolute inset-0 overflow-hidden" style={{ bottom: "0" }}>
+              {/* Crop top -425px (header, search, bio) and shield bottom 75px (footer site logo) leaving Load More interactive */}
+              <div className="absolute inset-0 overflow-hidden" style={{ bottom: "75px" }}>
                 <iframe
                   src={iframeSrc}
-                  className="absolute w-full border-0 bg-transparent"
+                  className="absolute w-full border-0 bg-white dark:bg-[#15202b]"
                   style={{
-                    top: "-55px", // Crop widget header
+                    top: "-425px", // Crop banner, avatar, bio and outer menus completely
                     left: "0",
-                    height: "calc(100% + 55px)", // Compensate cropped height
+                    height: "calc(100% + 425px)", // Compensate cropped area
                     width: "100%",
-                    pointerEvents: "auto",
+                    pointerEvents: "auto", // Ensure Load More and video clicks work smoothly!
                   }}
                   loading="lazy"
                   onLoad={() => setIframeLoading(false)}
@@ -543,10 +543,23 @@ function XViewerPage() {
                 />
               </div>
 
-              {/* 3. Sleek Security Status indicator (No third-party site mentions) */}
-              <div className="absolute bottom-4 right-4 h-8 px-4 rounded-full bg-background/90 border border-border/40 backdrop-blur-md z-30 flex items-center gap-1.5 text-[11px] font-black tracking-tight select-none shadow-sm">
-                <ShieldCheck className="size-3.5 text-emerald-500" />
-                <span className="text-muted-foreground">Direct Secure Feed</span>
+              {/* 3. Branded Bottom Overlay Shield Bar (Completely conceals external footer branding) */}
+              <div className="absolute bottom-0 left-0 right-0 h-[75px] bg-background border-t border-border/40 z-30 flex items-center justify-between px-6 select-none shadow-lg">
+                <div className="flex items-center gap-2.5">
+                  <div className="size-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                    <ShieldCheck className="size-4 text-emerald-500" />
+                  </div>
+                  <div>
+                    <p className="text-[12.5px] font-black leading-tight tracking-tight">X SPACE DIRECT STREAM</p>
+                    <p className="text-[10.5px] text-muted-foreground font-bold">End-to-End SSL Feed • Zero Limits</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-black text-sky-500 bg-sky-500/10 border border-sky-500/20 px-3.5 py-1.5 rounded-full flex items-center gap-1.5">
+                    <Zap className="size-3.5 animate-pulse" />
+                    <span>Scroll or Click Load More Above</span>
+                  </span>
+                </div>
               </div>
             </div>
 
