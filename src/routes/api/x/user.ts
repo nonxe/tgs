@@ -1,5 +1,3 @@
-import { createFileRoute } from "@tanstack/react-router";
-
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, OPTIONS",
@@ -19,16 +17,61 @@ async function handleGetUser(request: Request) {
       });
     }
 
-    // Call fxtwitter API under the hood
+    // Attempt to fetch from vxtwitter first (more reliable)
+    try {
+      const res = await fetch(`https://api.vxtwitter.com/${encodeURIComponent(username)}`, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        },
+      });
+
+      if (res.ok) {
+        const user = await res.json();
+        if (user && user.screen_name) {
+          return new Response(JSON.stringify({
+            success: true,
+            user: {
+              name: user.name,
+              screen_name: user.screen_name,
+              avatar_url: user.profile_image_url?.replace("_normal", "_400x400") || "",
+              description: user.description || "",
+              followers: user.followers_count || 0,
+              following: user.following_count || 0,
+              tweets: user.tweet_count || 0,
+              location: user.location || "",
+            }
+          }), {
+            status: 200,
+            headers: CORS_HEADERS,
+          });
+        }
+      }
+    } catch (e: any) {
+      console.error("VxTwitter fetch failed, trying FxTwitter...", e.message);
+    }
+
+    // Fallback to fxtwitter
     const res = await fetch(`https://api.fxtwitter.com/${encodeURIComponent(username)}`, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 (CLOUD X Client)",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
       },
     });
 
     const data = await res.json();
     if (res.ok && data.code === 200 && data.user) {
-      return new Response(JSON.stringify({ success: true, user: data.user }), {
+      return new Response(JSON.stringify({
+        success: true,
+        user: {
+          name: data.user.name,
+          screen_name: data.user.screen_name,
+          avatar_url: data.user.avatar_url?.replace("_normal", "_400x400") || "",
+          description: data.user.description || "",
+          followers: data.user.followers || 0,
+          following: data.user.following || 0,
+          tweets: data.user.tweets || 0,
+          location: data.user.location || "",
+        }
+      }), {
         status: 200,
         headers: CORS_HEADERS,
       });
@@ -45,6 +88,8 @@ async function handleGetUser(request: Request) {
     });
   }
 }
+
+import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/api/x/user")({
   server: {

@@ -9,9 +9,11 @@ import {
   RefreshCw,
   Users,
   Download,
-  Play,
   Video,
-  AlertCircle
+  AlertCircle,
+  MapPin,
+  Twitter,
+  Calendar
 } from "lucide-react";
 
 export const Route = createFileRoute("/x")({
@@ -29,6 +31,17 @@ export const Route = createFileRoute("/x")({
 });
 
 const TWV_BASE = "https://twitterwebviewer.com";
+
+interface XUserProfile {
+  name: string;
+  screen_name: string;
+  avatar_url: string;
+  description: string;
+  followers: number;
+  following: number;
+  tweets: number;
+  location: string;
+}
 
 interface XVideo {
   url: string;
@@ -52,10 +65,15 @@ function XViewerPage() {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [activeTab, setActiveTab] = useState<"profile" | "downloader">("profile");
 
-  // Search query for profile lookup
+  // Search queries
   const [userQuery, setUserQuery] = useState("");
 
-  // Iframe states for Profile Tab
+  // Native Profile stats state
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [profileData, setProfileData] = useState<XUserProfile | null>(null);
+
+  // Iframe states for timeline
   const [iframeSrc, setIframeSrc] = useState("");
   const [iframeLoading, setIframeLoading] = useState(false);
   const [viewMode, setViewMode] = useState<"home" | "browsing">("home");
@@ -91,12 +109,33 @@ function XViewerPage() {
     document.documentElement.classList.toggle("dark", next === "dark");
   };
 
-  const loadXProfile = (username: string) => {
+  const loadXProfile = async (username: string) => {
     const clean = username.trim().replace(/^@/, "").replace(/https?:\/\/(x|twitter)\.com\//i, "").split("/")[0].split("?")[0];
     if (!clean) return;
+
+    setProfileLoading(true);
     setIframeLoading(true);
-    setIframeSrc(`${TWV_BASE}/?user=${encodeURIComponent(clean)}`);
+    setProfileError(null);
+    setProfileData(null);
     setViewMode("browsing");
+
+    // 1. Fetch user metadata from our backend API
+    try {
+      const res = await fetch(`/api/x/user?username=${encodeURIComponent(clean)}`);
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setProfileData(data.user);
+      } else {
+        setProfileError(data.error || "User profile not found. Make sure the username is correct.");
+      }
+    } catch {
+      setProfileError("Failed to fetch profile metadata.");
+    } finally {
+      setProfileLoading(false);
+    }
+
+    // 2. Load the cropped tweets timeline in the iframe
+    setIframeSrc(`${TWV_BASE}/?user=${encodeURIComponent(clean)}`);
   };
 
   const handleUserSearch = (e: React.FormEvent) => {
@@ -120,7 +159,7 @@ function XViewerPage() {
       if (res.ok && data.success) {
         setDownloadResult(data);
       } else {
-        setDownloadError(data.error || "Failed to process video link. Make sure the tweet is public and contains a video.");
+        setDownloadError(data.error || "Failed to process video link. Make sure the tweet contains a video.");
       }
     } catch {
       setDownloadError("Connection to video processor failed.");
@@ -132,14 +171,14 @@ function XViewerPage() {
   const goHome = () => {
     setViewMode("home");
     setIframeSrc("");
+    setProfileData(null);
     setUserQuery("");
   };
 
-  const refreshFrame = () => {
-    if (iframeRef.current && iframeSrc) {
-      setIframeLoading(true);
-      iframeRef.current.src = iframeSrc;
-    }
+  const formatNumber = (num: number) => {
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
+    if (num >= 1000) return (num / 1000).toFixed(1) + "K";
+    return num.toString();
   };
 
   return (
@@ -185,7 +224,6 @@ function XViewerPage() {
             <button
               onClick={() => {
                 setActiveTab("downloader");
-                // Stop iframe browsing mode and load native downloader tab view
                 setViewMode("home");
               }}
               className={`px-3 py-1.5 rounded-[10px] transition-all ${
@@ -199,21 +237,12 @@ function XViewerPage() {
 
         <div className="flex items-center gap-2">
           {viewMode === "browsing" && activeTab === "profile" && (
-            <>
-              <button
-                onClick={refreshFrame}
-                className="size-9 rounded-full border border-border hover:bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-all active:scale-90"
-                title="Refresh"
-              >
-                <RefreshCw className="size-4" />
-              </button>
-              <button
-                onClick={goHome}
-                className="h-9 px-4 rounded-full border border-border hover:bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-all active:scale-95 text-[12px] font-bold"
-              >
-                Back
-              </button>
-            </>
+            <button
+              onClick={goHome}
+              className="h-9 px-4 rounded-full border border-border hover:bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-all active:scale-95 text-[12px] font-bold"
+            >
+              Back
+            </button>
           )}
           <button
             onClick={toggleTheme}
@@ -406,27 +435,108 @@ function XViewerPage() {
             )}
           </div>
         ) : (
-          /* ===== BROWSING WORKSPACE (Iframe Masking Layout for Profile Tab) ===== */
-          <div className="flex-1 w-full h-full relative overflow-hidden flex flex-col">
-            {iframeLoading && (
-              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/90 backdrop-blur-sm">
-                <Loader2 className="size-8 text-sky-500 animate-spin mb-2" />
-                <span className="text-[13px] font-bold text-foreground">Loading content anonymously...</span>
-                <p className="text-[10.5px] text-muted-foreground">Connecting securely via local browser session</p>
-              </div>
-            )}
+          /* ===== BROWSING WORKSPACE (OUR OWN iOS Profile + Cropped Read-only Timeline) ===== */
+          <div className="flex-1 w-full h-full flex flex-col min-h-0 overflow-y-auto">
+            
+            {/* 1. Custom, Native iOS-Themed Profile Card */}
+            <div className="w-full flex-shrink-0 bg-background border-b border-border/40">
+              {profileLoading ? (
+                <div className="p-8 flex flex-col items-center justify-center animate-pulse">
+                  <Loader2 className="size-6 text-sky-500 animate-spin mb-2" />
+                  <span className="text-[12px] font-bold text-muted-foreground">Loading profile header...</span>
+                </div>
+              ) : profileError ? (
+                <div className="p-6 text-center space-y-2">
+                  <AlertCircle className="size-7 text-destructive mx-auto" />
+                  <p className="text-[13px] font-bold text-destructive">{profileError}</p>
+                </div>
+              ) : profileData ? (
+                <div className="relative animate-slide-up">
+                  {/* Premium Mesh Gradient Banner */}
+                  <div className="h-[120px] w-full bg-gradient-to-r from-sky-500/20 via-indigo-500/20 to-purple-500/20 relative overflow-hidden">
+                    <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.4),rgba(255,255,255,0))]" />
+                  </div>
 
-            {/* Frame Cropper Wrapper to mask the outer website header/footer */}
-            <div className="flex-1 w-full h-full overflow-hidden relative">
+                  {/* Profile details container */}
+                  <div className="px-5 pb-5 relative select-none">
+                    {/* Avatar overlap */}
+                    <div className="absolute -top-[45px] left-5 size-22 rounded-full overflow-hidden border-4 border-background bg-secondary shadow-md">
+                      <img src={profileData.avatar_url} alt="" className="w-full h-full object-cover" />
+                    </div>
+
+                    {/* Meta/stats alignment wrapper */}
+                    <div className="pt-16 space-y-3">
+                      <div>
+                        <h2 className="text-[19px] font-black tracking-tight leading-tight flex items-center gap-1.5">
+                          {profileData.name}
+                          <div className="size-4.5 rounded-full bg-sky-500/10 border border-sky-500/20 flex items-center justify-center">
+                            <Twitter className="size-2.5 text-sky-500 fill-current" />
+                          </div>
+                        </h2>
+                        <p className="text-[13px] text-muted-foreground font-bold">@{profileData.screen_name}</p>
+                      </div>
+
+                      {profileData.description && (
+                        <p className="text-[13px] leading-relaxed text-foreground/90 font-medium">
+                          {profileData.description}
+                        </p>
+                      )}
+
+                      {/* Location and metadata info */}
+                      <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-[11.5px] text-muted-foreground font-bold">
+                        {profileData.location && (
+                          <div className="flex items-center gap-1">
+                            <MapPin className="size-3.5" />
+                            <span>{profileData.location}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1">
+                          <Calendar className="size-3.5" />
+                          <span>Joined Twitter</span>
+                        </div>
+                      </div>
+
+                      {/* Stats Row */}
+                      <div className="flex gap-4 pt-1.5 text-[13px] font-bold border-t border-border/20">
+                        <div className="flex gap-1">
+                          <span className="text-foreground">{formatNumber(profileData.following)}</span>
+                          <span className="text-muted-foreground font-medium">Following</span>
+                        </div>
+                        <div className="flex gap-1">
+                          <span className="text-foreground">{formatNumber(profileData.followers)}</span>
+                          <span className="text-muted-foreground font-medium">Followers</span>
+                        </div>
+                        <div className="flex gap-1">
+                          <span className="text-foreground">{formatNumber(profileData.tweets)}</span>
+                          <span className="text-muted-foreground font-medium">Posts</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            {/* 2. Embedded Tweets Timeline - Cropped to hide original site header/bio and made READ-ONLY */}
+            <div className="flex-1 w-full relative min-h-[400px] overflow-hidden bg-background">
+              {iframeLoading && (
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/95">
+                  <Loader2 className="size-7 text-sky-500 animate-spin mb-2" />
+                  <span className="text-[12.5px] font-bold text-muted-foreground">Loading posts timeline...</span>
+                </div>
+              )}
+
+              {/* Set top crop value to hide their banner/bio/tabs: -430px on desktop, -450px on mobile */}
               <iframe
                 ref={iframeRef}
                 src={iframeSrc}
                 className="absolute w-full border-0 bg-white dark:bg-[#15202b]"
                 style={{
-                  top: "-80px", // Crop top header (logo, search bar, website name) completely
+                  top: "-425px", // Crop banner, avatar, bio and outer menus completely
                   left: "0",
-                  height: "calc(100% + 80px)", // Compensate height for top crop
+                  height: "calc(100% + 425px)", // Compensate cropped area
                   width: "100%",
+                  pointerEvents: "none", // Prevent clicks on links to avoid interface exposure/navigating away
                 }}
                 sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
                 loading="lazy"
@@ -434,6 +544,7 @@ function XViewerPage() {
                 onError={() => setIframeLoading(false)}
               />
             </div>
+
           </div>
         )}
       </div>
