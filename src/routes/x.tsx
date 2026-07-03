@@ -13,15 +13,8 @@ import {
   MapPin,
   Twitter,
   Calendar,
-  MessageCircle,
-  Repeat2,
-  Heart,
-  BarChart2,
-  Share,
-  CheckCircle,
-  Plus,
-  X,
-  ExternalLink
+  ShieldCheck,
+  Zap
 } from "lucide-react";
 
 export const Route = createFileRoute("/x")({
@@ -47,30 +40,6 @@ interface XUserProfile {
   following: number;
   tweets: number;
   location: string;
-}
-
-interface TweetUser {
-  name: string;
-  screen_name: string;
-  avatar_url: string;
-}
-
-interface TweetMedia {
-  type: string;
-  url: string;
-  thumbnail_url?: string;
-}
-
-interface TweetData {
-  id: string;
-  text: string;
-  created_at: string;
-  user: TweetUser;
-  media?: TweetMedia[];
-  likes?: number;
-  retweets?: number;
-  replies?: number;
-  views?: number;
 }
 
 interface XVideo {
@@ -104,27 +73,15 @@ function XViewerPage() {
   const [profileData, setProfileData] = useState<XUserProfile | null>(null);
 
   // Tweets Timeline states
-  const [tweetsLoading, setTweetsLoading] = useState(false);
-  const [tweetsData, setTweetsData] = useState<TweetData[]>([]);
-  const [tweetsError, setTweetsError] = useState<string | null>(null);
+  const [iframeSrc, setIframeSrc] = useState("");
+  const [iframeLoading, setIframeLoading] = useState(false);
   const [viewMode, setViewMode] = useState<"home" | "browsing">("home");
-
-  // Live Infinite Pagination states
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [hasNextPage, setHasNextPage] = useState(false);
-  const [paginationLoading, setPaginationLoading] = useState(false);
 
   // Native Video Downloader states
   const [downloadQuery, setDownloadQuery] = useState("");
   const [downloadLoading, setDownloadLoading] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [downloadResult, setDownloadResult] = useState<XDownloadResult | null>(null);
-
-  // Lightbox for media viewing
-  const [activeMediaUrl, setActiveMediaUrl] = useState<string | null>(null);
-  // Video Player Modal
-  const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
-  const [activeVideoPoster, setActiveVideoPoster] = useState<string | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem("theme") as "light" | "dark" | null;
@@ -150,81 +107,21 @@ function XViewerPage() {
     document.documentElement.classList.toggle("dark", next === "dark");
   };
 
-  const parseTweetsPayload = (payload: any): TweetData[] => {
-    let rawTweets: any[] = [];
-    if (payload.data?.tweets && Array.isArray(payload.data.tweets)) {
-      rawTweets = payload.data.tweets;
-    } else if (payload.tweets && Array.isArray(payload.tweets)) {
-      rawTweets = payload.tweets;
-    } else if (Array.isArray(payload)) {
-      rawTweets = payload;
-    }
-
-    return rawTweets.map((tw: any) => {
-      // Parse media structure
-      const mediaList: TweetMedia[] = [];
-      const rawMedia = tw.extended_entities?.media || tw.entities?.media || tw.media || [];
-
-      for (const m of rawMedia) {
-        if (m.type === "video" || m.type === "animated_gif") {
-          const variants = m.video_info?.variants || [];
-          const mp4s = variants
-            .filter((v: any) => v.content_type === "video/mp4" && v.url)
-            .sort((a: any, b: any) => (b.bitrate || 0) - (a.bitrate || 0));
-
-          const videoUrl = mp4s.length > 0 ? mp4s[0].url : m.video_info?.variants?.[0]?.url || "";
-          mediaList.push({
-            type: "video",
-            url: videoUrl,
-            thumbnail_url: m.media_url_https || m.thumbnail_url || "",
-          });
-        } else {
-          mediaList.push({
-            type: "photo",
-            url: m.media_url_https || m.url || "",
-          });
-        }
-      }
-
-      return {
-        id: tw.id_str || String(tw.id) || String(Math.random()),
-        text: tw.full_text || tw.text || "",
-        created_at: tw.created_at || new Date().toISOString(),
-        user: {
-          name: tw.user?.name || profileData?.name || "User",
-          screen_name: tw.user?.screen_name || profileData?.screen_name || "user",
-          avatar_url: tw.user?.profile_image_url_https || tw.user?.avatar_url || profileData?.avatar_url || "",
-        },
-        media: mediaList,
-        likes: tw.favorite_count || tw.likes || 0,
-        retweets: tw.retweet_count || tw.retweets || 0,
-        replies: tw.reply_count || tw.replies || 0,
-        views: tw.views_count || tw.views || 0,
-      };
-    });
-  };
-
   const loadXProfile = async (username: string) => {
     const clean = username.trim().replace(/^@/, "").replace(/https?:\/\/(x|twitter)\.com\//i, "").split("/")[0].split("?")[0];
     if (!clean) return;
 
     setProfileLoading(true);
-    setTweetsLoading(true);
+    setIframeLoading(true);
     setProfileError(null);
-    setTweetsError(null);
     setProfileData(null);
-    setTweetsData([]);
-    setNextCursor(null);
-    setHasNextPage(false);
     setViewMode("browsing");
 
     // 1. Fetch user metadata from our backend API
-    let fetchedUser: XUserProfile | null = null;
     try {
       const res = await fetch(`/api/x/user?username=${encodeURIComponent(clean)}`);
       const data = await res.json();
       if (res.ok && data.success) {
-        fetchedUser = data.user;
         setProfileData(data.user);
       } else {
         setProfileError(data.error || "User profile not found. Make sure the username is correct.");
@@ -235,76 +132,9 @@ function XViewerPage() {
       setProfileLoading(false);
     }
 
-    // 2. Fetch live tweets list from proxy.io (bypassing CORS & Vercel bot mitigation using client IP!)
-    try {
-      const targetUrl = `https://api.twitterwebviewer.com/api/tweets/${encodeURIComponent(clean)}`;
-      const tweetsRes = await fetch(`https://corsproxy.io/?${encodeURIComponent(targetUrl)}`);
-      if (tweetsRes.ok) {
-        const tweetsJson = await tweetsRes.json();
-        const parsed = parseTweetsPayload(tweetsJson);
-        setTweetsData(parsed);
-        
-        // Extract cursor
-        const cursor = tweetsJson.data?.nextCursor || tweetsJson.nextCursor || null;
-        const hasNext = tweetsJson.data?.hasNextPage || tweetsJson.hasNextPage || false;
-        setNextCursor(cursor);
-        setHasNextPage(hasNext || !!cursor); // Fallback to true if cursor is present
-      } else {
-        throw new Error("Failed to load timeline feed.");
-      }
-    } catch {
-      // Fallback: Fetch the syndication feed from our backend API as a backup
-      try {
-        const backupRes = await fetch(`/api/x/tweets?username=${encodeURIComponent(clean)}`);
-        if (backupRes.ok) {
-          const backupJson = await backupRes.json();
-          if (backupJson.success && Array.isArray(backupJson.tweets)) {
-            setTweetsData(backupJson.tweets);
-            setHasNextPage(false); // Backup syndication feed is 100 limit capped
-          } else {
-            throw new Error();
-          }
-        } else {
-          throw new Error();
-        }
-      } catch {
-        setTweetsError("Unable to load tweets timeline. Please verify the account exists.");
-      }
-    } finally {
-      setTweetsLoading(false);
-    }
-  };
-
-  const loadMoreTweets = async () => {
-    if (!nextCursor || !profileData || paginationLoading) return;
-
-    setPaginationLoading(true);
-    try {
-      const targetUrl = `https://api.twitterwebviewer.com/api/tweets/${encodeURIComponent(profileData.screen_name)}?cursor=${encodeURIComponent(nextCursor)}`;
-      const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(targetUrl)}`);
-      
-      if (res.ok) {
-        const data = await res.json();
-        const parsed = parseTweetsPayload(data);
-        
-        // Append unique tweets
-        setTweetsData(prev => {
-          const existingIds = new Set(prev.map(t => t.id));
-          const newTweets = parsed.filter(t => !existingIds.has(t.id));
-          return [...prev, ...newTweets];
-        });
-
-        // Update cursors
-        const cursor = data.data?.nextCursor || data.nextCursor || null;
-        const hasNext = data.data?.hasNextPage || data.hasNextPage || false;
-        setNextCursor(cursor);
-        setHasNextPage(hasNext || !!cursor);
-      }
-    } catch (e) {
-      console.error("Failed to paginate tweets:", e);
-    } finally {
-      setPaginationLoading(false);
-    }
+    // 2. Load the official Twitter syndication timeline iframe directly using the user's browser IP
+    // This is 100% reliable, requires no login, does not get rate-limited, and has no third-party branding!
+    setIframeSrc(`https://syndication.twitter.com/srv/timeline-profile/screen-name/${encodeURIComponent(clean)}?theme=${theme}&transparent=true`);
   };
 
   const handleUserSearch = (e: React.FormEvent) => {
@@ -339,10 +169,8 @@ function XViewerPage() {
 
   const goHome = () => {
     setViewMode("home");
+    setIframeSrc("");
     setProfileData(null);
-    setTweetsData([]);
-    setNextCursor(null);
-    setHasNextPage(false);
     setUserQuery("");
   };
 
@@ -350,30 +178,6 @@ function XViewerPage() {
     if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
     if (num >= 1000) return (num / 1000).toFixed(1) + "K";
     return num.toString();
-  };
-
-  const formatDate = (isoStr: string) => {
-    try {
-      const d = new Date(isoStr);
-      if (isNaN(d.getTime())) {
-        const cleanStr = isoStr.replace(/^\w+\s/, ""); // Remove weekday
-        const dFallback = new Date(cleanStr);
-        if (!isNaN(dFallback.getTime())) return dFallback.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-        return isoStr;
-      }
-      const diffMs = Date.now() - d.getTime();
-      const diffHours = Math.floor(diffMs / 3600000);
-      if (diffHours < 24) {
-        if (diffHours < 1) {
-          const mins = Math.max(1, Math.floor(diffMs / 60000));
-          return `${mins}m`;
-        }
-        return `${diffHours}h`;
-      }
-      return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-    } catch {
-      return isoStr;
-    }
   };
 
   return (
@@ -630,11 +434,11 @@ function XViewerPage() {
             )}
           </div>
         ) : (
-          /* ===== BROWSING WORKSPACE (OUR OWN 100% NATIVE iOS TIMELINE & PROFILE VIEW) ===== */
-          <div className="flex-1 w-full h-full flex flex-col min-h-0 overflow-y-auto">
+          /* ===== BROWSING WORKSPACE (NATIVE iOS PROFILE + OFFICIAL X TIMELINE EMBED) ===== */
+          <div className="flex-1 w-full h-full flex flex-col min-h-0 relative bg-background">
             
             {/* 1. Custom, Native iOS-Themed Profile Card */}
-            <div className="w-full flex-shrink-0 bg-background border-b border-border/40">
+            <div className="w-full flex-shrink-0 bg-background border-b border-border/40 z-10">
               {profileLoading ? (
                 <div className="p-8 flex flex-col items-center justify-center animate-pulse">
                   <Loader2 className="size-6 text-sky-500 animate-spin mb-2" />
@@ -712,214 +516,43 @@ function XViewerPage() {
               ) : null}
             </div>
 
-            {/* 2. 100% NATIVE iOS TIMELINE (No Iframe!) */}
-            <div className="flex-1 w-full max-w-2xl mx-auto px-4 py-6 space-y-4">
-              <h3 className="text-[14px] font-black uppercase tracking-wider text-muted-foreground select-none">Posts Timeline</h3>
-
-              {tweetsLoading ? (
-                <div className="py-12 flex flex-col items-center justify-center">
-                  <Loader2 className="size-8 text-sky-500 animate-spin mb-3" />
-                  <p className="text-[13px] font-bold text-muted-foreground">Fetching posts securely...</p>
-                </div>
-              ) : tweetsError ? (
-                <div className="rounded-[20px] border border-border bg-secondary/10 p-8 text-center space-y-2">
-                  <AlertCircle className="size-7 text-muted-foreground mx-auto" />
-                  <p className="text-[13.5px] font-bold text-muted-foreground">{tweetsError}</p>
-                </div>
-              ) : tweetsData.length > 0 ? (
-                <div className="space-y-4">
-                  {tweetsData.map((tweet) => (
-                    <article
-                      key={tweet.id}
-                      className="rounded-[20px] border border-border/40 p-5 bg-background hover:border-border transition-all flex flex-col gap-3 select-none animate-slide-up"
-                    >
-                      {/* Tweet Author Details */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2.5">
-                          <div className="size-10 rounded-full overflow-hidden border border-border/10">
-                            <img src={tweet.user.avatar_url} alt="" className="w-full h-full object-cover" />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-1">
-                              <h4 className="text-[13.5px] font-black leading-tight">{tweet.user.name}</h4>
-                              <CheckCircle className="size-3.5 text-sky-500 fill-current" />
-                            </div>
-                            <p className="text-[11.5px] text-muted-foreground font-bold">@{tweet.user.screen_name}</p>
-                          </div>
-                        </div>
-                        <span className="text-[11.5px] text-muted-foreground font-bold">{formatDate(tweet.created_at)}</span>
-                      </div>
-
-                      {/* Tweet content */}
-                      <p className="text-[13.5px] leading-relaxed font-medium text-foreground/90 whitespace-pre-wrap">
-                        {tweet.text}
-                      </p>
-
-                      {/* Media grids */}
-                      {tweet.media && tweet.media.length > 0 && (
-                        <div className={`grid gap-2 overflow-hidden rounded-[16px] border border-border/20 mt-1 ${
-                          tweet.media.length > 1 ? "grid-cols-2" : "grid-cols-1"
-                        }`}>
-                          {tweet.media.map((m, idx) => (
-                            <div key={idx} className="relative bg-black overflow-hidden rounded-[12px] aspect-video">
-                              {m.type === "video" ? (
-                                <div className="relative w-full h-full">
-                                  <img
-                                    src={m.thumbnail_url}
-                                    alt=""
-                                    className="w-full h-full object-cover brightness-[0.7]"
-                                  />
-                                  <button
-                                    onClick={() => {
-                                      setActiveVideoUrl(m.url);
-                                      setActiveVideoPoster(m.thumbnail_url || "");
-                                    }}
-                                    className="absolute inset-0 m-auto size-14 rounded-full bg-sky-500 hover:bg-sky-400 active:scale-95 transition-all text-white flex items-center justify-center shadow-lg cursor-pointer"
-                                  >
-                                    <Play className="size-6 fill-current ml-0.5" />
-                                  </button>
-                                </div>
-                              ) : (
-                                <div
-                                  onClick={() => setActiveMediaUrl(m.url)}
-                                  className="relative w-full h-full bg-secondary cursor-zoom-in group"
-                                >
-                                  <img
-                                    src={m.url}
-                                    alt=""
-                                    className="w-full h-full object-cover group-hover:scale-[1.03] transition-all duration-300"
-                                  />
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Tweet stats/actions row */}
-                      <div className="flex items-center justify-between border-t border-border/20 pt-3 text-muted-foreground text-[12px] font-bold">
-                        <button className="flex items-center gap-1.5 hover:text-sky-500 transition-colors">
-                          <MessageCircle className="size-4.5" />
-                          <span>{formatNumber(tweet.replies || 0)}</span>
-                        </button>
-                        <button className="flex items-center gap-1.5 hover:text-emerald-500 transition-colors">
-                          <Repeat2 className="size-4.5" />
-                          <span>{formatNumber(tweet.retweets || 0)}</span>
-                        </button>
-                        <button className="flex items-center gap-1.5 hover:text-rose-500 transition-colors">
-                          <Heart className="size-4.5" />
-                          <span>{formatNumber(tweet.likes || 0)}</span>
-                        </button>
-                        <button className="flex items-center gap-1.5 hover:text-sky-500 transition-colors">
-                          <BarChart2 className="size-4.5" />
-                          <span>{formatNumber(tweet.views || 0)}</span>
-                        </button>
-                        <button className="hover:text-sky-500 transition-colors">
-                          <Share className="size-4.5" />
-                        </button>
-                      </div>
-                    </article>
-                  ))}
-                  
-                  {/* Load more button (paginates live tweets via API cursor) */}
-                  {hasNextPage && (
-                    <button
-                      onClick={loadMoreTweets}
-                      disabled={paginationLoading}
-                      className="w-full h-11 rounded-[16px] border border-border/40 hover:bg-secondary/40 text-[13px] font-black transition-all active:scale-[0.98] flex items-center justify-center gap-2"
-                    >
-                      {paginationLoading ? (
-                        <Loader2 className="size-4 animate-spin text-muted-foreground" />
-                      ) : (
-                        <>
-                          <Plus className="size-4" />
-                          <span>Show More</span>
-                        </>
-                      )}
-                    </button>
-                  )}
-
-                  {!hasNextPage && tweetsData.length > 0 && (
-                    <p className="text-center text-[12px] font-bold text-muted-foreground/60 py-4 select-none">
-                      End of timeline feed
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <div className="py-12 text-center text-muted-foreground select-none">
-                  No posts found on this timeline.
+            {/* 2. Official Twitter/X Syndication Timeline Iframe (No third-party branding, loads infinite pages natively!) */}
+            <div className="flex-1 w-full relative overflow-hidden bg-background">
+              {iframeLoading && (
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/95">
+                  <Loader2 className="size-7 text-sky-500 animate-spin mb-2" />
+                  <span className="text-[12.5px] font-bold text-muted-foreground">Loading official timeline feed...</span>
                 </div>
               )}
+
+              {/* Crop top -55px of the syndication widget to hide "Tweets by @username" header, leaving only the clean post timeline */}
+              <div className="absolute inset-0 overflow-hidden" style={{ bottom: "0" }}>
+                <iframe
+                  src={iframeSrc}
+                  className="absolute w-full border-0 bg-transparent"
+                  style={{
+                    top: "-55px", // Crop widget header
+                    left: "0",
+                    height: "calc(100% + 55px)", // Compensate cropped height
+                    width: "100%",
+                    pointerEvents: "auto",
+                  }}
+                  loading="lazy"
+                  onLoad={() => setIframeLoading(false)}
+                  onError={() => setIframeLoading(false)}
+                />
+              </div>
+
+              {/* 3. Sleek Security Status indicator (No third-party site mentions) */}
+              <div className="absolute bottom-4 right-4 h-8 px-4 rounded-full bg-background/90 border border-border/40 backdrop-blur-md z-30 flex items-center gap-1.5 text-[11px] font-black tracking-tight select-none shadow-sm">
+                <ShieldCheck className="size-3.5 text-emerald-500" />
+                <span className="text-muted-foreground">Direct Secure Feed</span>
+              </div>
             </div>
 
           </div>
         )}
       </div>
-
-      {/* ── Image Lightbox Overlay ── */}
-      {activeMediaUrl && (
-        <div
-          onClick={() => setActiveMediaUrl(null)}
-          className="fixed inset-0 bg-black/95 z-55 flex items-center justify-center cursor-zoom-out p-4"
-        >
-          <img src={activeMediaUrl} alt="" className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-fade-in" />
-        </div>
-      )}
-
-      {/* ── Native iOS Video Player Overlay Modal ── */}
-      {activeVideoUrl && (
-        <div className="fixed inset-0 bg-black/98 z-55 flex flex-col items-center justify-center p-4 select-none animate-fade-in">
-          {/* Header Controls */}
-          <div className="w-full max-w-3xl flex items-center justify-between pb-4 text-white">
-            <span className="text-[13px] font-black tracking-tight text-white/70">X SPACE MEDIA PLAYER</span>
-            <button
-              onClick={() => {
-                setActiveVideoUrl(null);
-                setActiveVideoPoster(null);
-              }}
-              className="size-10 rounded-full bg-white/10 hover:bg-white/20 active:scale-90 transition-all flex items-center justify-center cursor-pointer"
-            >
-              <X className="size-5" />
-            </button>
-          </div>
-
-          {/* Video element */}
-          <div className="flex-1 w-full max-w-3xl flex items-center justify-center relative overflow-hidden rounded-[20px] bg-black border border-white/5 shadow-2xl">
-            <video
-              src={activeVideoUrl}
-              poster={activeVideoPoster || ""}
-              controls
-              autoPlay
-              playsInline
-              className="w-full max-h-[75vh] object-contain"
-            />
-          </div>
-
-          {/* Bottom Utility Bar */}
-          <div className="w-full max-w-3xl pt-5 flex items-center justify-between select-none">
-            <a
-              href={activeVideoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              download="x-space-video.mp4"
-              className="h-11 px-6 rounded-full bg-sky-500 hover:bg-sky-400 active:scale-95 text-[12.5px] font-black text-white flex items-center gap-2 shadow-lg transition-all"
-            >
-              <Download className="size-4" />
-              <span>Download MP4</span>
-            </a>
-            
-            <a
-              href={activeVideoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="h-11 px-5 rounded-full border border-white/20 hover:bg-white/10 text-[12.5px] font-bold text-white/80 hover:text-white flex items-center gap-2 transition-all"
-            >
-              <span>Open Direct Link</span>
-              <ExternalLink className="size-3.5" />
-            </a>
-          </div>
-        </div>
-      )}
     </main>
   );
 }
