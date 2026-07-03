@@ -20,7 +20,6 @@ import {
   Share,
   CheckCircle,
   Plus,
-  Play,
   X,
   ExternalLink
 } from "lucide-react";
@@ -110,6 +109,9 @@ function XViewerPage() {
   const [tweetsError, setTweetsError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"home" | "browsing">("home");
 
+  // Client-side pagination state
+  const [visibleCount, setVisibleCount] = useState(10);
+
   // Native Video Downloader states
   const [downloadQuery, setDownloadQuery] = useState("");
   const [downloadLoading, setDownloadLoading] = useState(false);
@@ -156,6 +158,7 @@ function XViewerPage() {
     setTweetsError(null);
     setProfileData(null);
     setTweetsData([]);
+    setVisibleCount(10); // Reset pagination count on search
     setViewMode("browsing");
 
     // 1. Fetch user metadata from our backend API
@@ -664,7 +667,8 @@ function XViewerPage() {
                 </div>
               ) : tweetsData.length > 0 ? (
                 <div className="space-y-4">
-                  {tweetsData.map((tweet) => (
+                  {/* Map over client-side sliced displayed entries */}
+                  {tweetsData.slice(0, visibleCount).map((tweet) => (
                     <article
                       key={tweet.id}
                       className="rounded-[20px] border border-border/40 p-5 bg-background hover:border-border transition-all flex flex-col gap-3 select-none animate-slide-up"
@@ -700,7 +704,6 @@ function XViewerPage() {
                             <div key={idx} className="relative bg-black overflow-hidden rounded-[12px] aspect-video">
                               {m.type === "video" ? (
                                 <div className="relative w-full h-full">
-                                  {/* Sleek, premium Video poster with central Play Button overlay */}
                                   <img
                                     src={m.thumbnail_url}
                                     alt=""
@@ -758,32 +761,22 @@ function XViewerPage() {
                     </article>
                   ))}
                   
-                  {/* Load more button */}
-                  <button
-                    onClick={() => {
-                      const nextMock: TweetData[] = [
-                        {
-                          id: String(Math.random()),
-                          text: `Continuous iteration is key. Refining the UI, polishing layout offsets, and ensuring clean logic flow.`,
-                          created_at: new Date(Date.now() - 345600000).toISOString(),
-                          user: {
-                            name: profileData?.name || "User",
-                            screen_name: profileData?.screen_name || "user",
-                            avatar_url: profileData?.avatar_url || "",
-                          },
-                          likes: 72000,
-                          retweets: 3100,
-                          replies: 800,
-                          views: 2400000,
-                        }
-                      ];
-                      setTweetsData([...tweetsData, ...nextMock]);
-                    }}
-                    className="w-full h-11 rounded-[16px] border border-border/40 hover:bg-secondary/40 text-[13px] font-black transition-all active:scale-[0.98] flex items-center justify-center gap-2"
-                  >
-                    <Plus className="size-4" />
-                    Show More
-                  </button>
+                  {/* Load more button (client-side paginates the real fetched 100 entries) */}
+                  {visibleCount < tweetsData.length && (
+                    <button
+                      onClick={() => setVisibleCount((prev) => Math.min(prev + 10, tweetsData.length))}
+                      className="w-full h-11 rounded-[16px] border border-border/40 hover:bg-secondary/40 text-[13px] font-black transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                    >
+                      <Plus className="size-4" />
+                      Show More
+                    </button>
+                  )}
+
+                  {visibleCount >= tweetsData.length && tweetsData.length > 0 && (
+                    <p className="text-center text-[12px] font-bold text-muted-foreground/60 py-4 select-none">
+                      End of timeline feed
+                    </p>
+                  )}
                 </div>
               ) : (
                 <div className="py-12 text-center text-muted-foreground select-none">
