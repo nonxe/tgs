@@ -19,7 +19,10 @@ import {
   BarChart2,
   Share,
   CheckCircle,
-  Plus
+  Plus,
+  Play,
+  X,
+  ExternalLink
 } from "lucide-react";
 
 export const Route = createFileRoute("/x")({
@@ -115,6 +118,9 @@ function XViewerPage() {
 
   // Lightbox for media viewing
   const [activeMediaUrl, setActiveMediaUrl] = useState<string | null>(null);
+  // Video Player Modal
+  const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
+  const [activeVideoPoster, setActiveVideoPoster] = useState<string | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem("theme") as "light" | "dark" | null;
@@ -122,7 +128,7 @@ function XViewerPage() {
     setTheme(t);
     document.documentElement.classList.toggle("dark", t === "dark");
 
-    // Support direct loading via query param e.g., /x?user=elonmusk
+    // Support query param direct load e.g., /x?user=elonmusk
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const userParam = params.get("user");
@@ -685,25 +691,35 @@ function XViewerPage() {
                         {tweet.text}
                       </p>
 
-                      {/* Media grids (supports native video playback!) */}
+                      {/* Media grids */}
                       {tweet.media && tweet.media.length > 0 && (
                         <div className={`grid gap-2 overflow-hidden rounded-[16px] border border-border/20 mt-1 ${
                           tweet.media.length > 1 ? "grid-cols-2" : "grid-cols-1"
                         }`}>
                           {tweet.media.map((m, idx) => (
-                            <div key={idx} className="relative bg-black overflow-hidden rounded-[12px]">
+                            <div key={idx} className="relative bg-black overflow-hidden rounded-[12px] aspect-video">
                               {m.type === "video" ? (
-                                <video
-                                  src={m.url}
-                                  poster={m.thumbnail_url}
-                                  controls
-                                  playsInline
-                                  className="w-full max-h-[420px] object-contain"
-                                />
+                                <div className="relative w-full h-full">
+                                  {/* Sleek, premium Video poster with central Play Button overlay */}
+                                  <img
+                                    src={m.thumbnail_url}
+                                    alt=""
+                                    className="w-full h-full object-cover brightness-[0.7]"
+                                  />
+                                  <button
+                                    onClick={() => {
+                                      setActiveVideoUrl(m.url);
+                                      setActiveVideoPoster(m.thumbnail_url || "");
+                                    }}
+                                    className="absolute inset-0 m-auto size-14 rounded-full bg-sky-500 hover:bg-sky-400 active:scale-95 transition-all text-white flex items-center justify-center shadow-lg cursor-pointer"
+                                  >
+                                    <Play className="size-6 fill-current ml-0.5" />
+                                  </button>
+                                </div>
                               ) : (
                                 <div
                                   onClick={() => setActiveMediaUrl(m.url)}
-                                  className="relative aspect-video bg-secondary cursor-zoom-in group"
+                                  className="relative w-full h-full bg-secondary cursor-zoom-in group"
                                 >
                                   <img
                                     src={m.url}
@@ -780,13 +796,68 @@ function XViewerPage() {
         )}
       </div>
 
-      {/* ── Lightbox Overlay ── */}
+      {/* ── Image Lightbox Overlay ── */}
       {activeMediaUrl && (
         <div
           onClick={() => setActiveMediaUrl(null)}
           className="fixed inset-0 bg-black/95 z-55 flex items-center justify-center cursor-zoom-out p-4"
         >
-          <img src={activeMediaUrl} alt="" className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" />
+          <img src={activeMediaUrl} alt="" className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-fade-in" />
+        </div>
+      )}
+
+      {/* ── Native iOS Video Player Overlay Modal ── */}
+      {activeVideoUrl && (
+        <div className="fixed inset-0 bg-black/98 z-55 flex flex-col items-center justify-center p-4 select-none animate-fade-in">
+          {/* Header Controls */}
+          <div className="w-full max-w-3xl flex items-center justify-between pb-4 text-white">
+            <span className="text-[13px] font-black tracking-tight text-white/70">X SPACE MEDIA PLAYER</span>
+            <button
+              onClick={() => {
+                setActiveVideoUrl(null);
+                setActiveVideoPoster(null);
+              }}
+              className="size-10 rounded-full bg-white/10 hover:bg-white/20 active:scale-90 transition-all flex items-center justify-center cursor-pointer"
+            >
+              <X className="size-5" />
+            </button>
+          </div>
+
+          {/* Video element */}
+          <div className="flex-1 w-full max-w-3xl flex items-center justify-center relative overflow-hidden rounded-[20px] bg-black border border-white/5 shadow-2xl">
+            <video
+              src={activeVideoUrl}
+              poster={activeVideoPoster || ""}
+              controls
+              autoPlay
+              playsInline
+              className="w-full max-h-[75vh] object-contain"
+            />
+          </div>
+
+          {/* Bottom Utility Bar */}
+          <div className="w-full max-w-3xl pt-5 flex items-center justify-between select-none">
+            <a
+              href={activeVideoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              download="x-space-video.mp4"
+              className="h-11 px-6 rounded-full bg-sky-500 hover:bg-sky-400 active:scale-95 text-[12.5px] font-black text-white flex items-center gap-2 shadow-lg transition-all"
+            >
+              <Download className="size-4" />
+              <span>Download MP4</span>
+            </a>
+            
+            <a
+              href={activeVideoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="h-11 px-5 rounded-full border border-white/20 hover:bg-white/10 text-[12.5px] font-bold text-white/80 hover:text-white flex items-center gap-2 transition-all"
+            >
+              <span>Open Direct Link</span>
+              <ExternalLink className="size-3.5" />
+            </a>
+          </div>
         </div>
       )}
     </main>
