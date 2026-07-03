@@ -22,6 +22,8 @@ import { Route as NoteIndexRouteImport } from './routes/note.index'
 import { Route as NoteNoteIdRouteImport } from './routes/note.$noteId'
 import { Route as DbCreateRouteImport } from './routes/db.create'
 import { Route as DbIdRouteImport } from './routes/db.$id'
+import { Route as ApiXUserRouteImport } from './routes/api/x/user'
+import { Route as ApiXDownloadRouteImport } from './routes/api/x/download'
 import { Route as ApiPublicUploadRouteImport } from './routes/api/public/upload'
 
 const XRoute = XRouteImport.update({
@@ -89,6 +91,16 @@ const DbIdRoute = DbIdRouteImport.update({
   path: '/db/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiXUserRoute = ApiXUserRouteImport.update({
+  id: '/api/x/user',
+  path: '/api/x/user',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiXDownloadRoute = ApiXDownloadRouteImport.update({
+  id: '/api/x/download',
+  path: '/api/x/download',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicUploadRoute = ApiPublicUploadRouteImport.update({
   id: '/api/public/upload',
   path: '/api/public/upload',
@@ -110,6 +122,8 @@ export interface FileRoutesByFullPath {
   '/note/$noteId': typeof NoteNoteIdRoute
   '/note/': typeof NoteIndexRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
+  '/api/x/download': typeof ApiXDownloadRoute
+  '/api/x/user': typeof ApiXUserRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -125,6 +139,8 @@ export interface FileRoutesByTo {
   '/note/$noteId': typeof NoteNoteIdRoute
   '/note': typeof NoteIndexRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
+  '/api/x/download': typeof ApiXDownloadRoute
+  '/api/x/user': typeof ApiXUserRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -142,6 +158,8 @@ export interface FileRoutesById {
   '/note/$noteId': typeof NoteNoteIdRoute
   '/note/': typeof NoteIndexRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
+  '/api/x/download': typeof ApiXDownloadRoute
+  '/api/x/user': typeof ApiXUserRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -160,6 +178,8 @@ export interface FileRouteTypes {
     | '/note/$noteId'
     | '/note/'
     | '/api/public/upload'
+    | '/api/x/download'
+    | '/api/x/user'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -175,6 +195,8 @@ export interface FileRouteTypes {
     | '/note/$noteId'
     | '/note'
     | '/api/public/upload'
+    | '/api/x/download'
+    | '/api/x/user'
   id:
     | '__root__'
     | '/'
@@ -191,6 +213,8 @@ export interface FileRouteTypes {
     | '/note/$noteId'
     | '/note/'
     | '/api/public/upload'
+    | '/api/x/download'
+    | '/api/x/user'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -206,6 +230,8 @@ export interface RootRouteChildren {
   DbIdRoute: typeof DbIdRoute
   DbCreateRoute: typeof DbCreateRoute
   ApiPublicUploadRoute: typeof ApiPublicUploadRoute
+  ApiXDownloadRoute: typeof ApiXDownloadRoute
+  ApiXUserRoute: typeof ApiXUserRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -301,6 +327,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DbIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/x/user': {
+      id: '/api/x/user'
+      path: '/api/x/user'
+      fullPath: '/api/x/user'
+      preLoaderRoute: typeof ApiXUserRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/x/download': {
+      id: '/api/x/download'
+      path: '/api/x/download'
+      fullPath: '/api/x/download'
+      preLoaderRoute: typeof ApiXDownloadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/upload': {
       id: '/api/public/upload'
       path: '/api/public/upload'
@@ -336,6 +376,8 @@ const rootRouteChildren: RootRouteChildren = {
   DbIdRoute: DbIdRoute,
   DbCreateRoute: DbCreateRoute,
   ApiPublicUploadRoute: ApiPublicUploadRoute,
+  ApiXDownloadRoute: ApiXDownloadRoute,
+  ApiXUserRoute: ApiXUserRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
