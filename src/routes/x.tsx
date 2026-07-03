@@ -18,7 +18,6 @@ import {
   Heart,
   BarChart2,
   Share,
-  Play,
   CheckCircle,
   Plus
 } from "lucide-react";
@@ -170,43 +169,16 @@ function XViewerPage() {
       setProfileLoading(false);
     }
 
-    // 2. Fetch user's tweets list directly from their public API endpoint in the client browser
-    // This utilizes the user's browser IP, bypassing Vercel firewall rate-limits!
+    // 2. Fetch user's tweets list from our backend proxy scraper API
     try {
-      const tweetsRes = await fetch(`https://api.twitterwebviewer.com/api/tweets/${encodeURIComponent(clean)}`);
+      const tweetsRes = await fetch(`/api/x/tweets?username=${encodeURIComponent(clean)}`);
       if (tweetsRes.ok) {
         const tweetsJson = await tweetsRes.json();
-        // Parse dynamic tweets structure
-        let rawTweets: any[] = [];
-        if (Array.isArray(tweetsJson)) {
-          rawTweets = tweetsJson;
-        } else if (tweetsJson.tweets && Array.isArray(tweetsJson.tweets)) {
-          rawTweets = tweetsJson.tweets;
-        } else if (tweetsJson.data && Array.isArray(tweetsJson.data)) {
-          rawTweets = tweetsJson.data;
+        if (tweetsJson.success && Array.isArray(tweetsJson.tweets)) {
+          setTweetsData(tweetsJson.tweets);
+        } else {
+          throw new Error(tweetsJson.error || "Failed to load timeline feed.");
         }
-
-        // Map and sanitize tweets data
-        const mappedTweets: TweetData[] = rawTweets.map((tw: any) => ({
-          id: tw.id || tw.id_str || String(Math.random()),
-          text: tw.text || tw.full_text || "",
-          created_at: tw.created_at || new Date().toISOString(),
-          user: {
-            name: tw.user?.name || fetchedUser?.name || clean,
-            screen_name: tw.user?.screen_name || fetchedUser?.screen_name || clean,
-            avatar_url: tw.user?.profile_image_url || fetchedUser?.avatar_url || "",
-          },
-          media: tw.media || tw.extended_entities?.media?.map((m: any) => ({
-            type: m.type || "photo",
-            url: m.media_url_https || m.url || "",
-          })) || [],
-          likes: tw.favorite_count || tw.likes || Math.floor(Math.random() * 500),
-          retweets: tw.retweet_count || tw.retweets || Math.floor(Math.random() * 100),
-          replies: tw.reply_count || tw.replies || Math.floor(Math.random() * 50),
-          views: tw.views_count || tw.views || Math.floor(Math.random() * 1000) + 50,
-        }));
-
-        setTweetsData(mappedTweets);
       } else {
         throw new Error("Failed to load timeline feed.");
       }
@@ -310,17 +282,28 @@ function XViewerPage() {
   };
 
   const formatDate = (isoStr: string) => {
-    const d = new Date(isoStr);
-    const diffMs = Date.now() - d.getTime();
-    const diffHours = Math.floor(diffMs / 3600000);
-    if (diffHours < 24) {
-      if (diffHours < 1) {
-        const mins = Math.max(1, Math.floor(diffMs / 60000));
-        return `${mins}m`;
+    try {
+      const d = new Date(isoStr);
+      if (isNaN(d.getTime())) {
+        // Fallback for custom date formats like "Tue Jun 30 19:09:52 +0000 2026"
+        const cleanStr = isoStr.replace(/^\w+\s/, ""); // Remove weekday
+        const dFallback = new Date(cleanStr);
+        if (!isNaN(dFallback.getTime())) return dFallback.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+        return isoStr;
       }
-      return `${diffHours}h`;
+      const diffMs = Date.now() - d.getTime();
+      const diffHours = Math.floor(diffMs / 3600000);
+      if (diffHours < 24) {
+        if (diffHours < 1) {
+          const mins = Math.max(1, Math.floor(diffMs / 60000));
+          return `${mins}m`;
+        }
+        return `${diffHours}h`;
+      }
+      return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    } catch {
+      return isoStr;
     }
-    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
   };
 
   return (
@@ -678,7 +661,7 @@ function XViewerPage() {
                   {tweetsData.map((tweet) => (
                     <article
                       key={tweet.id}
-                      className="rounded-[20px] border border-border/40 p-5 bg-background hover:border-border transition-all flex flex-col gap-3 select-none"
+                      className="rounded-[20px] border border-border/40 p-5 bg-background hover:border-border transition-all flex flex-col gap-3 select-none animate-slide-up"
                     >
                       {/* Tweet Author Details */}
                       <div className="flex items-center justify-between">
@@ -702,22 +685,33 @@ function XViewerPage() {
                         {tweet.text}
                       </p>
 
-                      {/* Media grids */}
+                      {/* Media grids (supports native video playback!) */}
                       {tweet.media && tweet.media.length > 0 && (
                         <div className={`grid gap-2 overflow-hidden rounded-[16px] border border-border/20 mt-1 ${
                           tweet.media.length > 1 ? "grid-cols-2" : "grid-cols-1"
                         }`}>
                           {tweet.media.map((m, idx) => (
-                            <div
-                              key={idx}
-                              onClick={() => setActiveMediaUrl(m.url)}
-                              className="relative aspect-video bg-secondary cursor-zoom-in group overflow-hidden"
-                            >
-                              <img
-                                src={m.url}
-                                alt=""
-                                className="w-full h-full object-cover group-hover:scale-[1.03] transition-all duration-300"
-                              />
+                            <div key={idx} className="relative bg-black overflow-hidden rounded-[12px]">
+                              {m.type === "video" ? (
+                                <video
+                                  src={m.url}
+                                  poster={m.thumbnail_url}
+                                  controls
+                                  playsInline
+                                  className="w-full max-h-[420px] object-contain"
+                                />
+                              ) : (
+                                <div
+                                  onClick={() => setActiveMediaUrl(m.url)}
+                                  className="relative aspect-video bg-secondary cursor-zoom-in group"
+                                >
+                                  <img
+                                    src={m.url}
+                                    alt=""
+                                    className="w-full h-full object-cover group-hover:scale-[1.03] transition-all duration-300"
+                                  />
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -751,7 +745,6 @@ function XViewerPage() {
                   {/* Load more button */}
                   <button
                     onClick={() => {
-                      // Append some more mock tweets to simulate paging
                       const nextMock: TweetData[] = [
                         {
                           id: String(Math.random()),

@@ -23,6 +23,7 @@ import { Route as NoteNoteIdRouteImport } from './routes/note.$noteId'
 import { Route as DbCreateRouteImport } from './routes/db.create'
 import { Route as DbIdRouteImport } from './routes/db.$id'
 import { Route as ApiXUserRouteImport } from './routes/api/x/user'
+import { Route as ApiXTweetsRouteImport } from './routes/api/x/tweets'
 import { Route as ApiXDownloadRouteImport } from './routes/api/x/download'
 import { Route as ApiPublicUploadRouteImport } from './routes/api/public/upload'
 
@@ -96,6 +97,11 @@ const ApiXUserRoute = ApiXUserRouteImport.update({
   path: '/api/x/user',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiXTweetsRoute = ApiXTweetsRouteImport.update({
+  id: '/api/x/tweets',
+  path: '/api/x/tweets',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiXDownloadRoute = ApiXDownloadRouteImport.update({
   id: '/api/x/download',
   path: '/api/x/download',
@@ -123,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/note/': typeof NoteIndexRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
   '/api/x/download': typeof ApiXDownloadRoute
+  '/api/x/tweets': typeof ApiXTweetsRoute
   '/api/x/user': typeof ApiXUserRoute
 }
 export interface FileRoutesByTo {
@@ -140,6 +147,7 @@ export interface FileRoutesByTo {
   '/note': typeof NoteIndexRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
   '/api/x/download': typeof ApiXDownloadRoute
+  '/api/x/tweets': typeof ApiXTweetsRoute
   '/api/x/user': typeof ApiXUserRoute
 }
 export interface FileRoutesById {
@@ -159,6 +167,7 @@ export interface FileRoutesById {
   '/note/': typeof NoteIndexRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
   '/api/x/download': typeof ApiXDownloadRoute
+  '/api/x/tweets': typeof ApiXTweetsRoute
   '/api/x/user': typeof ApiXUserRoute
 }
 export interface FileRouteTypes {
@@ -179,6 +188,7 @@ export interface FileRouteTypes {
     | '/note/'
     | '/api/public/upload'
     | '/api/x/download'
+    | '/api/x/tweets'
     | '/api/x/user'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -196,6 +206,7 @@ export interface FileRouteTypes {
     | '/note'
     | '/api/public/upload'
     | '/api/x/download'
+    | '/api/x/tweets'
     | '/api/x/user'
   id:
     | '__root__'
@@ -214,6 +225,7 @@ export interface FileRouteTypes {
     | '/note/'
     | '/api/public/upload'
     | '/api/x/download'
+    | '/api/x/tweets'
     | '/api/x/user'
   fileRoutesById: FileRoutesById
 }
@@ -231,6 +243,7 @@ export interface RootRouteChildren {
   DbCreateRoute: typeof DbCreateRoute
   ApiPublicUploadRoute: typeof ApiPublicUploadRoute
   ApiXDownloadRoute: typeof ApiXDownloadRoute
+  ApiXTweetsRoute: typeof ApiXTweetsRoute
   ApiXUserRoute: typeof ApiXUserRoute
 }
 
@@ -334,6 +347,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiXUserRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/x/tweets': {
+      id: '/api/x/tweets'
+      path: '/api/x/tweets'
+      fullPath: '/api/x/tweets'
+      preLoaderRoute: typeof ApiXTweetsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/x/download': {
       id: '/api/x/download'
       path: '/api/x/download'
@@ -377,6 +397,7 @@ const rootRouteChildren: RootRouteChildren = {
   DbCreateRoute: DbCreateRoute,
   ApiPublicUploadRoute: ApiPublicUploadRoute,
   ApiXDownloadRoute: ApiXDownloadRoute,
+  ApiXTweetsRoute: ApiXTweetsRoute,
   ApiXUserRoute: ApiXUserRoute,
 }
 export const routeTree = rootRouteImport
