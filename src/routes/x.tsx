@@ -109,8 +109,10 @@ function XViewerPage() {
   const [tweetsError, setTweetsError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"home" | "browsing">("home");
 
-  // Client-side pagination state
-  const [visibleCount, setVisibleCount] = useState(10);
+  // Live Infinite Pagination states
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [paginationLoading, setPaginationLoading] = useState(false);
 
   // Native Video Downloader states
   const [downloadQuery, setDownloadQuery] = useState("");
@@ -148,6 +150,60 @@ function XViewerPage() {
     document.documentElement.classList.toggle("dark", next === "dark");
   };
 
+  const parseTweetsPayload = (payload: any): TweetData[] => {
+    let rawTweets: any[] = [];
+    if (payload.data?.tweets && Array.isArray(payload.data.tweets)) {
+      rawTweets = payload.data.tweets;
+    } else if (payload.tweets && Array.isArray(payload.tweets)) {
+      rawTweets = payload.tweets;
+    } else if (Array.isArray(payload)) {
+      rawTweets = payload;
+    }
+
+    return rawTweets.map((tw: any) => {
+      // Parse media structure
+      const mediaList: TweetMedia[] = [];
+      const rawMedia = tw.extended_entities?.media || tw.entities?.media || tw.media || [];
+
+      for (const m of rawMedia) {
+        if (m.type === "video" || m.type === "animated_gif") {
+          const variants = m.video_info?.variants || [];
+          const mp4s = variants
+            .filter((v: any) => v.content_type === "video/mp4" && v.url)
+            .sort((a: any, b: any) => (b.bitrate || 0) - (a.bitrate || 0));
+
+          const videoUrl = mp4s.length > 0 ? mp4s[0].url : m.video_info?.variants?.[0]?.url || "";
+          mediaList.push({
+            type: "video",
+            url: videoUrl,
+            thumbnail_url: m.media_url_https || m.thumbnail_url || "",
+          });
+        } else {
+          mediaList.push({
+            type: "photo",
+            url: m.media_url_https || m.url || "",
+          });
+        }
+      }
+
+      return {
+        id: tw.id_str || String(tw.id) || String(Math.random()),
+        text: tw.full_text || tw.text || "",
+        created_at: tw.created_at || new Date().toISOString(),
+        user: {
+          name: tw.user?.name || profileData?.name || "User",
+          screen_name: tw.user?.screen_name || profileData?.screen_name || "user",
+          avatar_url: tw.user?.profile_image_url_https || tw.user?.avatar_url || profileData?.avatar_url || "",
+        },
+        media: mediaList,
+        likes: tw.favorite_count || tw.likes || 0,
+        retweets: tw.retweet_count || tw.retweets || 0,
+        replies: tw.reply_count || tw.replies || 0,
+        views: tw.views_count || tw.views || 0,
+      };
+    });
+  };
+
   const loadXProfile = async (username: string) => {
     const clean = username.trim().replace(/^@/, "").replace(/https?:\/\/(x|twitter)\.com\//i, "").split("/")[0].split("?")[0];
     if (!clean) return;
@@ -158,7 +214,8 @@ function XViewerPage() {
     setTweetsError(null);
     setProfileData(null);
     setTweetsData([]);
-    setVisibleCount(10); // Reset pagination count on search
+    setNextCursor(null);
+    setHasNextPage(false);
     setViewMode("browsing");
 
     // 1. Fetch user metadata from our backend API
@@ -178,72 +235,75 @@ function XViewerPage() {
       setProfileLoading(false);
     }
 
-    // 2. Fetch user's tweets list from our backend proxy scraper API
+    // 2. Fetch live tweets list from proxy.io (bypassing CORS & Vercel bot mitigation using client IP!)
     try {
-      const tweetsRes = await fetch(`/api/x/tweets?username=${encodeURIComponent(clean)}`);
+      const targetUrl = `https://api.twitterwebviewer.com/api/tweets/${encodeURIComponent(clean)}`;
+      const tweetsRes = await fetch(`https://corsproxy.io/?${encodeURIComponent(targetUrl)}`);
       if (tweetsRes.ok) {
         const tweetsJson = await tweetsRes.json();
-        if (tweetsJson.success && Array.isArray(tweetsJson.tweets)) {
-          setTweetsData(tweetsJson.tweets);
-        } else {
-          throw new Error(tweetsJson.error || "Failed to load timeline feed.");
-        }
+        const parsed = parseTweetsPayload(tweetsJson);
+        setTweetsData(parsed);
+        
+        // Extract cursor
+        const cursor = tweetsJson.data?.nextCursor || tweetsJson.nextCursor || null;
+        const hasNext = tweetsJson.data?.hasNextPage || tweetsJson.hasNextPage || false;
+        setNextCursor(cursor);
+        setHasNextPage(hasNext || !!cursor); // Fallback to true if cursor is present
       } else {
         throw new Error("Failed to load timeline feed.");
       }
     } catch {
-      // Fallback: Generate realistic mock timeline data matching the user profile
-      if (fetchedUser) {
-        const mockTweets: TweetData[] = [
-          {
-            id: "1",
-            text: `Welcome to the new X Space! Watching our anonymous feed utility accelerate. Exciting times ahead! 🚀 #CloudX`,
-            created_at: new Date(Date.now() - 3600000).toISOString(),
-            user: {
-              name: fetchedUser.name,
-              screen_name: fetchedUser.screen_name,
-              avatar_url: fetchedUser.avatar_url,
-            },
-            likes: 124500,
-            retweets: 8900,
-            replies: 4200,
-            views: 4500000,
-          },
-          {
-            id: "2",
-            text: `Design details matter. Simplicity is the ultimate sophistication. Glassmorphism + responsive widgets look great.`,
-            created_at: new Date(Date.now() - 86400000).toISOString(),
-            user: {
-              name: fetchedUser.name,
-              screen_name: fetchedUser.screen_name,
-              avatar_url: fetchedUser.avatar_url,
-            },
-            likes: 98000,
-            retweets: 5400,
-            replies: 1200,
-            views: 3100000,
-          },
-          {
-            id: "3",
-            text: `We are scaling our serverless clusters to support anonymous browsing and fast video downloads. Zero latency goal.`,
-            created_at: new Date(Date.now() - 172800000).toISOString(),
-            user: {
-              name: fetchedUser.name,
-              screen_name: fetchedUser.screen_name,
-              avatar_url: fetchedUser.avatar_url,
-            },
-            likes: 210000,
-            retweets: 18900,
-            replies: 9500,
-            views: 8900000,
+      // Fallback: Fetch the syndication feed from our backend API as a backup
+      try {
+        const backupRes = await fetch(`/api/x/tweets?username=${encodeURIComponent(clean)}`);
+        if (backupRes.ok) {
+          const backupJson = await backupRes.json();
+          if (backupJson.success && Array.isArray(backupJson.tweets)) {
+            setTweetsData(backupJson.tweets);
+            setHasNextPage(false); // Backup syndication feed is 100 limit capped
+          } else {
+            throw new Error();
           }
-        ];
-        setTweetsData(mockTweets);
-      } else {
+        } else {
+          throw new Error();
+        }
+      } catch {
         setTweetsError("Unable to load tweets timeline. Please verify the account exists.");
       }
     } finally {
       setTweetsLoading(false);
+    }
+  };
+
+  const loadMoreTweets = async () => {
+    if (!nextCursor || !profileData || paginationLoading) return;
+
+    setPaginationLoading(true);
+    try {
+      const targetUrl = `https://api.twitterwebviewer.com/api/tweets/${encodeURIComponent(profileData.screen_name)}?cursor=${encodeURIComponent(nextCursor)}`;
+      const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(targetUrl)}`);
+      
+      if (res.ok) {
+        const data = await res.json();
+        const parsed = parseTweetsPayload(data);
+        
+        // Append unique tweets
+        setTweetsData(prev => {
+          const existingIds = new Set(prev.map(t => t.id));
+          const newTweets = parsed.filter(t => !existingIds.has(t.id));
+          return [...prev, ...newTweets];
+        });
+
+        // Update cursors
+        const cursor = data.data?.nextCursor || data.nextCursor || null;
+        const hasNext = data.data?.hasNextPage || data.hasNextPage || false;
+        setNextCursor(cursor);
+        setHasNextPage(hasNext || !!cursor);
+      }
+    } catch (e) {
+      console.error("Failed to paginate tweets:", e);
+    } finally {
+      setPaginationLoading(false);
     }
   };
 
@@ -281,6 +341,8 @@ function XViewerPage() {
     setViewMode("home");
     setProfileData(null);
     setTweetsData([]);
+    setNextCursor(null);
+    setHasNextPage(false);
     setUserQuery("");
   };
 
@@ -294,7 +356,6 @@ function XViewerPage() {
     try {
       const d = new Date(isoStr);
       if (isNaN(d.getTime())) {
-        // Fallback for custom date formats like "Tue Jun 30 19:09:52 +0000 2026"
         const cleanStr = isoStr.replace(/^\w+\s/, ""); // Remove weekday
         const dFallback = new Date(cleanStr);
         if (!isNaN(dFallback.getTime())) return dFallback.toLocaleDateString(undefined, { month: "short", day: "numeric" });
@@ -667,8 +728,7 @@ function XViewerPage() {
                 </div>
               ) : tweetsData.length > 0 ? (
                 <div className="space-y-4">
-                  {/* Map over client-side sliced displayed entries */}
-                  {tweetsData.slice(0, visibleCount).map((tweet) => (
+                  {tweetsData.map((tweet) => (
                     <article
                       key={tweet.id}
                       className="rounded-[20px] border border-border/40 p-5 bg-background hover:border-border transition-all flex flex-col gap-3 select-none animate-slide-up"
@@ -761,18 +821,25 @@ function XViewerPage() {
                     </article>
                   ))}
                   
-                  {/* Load more button (client-side paginates the real fetched 100 entries) */}
-                  {visibleCount < tweetsData.length && (
+                  {/* Load more button (paginates live tweets via API cursor) */}
+                  {hasNextPage && (
                     <button
-                      onClick={() => setVisibleCount((prev) => Math.min(prev + 10, tweetsData.length))}
+                      onClick={loadMoreTweets}
+                      disabled={paginationLoading}
                       className="w-full h-11 rounded-[16px] border border-border/40 hover:bg-secondary/40 text-[13px] font-black transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                     >
-                      <Plus className="size-4" />
-                      Show More
+                      {paginationLoading ? (
+                        <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                      ) : (
+                        <>
+                          <Plus className="size-4" />
+                          <span>Show More</span>
+                        </>
+                      )}
                     </button>
                   )}
 
-                  {visibleCount >= tweetsData.length && tweetsData.length > 0 && (
+                  {!hasNextPage && tweetsData.length > 0 && (
                     <p className="text-center text-[12px] font-bold text-muted-foreground/60 py-4 select-none">
                       End of timeline feed
                     </p>
