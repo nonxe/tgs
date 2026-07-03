@@ -13,7 +13,9 @@ import {
   AlertCircle,
   MapPin,
   Twitter,
-  Calendar
+  Calendar,
+  ShieldCheck,
+  Zap
 } from "lucide-react";
 
 export const Route = createFileRoute("/x")({
@@ -435,11 +437,11 @@ function XViewerPage() {
             )}
           </div>
         ) : (
-          /* ===== BROWSING WORKSPACE (OUR OWN iOS Profile + Cropped Read-only Timeline) ===== */
-          <div className="flex-1 w-full h-full flex flex-col min-h-0 overflow-y-auto">
+          /* ===== BROWSING WORKSPACE (OUR OWN iOS Profile + Interactive Tweets Timeline) ===== */
+          <div className="flex-1 w-full h-full flex flex-col min-h-0 relative">
             
             {/* 1. Custom, Native iOS-Themed Profile Card */}
-            <div className="w-full flex-shrink-0 bg-background border-b border-border/40">
+            <div className="w-full flex-shrink-0 bg-background border-b border-border/40 z-10">
               {profileLoading ? (
                 <div className="p-8 flex flex-col items-center justify-center animate-pulse">
                   <Loader2 className="size-6 text-sky-500 animate-spin mb-2" />
@@ -517,8 +519,9 @@ function XViewerPage() {
               ) : null}
             </div>
 
-            {/* 2. Embedded Tweets Timeline - Cropped to hide original site header/bio and made READ-ONLY */}
-            <div className="flex-1 w-full relative min-h-[400px] overflow-hidden bg-background">
+            {/* ── Interactive Tweets Timeline ── */}
+            {/* Height takes remaining space, hides footer and exposes interactive clicks */}
+            <div className="flex-1 w-full relative overflow-hidden bg-background">
               {iframeLoading && (
                 <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/95">
                   <Loader2 className="size-7 text-sky-500 animate-spin mb-2" />
@@ -526,23 +529,37 @@ function XViewerPage() {
                 </div>
               )}
 
-              {/* Set top crop value to hide their banner/bio/tabs: -430px on desktop, -450px on mobile */}
-              <iframe
-                ref={iframeRef}
-                src={iframeSrc}
-                className="absolute w-full border-0 bg-white dark:bg-[#15202b]"
-                style={{
-                  top: "-425px", // Crop banner, avatar, bio and outer menus completely
-                  left: "0",
-                  height: "calc(100% + 425px)", // Compensate cropped area
-                  width: "100%",
-                  pointerEvents: "none", // Prevent clicks on links to avoid interface exposure/navigating away
-                }}
-                sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-                loading="lazy"
-                onLoad={() => setIframeLoading(false)}
-                onError={() => setIframeLoading(false)}
-              />
+              {/* Crop top -430px (header, banner, bio) and bottom -55px (footer site logo) */}
+              <div className="absolute inset-0 overflow-hidden" style={{ bottom: "50px" }}>
+                <iframe
+                  ref={iframeRef}
+                  src={iframeSrc}
+                  className="absolute w-full border-0 bg-white dark:bg-[#15202b]"
+                  style={{
+                    top: "-425px", // Crop banner, avatar, bio and outer menus completely
+                    left: "0",
+                    height: "calc(100% + 425px)", // Compensate cropped area
+                    width: "100%",
+                    pointerEvents: "auto", // Let clicks pass through so "Show More" / media work!
+                  }}
+                  sandbox="allow-scripts allow-same-origin allow-forms"
+                  loading="lazy"
+                  onLoad={() => setIframeLoading(false)}
+                  onError={() => setIframeLoading(false)}
+                />
+              </div>
+
+              {/* 3. Branded Bottom Overlay Mask (Completely covers target site's footer and details) */}
+              <div className="absolute bottom-0 left-0 right-0 h-[50px] bg-background border-t border-border/40 z-35 flex items-center justify-between px-5 select-none">
+                <div className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground">
+                  <ShieldCheck className="size-4 text-emerald-500" />
+                  <span>Secure SSL Feed</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-[11px] font-bold text-sky-500">
+                  <Zap className="size-4 animate-pulse" />
+                  <span>Cloud API Acceleration</span>
+                </div>
+              </div>
             </div>
 
           </div>
