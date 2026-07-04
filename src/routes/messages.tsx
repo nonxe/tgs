@@ -13,8 +13,11 @@ import {
   User,
   Loader2,
   AlertCircle,
-  CheckCircle,
-  Plus
+  Plus,
+  Search,
+  LogOut,
+  Sparkles,
+  ChevronLeft
 } from "lucide-react";
 
 export const Route = createFileRoute("/messages")({
@@ -67,12 +70,18 @@ function E2eeMessengerPage() {
   const [myPrivateKey, setMyPrivateKey] = useState<CryptoKey | null>(null);
   const [myAuthHash, setMyAuthHash] = useState<string>("");
 
+  // Responsive mobile view state: "list" (show sidebar of contacts) or "chat" (show active chat pane)
+  const [mobileView, setMobileView] = useState<"list" | "chat">("list");
+
   // Chat State
   const [contacts, setContacts] = useState<string[]>([]);
   const [activeContact, setActiveContact] = useState<string>("");
   const [newContactInput, setNewContactInput] = useState<string>("");
   const [contactError, setContactError] = useState<string | null>(null);
   const [contactLoading, setContactLoading] = useState<boolean>(false);
+  
+  // Contacts search filter
+  const [searchFilter, setSearchFilter] = useState<string>("");
   
   // Public keys cache to avoid repeated network requests
   const [publicKeysCache, setPublicKeysCache] = useState<Record<string, CryptoKey>>({});
@@ -159,6 +168,31 @@ function E2eeMessengerPage() {
     setDecryptedMessages([]);
     setActiveContact("");
     setContacts([]);
+    setMobileView("list");
+  };
+
+  const handleContactSelect = (c: string) => {
+    setActiveContact(c);
+    setMobileView("chat");
+  };
+
+  // Avatar deterministic gradient colors based on username hash
+  const getAvatarGradient = (name: string): string => {
+    const colors = [
+      "from-rose-500 to-red-600",
+      "from-purple-600 to-indigo-700",
+      "from-blue-500 to-sky-600",
+      "from-emerald-500 to-teal-600",
+      "from-amber-500 to-orange-600",
+      "from-pink-500 to-rose-600",
+      "from-violet-500 to-fuchsia-600",
+    ];
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % colors.length;
+    return colors[index];
   };
 
   // --- CRYPTO HELPERS ---
@@ -483,7 +517,7 @@ function E2eeMessengerPage() {
       return;
     }
     if (contacts.includes(target)) {
-      setActiveContact(target);
+      handleContactSelect(target);
       setNewContactInput("");
       return;
     }
@@ -495,7 +529,7 @@ function E2eeMessengerPage() {
         setContactError("User does not exist on SHS Network.");
       } else {
         setContacts(prev => [...prev, target]);
-        setActiveContact(target);
+        handleContactSelect(target);
         setNewContactInput("");
       }
     } catch {
@@ -565,11 +599,35 @@ function E2eeMessengerPage() {
            (msg.sender === loggedInUser && msg.recipient === activeContact)
   );
 
+  const filteredContacts = contacts.filter(c => 
+    c.toLowerCase().includes(searchFilter.trim().toLowerCase())
+  );
+
   return (
     <main className="min-h-screen bg-background text-foreground font-sans transition-colors duration-300 flex flex-col h-screen overflow-hidden relative select-none">
       
-      {/* Header */}
-      <header className="px-5 py-4 flex items-center justify-between border-b border-border/40 backdrop-blur-md sticky top-0 z-40 bg-background/80 flex-shrink-0">
+      {/* Dynamic Telegram Chat Theme Colors Injection */}
+      <style>{`
+        :root {
+          --tg-sidebar-bg-dark: #17212b;
+          --tg-sidebar-bg-light: #ffffff;
+          
+          --tg-chat-bg-dark: #0e1621;
+          --tg-chat-bg-light: #e7ebf0;
+          
+          --tg-border-dark: #101921;
+          --tg-border-light: #e5e7eb;
+          
+          --tg-bubble-sent-dark: #2b5278;
+          --tg-bubble-sent-light: #3390ec;
+          
+          --tg-bubble-received-dark: #182533;
+          --tg-bubble-received-light: #ffffff;
+        }
+      `}</style>
+
+      {/* Header (Always Visible on Web and Top of Login) */}
+      <header className="px-4 py-3.5 flex items-center justify-between border-b border-border/40 backdrop-blur-md sticky top-0 z-40 bg-background/80 flex-shrink-0">
         <div className="flex items-center gap-3">
           <Link
             to="/"
@@ -578,12 +636,12 @@ function E2eeMessengerPage() {
             <ArrowLeft className="size-4" />
           </Link>
           <div className="flex items-center gap-2">
-            <div className="size-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+            <div className="size-8.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
               <Lock className="size-4.5 text-emerald-500" />
             </div>
             <div>
-              <h1 className="text-[16px] font-black tracking-tight leading-tight">SHS MESSENGER</h1>
-              <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider">
+              <h1 className="text-[15.5px] font-black tracking-tight leading-none">SHS MESSENGER</h1>
+              <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-wider mt-0.5">
                 AES E2EE Private Chat Space
               </p>
             </div>
@@ -594,9 +652,10 @@ function E2eeMessengerPage() {
           {loggedInUser && (
             <button
               onClick={clearSession}
-              className="px-3.5 h-8 rounded-full border border-rose-500/25 bg-rose-500/5 hover:bg-rose-500/10 text-rose-500 font-bold text-[11px] hover:scale-[1.02] active:scale-[0.98] transition-all"
+              title="Sign Out"
+              className="size-9 rounded-full border border-rose-500/25 bg-rose-500/5 hover:bg-rose-500/10 text-rose-500 flex items-center justify-center hover:scale-[1.02] active:scale-[0.98] transition-all"
             >
-              Sign Out ({loggedInUser})
+              <LogOut className="size-4" />
             </button>
           )}
 
@@ -693,53 +752,94 @@ function E2eeMessengerPage() {
           </div>
         </div>
       ) : (
-        // E2EE Chat Screen
-        <div className="flex-1 flex min-h-0 bg-secondary/5 select-text">
+        // E2EE Telegram-Style Chat Screen
+        <div className="flex-1 flex min-h-0 select-text">
           
-          {/* Left Column: Contacts list */}
-          <div className="w-80 border-r border-border/30 flex flex-col min-h-0 flex-shrink-0 bg-background/50 select-none">
+          {/* ───────────────── LEFT PANEL: CONTACTS SIDEBAR ───────────────── */}
+          <div className={`w-full md:w-[350px] border-r border-border/10 dark:border-[#101921] flex flex-col min-h-0 flex-shrink-0 bg-white dark:bg-[#17212b] select-none ${
+            mobileView === "chat" ? "hidden md:flex" : "flex"
+          }`}>
             
-            {/* Search/Add User Box */}
-            <div className="p-4 border-b border-border/30 flex-shrink-0">
+            {/* Logged in User Bar */}
+            <div className="px-4 py-3 bg-secondary/15 dark:bg-[#101921]/40 border-b border-border/5 dark:border-[#101921] flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className={`size-8 rounded-full bg-gradient-to-tr ${getAvatarGradient(loggedInUser)} text-white flex items-center justify-center text-[12px] font-black shadow-sm`}>
+                  {loggedInUser.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <span className="text-[13px] font-black block text-foreground leading-none">{loggedInUser}</span>
+                  <span className="text-[9.5px] font-semibold text-emerald-500 tracking-wide mt-0.5 block flex items-center gap-0.5">
+                    <span className="size-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
+                    Secure node online
+                  </span>
+                </div>
+              </div>
+
+              {/* Add contact mini button */}
+              <div className="flex items-center gap-1.5">
+                <div className="text-[10px] font-black uppercase text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                  SHS Cloud
+                </div>
+              </div>
+            </div>
+
+            {/* Contact Discovery Form */}
+            <div className="p-3.5 border-b border-border/5 dark:border-[#101921] space-y-2">
               <form onSubmit={handleAddContact} className="relative">
                 <input
                   type="text"
-                  placeholder="Search username to start chat..."
+                  placeholder="Enter username to start E2EE chat..."
                   value={newContactInput}
                   onChange={(e) => setNewContactInput(e.target.value)}
-                  className="w-full h-10 bg-background border border-border/40 rounded-xl pl-3 pr-10 text-[12px] font-bold outline-none focus:border-emerald-500/40 transition-all"
+                  className="w-full h-9 bg-secondary/50 dark:bg-[#0e1621] border border-border/40 dark:border-transparent rounded-full pl-3.5 pr-10 text-[12px] font-bold outline-none focus:border-emerald-500/40 dark:focus:border-emerald-500/40 transition-all lowercase"
                 />
                 <button
                   type="submit"
                   disabled={contactLoading || !newContactInput.trim()}
-                  className="absolute right-1 top-1 size-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center justify-center hover:bg-emerald-500/20 active:scale-95 disabled:opacity-40 transition-all"
+                  className="absolute right-1 top-1 size-7 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-500 flex items-center justify-center hover:bg-emerald-500/20 active:scale-95 disabled:opacity-40 transition-all"
                 >
-                  {contactLoading ? <Loader2 className="size-3.5 animate-spin" /> : <Plus className="size-4" />}
+                  {contactLoading ? <Loader2 className="size-3 animate-spin" /> : <Plus className="size-4" />}
                 </button>
               </form>
               
               {contactError && (
-                <p className="text-[10px] font-black text-rose-500 mt-2 text-center">{contactError}</p>
+                <p className="text-[10px] font-black text-rose-500 text-center">{contactError}</p>
               )}
+
+              {/* Local Filter Search Bar */}
+              <div className="relative">
+                <Search className="absolute left-3 top-2.5 size-3.5 text-muted-foreground/60" />
+                <input
+                  type="text"
+                  placeholder="Filter chat list..."
+                  value={searchFilter}
+                  onChange={(e) => setSearchFilter(e.target.value)}
+                  className="w-full h-8.5 bg-secondary/30 dark:bg-[#0e1621]/60 border border-transparent rounded-full pl-9 pr-4 text-[11px] font-bold outline-none focus:border-border/30 dark:focus:border-[#24303f] transition-all"
+                />
+              </div>
             </div>
 
             {/* Contacts list scroll */}
-            <div className="flex-1 overflow-y-auto min-h-0 p-2 space-y-1">
-              <div className="text-[9.5px] font-black text-muted-foreground uppercase tracking-wider px-3 py-2">
-                Secure Channels
+            <div className="flex-1 overflow-y-auto min-h-0 p-2 space-y-1 bg-secondary/5 dark:bg-[#17212b]">
+              <div className="text-[9.5px] font-bold text-muted-foreground/60 uppercase tracking-wider px-3 py-1.5 flex items-center justify-between">
+                <span>Direct Encrypted Channels</span>
+                <span className="text-[8px] bg-[#3390ec]/20 text-[#3390ec] dark:text-[#82b1ff] px-1.5 py-0.5 rounded-full font-black">
+                  {filteredContacts.length}
+                </span>
               </div>
               
-              {contacts.length === 0 ? (
-                <div className="text-center py-10 px-4">
-                  <MessageSquare className="size-8 text-muted-foreground/30 mx-auto mb-2" />
-                  <p className="text-[11.5px] font-black text-muted-foreground leading-normal">
-                    No active channels.<br/>Search a username above to start an E2EE conversation.
+              {filteredContacts.length === 0 ? (
+                <div className="text-center py-12 px-4 select-none">
+                  <MessageSquare className="size-8 text-muted-foreground/20 mx-auto mb-2" />
+                  <p className="text-[11.5px] font-black text-muted-foreground/80 leading-normal">
+                    {searchFilter ? "No matching contacts found." : "No active E2EE sessions.\nAdd a user above to begin."}
                   </p>
                 </div>
               ) : (
-                contacts.map((c) => {
+                filteredContacts.map((c) => {
                   const isActive = activeContact === c;
-                  // Get last message in this thread
+                  
+                  // Get messages inside this specific chat thread
                   const threadMsgs = decryptedMessages.filter(
                     msg => (msg.sender === c && msg.recipient === loggedInUser) ||
                            (msg.sender === loggedInUser && msg.recipient === c)
@@ -749,28 +849,37 @@ function E2eeMessengerPage() {
                   return (
                     <div
                       key={c}
-                      onClick={() => setActiveContact(c)}
-                      className={`flex items-center gap-3 p-3 rounded-[16px] cursor-pointer transition-all ${
+                      onClick={() => handleContactSelect(c)}
+                      className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border ${
                         isActive
-                          ? "bg-emerald-500/10 border border-emerald-500/25 text-foreground shadow-sm"
-                          : "hover:bg-secondary/40 text-muted-foreground hover:text-foreground border border-transparent"
+                          ? "bg-[#3390ec]/10 dark:bg-[#2b5278]/20 border-[#3390ec]/30 dark:border-[#2b5278]/40 text-foreground shadow-sm"
+                          : "border-transparent hover:bg-secondary/40 dark:hover:bg-[#202b36] text-muted-foreground hover:text-foreground"
                       }`}
                     >
-                      <div className={`size-9 rounded-full flex items-center justify-center font-black text-[13px] ${
-                        isActive ? "bg-emerald-500 text-white" : "bg-secondary text-foreground"
-                      }`}>
+                      {/* Avatar with deterministic gradient */}
+                      <div className={`size-10 rounded-full bg-gradient-to-tr ${getAvatarGradient(c)} text-white flex items-center justify-center font-black text-[14px] shadow-sm flex-shrink-0`}>
                         {c.charAt(0).toUpperCase()}
                       </div>
 
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-center">
-                          <span className="text-[13px] font-black truncate text-foreground">
+                          <span className="text-[12.5px] font-black truncate text-foreground dark:text-gray-200">
                             {c}
                           </span>
+                          {lastMsg && (
+                            <span className="text-[9px] text-muted-foreground/60 select-none">
+                              {new Date(lastMsg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          )}
                         </div>
-                        {lastMsg && (
-                          <p className="text-[11px] truncate text-muted-foreground mt-0.5">
+                        {lastMsg ? (
+                          <p className="text-[11px] truncate text-muted-foreground dark:text-gray-400 mt-0.5 pr-4">
                             {lastMsg.plaintext}
+                          </p>
+                        ) : (
+                          <p className="text-[10px] text-emerald-500 italic mt-0.5 flex items-center gap-0.5">
+                            <Lock className="size-2.5" />
+                            Session keys ready
                           </p>
                         )}
                       </div>
@@ -781,40 +890,65 @@ function E2eeMessengerPage() {
             </div>
           </div>
 
-          {/* Right Column: Chat timeline */}
-          <div className="flex-1 flex flex-col min-h-0 bg-background/30">
+          {/* ───────────────── RIGHT PANEL: CHAT TIMELINE ───────────────── */}
+          <div className={`flex-1 flex flex-col min-h-0 bg-[#e7ebf0] dark:bg-[#0e1621] ${
+            mobileView === "list" ? "hidden md:flex" : "flex"
+          }`}
+          style={{
+            backgroundImage: "radial-gradient(rgba(128, 128, 128, 0.08) 1.2px, transparent 1.2px)",
+            backgroundSize: "20px 20px"
+          }}>
             {activeContact ? (
               <div className="flex-1 flex flex-col min-h-0">
-                {/* Chat header */}
-                <div className="px-5 py-3 border-b border-border/30 flex items-center justify-between bg-background/50 flex-shrink-0 select-none">
-                  <div className="flex items-center gap-2.5">
-                    <div className="size-9 rounded-full bg-emerald-500/15 border border-emerald-500/25 text-emerald-500 flex items-center justify-center font-black text-[14px]">
+                
+                {/* Chat window Header */}
+                <div className="px-4 py-3.5 border-b border-border/10 dark:border-[#101921] flex items-center justify-between bg-white/95 dark:bg-[#17212b]/95 backdrop-blur-md flex-shrink-0 select-none shadow-sm">
+                  <div className="flex items-center min-w-0">
+                    {/* Back Button for mobile view layout */}
+                    <button
+                      onClick={() => setMobileView("list")}
+                      className="md:hidden size-8.5 rounded-full hover:bg-secondary dark:hover:bg-[#202b36] flex items-center justify-center active:scale-95 transition-all mr-2 flex-shrink-0 text-foreground"
+                    >
+                      <ChevronLeft className="size-6" />
+                    </button>
+                    
+                    {/* Peer avatar */}
+                    <div className={`size-10 rounded-full bg-gradient-to-tr ${getAvatarGradient(activeContact)} text-white flex items-center justify-center font-black text-[14px] shadow-sm flex-shrink-0 mr-3`}>
                       {activeContact.charAt(0).toUpperCase()}
                     </div>
-                    <div>
-                      <h3 className="text-[14px] font-black leading-tight">{activeContact}</h3>
-                      <div className="flex items-center gap-1 text-[9px] font-bold text-emerald-500 tracking-wide uppercase mt-0.5">
-                        <Lock className="size-2.5" />
-                        <span>AES-GCM 256 E2EE Secure</span>
+                    
+                    <div className="truncate">
+                      <h3 className="text-[13.5px] font-black leading-tight text-foreground dark:text-gray-100 truncate">
+                        {activeContact}
+                      </h3>
+                      <div className="flex items-center gap-1 text-[9px] font-bold text-emerald-500 tracking-wide uppercase mt-1">
+                        <span className="size-1.5 rounded-full bg-emerald-500 inline-block animate-ping" style={{ animationDuration: '2.5s' }} />
+                        <span>E2EE Active channel</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <ShieldCheck className="size-5 text-emerald-500" />
+                  <div className="flex items-center gap-3">
+                    <div className="hidden sm:flex items-center gap-1.5 bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 text-emerald-500 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider select-none">
+                      <ShieldCheck className="size-3.5" />
+                      <span>Zero-Knowledge</span>
+                    </div>
+                    
+                    {/* Secure badge indicator */}
+                    <ShieldCheck className="size-5.5 text-emerald-500 flex-shrink-0" />
                   </div>
                 </div>
 
-                {/* Messages scrollarea */}
-                <div className="flex-1 overflow-y-auto p-5 space-y-4 min-h-0">
+                {/* Chat Timeline Scroll container */}
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 min-h-0">
                   {activeMessages.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center text-center p-8 select-none">
-                      <div className="size-14 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 flex items-center justify-center mb-3">
+                      <div className="size-14 rounded-2xl bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/10 dark:border-emerald-500/20 flex items-center justify-center mb-3">
                         <Lock className="size-6 text-emerald-500/40 animate-pulse" />
                       </div>
-                      <p className="text-[13px] font-black">Secure Conversation Initiated</p>
+                      <p className="text-[13px] font-black text-foreground">Secure Channel Opened</p>
                       <p className="text-[11px] text-muted-foreground max-w-[260px] mx-auto mt-0.5 leading-normal">
-                        All payloads are encrypted in your browser using local ECDH public keys. The host cannot decrypt or inspect them.
+                        Your messages are highly encrypted using local client key pairs. Nobody else can read them.
                       </p>
                     </div>
                   ) : (
@@ -825,22 +959,26 @@ function E2eeMessengerPage() {
                           key={msg.id}
                           className={`flex ${isMe ? "justify-end" : "justify-start"}`}
                         >
-                          <div className={`max-w-[70%] space-y-1 flex flex-col ${isMe ? "items-end" : "items-start"}`}>
-                            {/* Message bubble */}
-                            <div className={`px-4 py-2.5 rounded-[20px] text-[13.5px] font-medium leading-relaxed break-words shadow-sm ${
-                              isMe
-                                ? "bg-emerald-600 text-white rounded-br-[4px]"
-                                : msg.decryptionFailed
-                                  ? "bg-rose-500/10 border border-rose-500/25 text-rose-500 rounded-bl-[4px]"
-                                  : "bg-secondary border border-border/40 text-foreground rounded-bl-[4px]"
-                            }`}>
-                              {msg.plaintext}
+                          {/* Telegram-style message bubbles */}
+                          <div className={`max-w-[78%] relative shadow-sm rounded-[15px] select-text border ${
+                            isMe
+                              ? "bg-[#3390ec] dark:bg-[#2b5278] border-[#3390ec]/20 dark:border-[#2b5278]/30 text-white rounded-br-[3px]"
+                              : msg.decryptionFailed
+                                ? "bg-rose-500/10 dark:bg-rose-500/5 border-rose-500/25 text-rose-500 rounded-bl-[3px]"
+                                : "bg-white dark:bg-[#182533] border-border/20 dark:border-transparent text-foreground dark:text-gray-100 rounded-bl-[3px]"
+                          }`}>
+                            <div className="pl-3.5 pr-12.5 pt-2 pb-2.5 min-w-[70px]">
+                              <p className="text-[13px] font-medium leading-relaxed break-words whitespace-pre-wrap select-text">
+                                {msg.plaintext}
+                              </p>
+                              
+                              {/* Bottom-right corner timestamp inside bubble */}
+                              <span className={`absolute bottom-1 right-2 text-[9px] select-none font-semibold ${
+                                isMe ? "text-white/60" : "text-muted-foreground/60"
+                              }`}>
+                                {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
                             </div>
-                            
-                            {/* Meta */}
-                            <span className="text-[9.5px] text-muted-foreground font-semibold px-1 select-none">
-                              {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
                           </div>
                         </div>
                       );
@@ -849,35 +987,44 @@ function E2eeMessengerPage() {
                   <div ref={chatEndRef} />
                 </div>
 
-                {/* Message input bar */}
-                <div className="p-4 border-t border-border/30 bg-background/50 flex-shrink-0">
-                  <form onSubmit={handleSendMessage} className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Type secure E2E message..."
-                      value={messageInput}
-                      onChange={(e) => setMessageInput(e.target.value)}
-                      className="flex-1 h-11 bg-background border border-border/35 rounded-xl px-4 text-[13px] font-bold outline-none focus:border-emerald-500/40 transition-all"
-                    />
+                {/* Telegram-Style Floating message input bar */}
+                <div className="p-3 sm:p-4 bg-white/70 dark:bg-[#17212b]/80 border-t border-border/10 dark:border-[#101921] backdrop-blur-sm flex-shrink-0">
+                  <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto flex items-center gap-2 relative">
+                    
+                    <div className="flex-1 bg-white dark:bg-[#0e1621] border border-border/30 dark:border-[#101921] rounded-[22px] flex items-center shadow-inner py-1 pl-4 pr-1.5">
+                      <input
+                        type="text"
+                        placeholder="Write encrypted message..."
+                        value={messageInput}
+                        onChange={(e) => setMessageInput(e.target.value)}
+                        className="flex-1 min-w-0 bg-transparent text-[13px] text-foreground font-bold outline-none py-1.5 focus:ring-0 placeholder:text-muted-foreground/60"
+                      />
+                    </div>
+
                     <button
                       type="submit"
                       disabled={sendLoading || !messageInput.trim()}
-                      className="size-11 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 transition-all flex-shrink-0"
+                      className="size-9.5 rounded-full bg-[#3390ec] dark:bg-[#2b5278] hover:scale-[1.05] active:scale-[0.95] disabled:opacity-40 text-white flex items-center justify-center shadow-md shadow-black/10 transition-all flex-shrink-0"
                     >
-                      {sendLoading ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4.5" />}
+                      {sendLoading ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <Send className="size-4.5" />
+                      )}
                     </button>
                   </form>
                 </div>
               </div>
             ) : (
+              // Desktop empty state
               <div className="flex-1 flex flex-col items-center justify-center text-center p-8 select-none space-y-3">
-                <div className="size-16 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 flex items-center justify-center shadow-sm">
-                  <MessageSquare className="size-7 text-emerald-500/40 animate-pulse" />
+                <div className="size-16 rounded-2xl bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/10 dark:border-emerald-500/20 flex items-center justify-center shadow-sm">
+                  <MessageSquare className="size-7.5 text-emerald-500/40 animate-pulse" />
                 </div>
                 <div>
-                  <p className="text-[14px] font-black">E2EE Chat Space</p>
+                  <p className="text-[14px] font-black text-foreground">Secure Chats Terminal</p>
                   <p className="text-[11px] text-muted-foreground max-w-[260px] mx-auto mt-0.5 leading-normal">
-                    Search or select a contact in the left panel to open an end-to-end encrypted private communications channel.
+                    Select a secure session from the channels list on the left, or add a contact to start messaging.
                   </p>
                 </div>
               </div>
@@ -888,12 +1035,12 @@ function E2eeMessengerPage() {
       )}
 
       {/* Security End Banner */}
-      <div className="h-10 bg-background border-t border-border/40 flex-shrink-0 flex items-center justify-between px-5 select-none z-10">
-        <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground">
-          <ShieldCheck className="size-3.5 text-emerald-500" />
-          <span>Elliptic Curve Diffie-Hellman (ECDH P-256) Key Agreement • AES-GCM 256 Payload Encryption</span>
+      <div className="h-10 bg-background border-t border-border/40 dark:border-[#101921] flex-shrink-0 flex items-center justify-between px-4 select-none z-10">
+        <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-bold text-muted-foreground truncate mr-2">
+          <ShieldCheck className="size-3.5 text-emerald-500 flex-shrink-0" />
+          <span className="truncate">ECDH P-256 Key Exchange • AES-GCM 256 Payload Encryption</span>
         </div>
-        <span className="text-[10px] font-black text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+        <span className="text-[9px] font-black text-emerald-500 bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 px-2 py-0.5 rounded-full flex-shrink-0">
           E2EE Live Node
         </span>
       </div>
