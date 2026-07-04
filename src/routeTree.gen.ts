@@ -10,15 +10,20 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as XRouteImport } from './routes/x'
+import { Route as TempmailRouteImport } from './routes/tempmail'
+import { Route as ShsdbConsoleRouteImport } from './routes/shsdb-console'
 import { Route as OwnerRouteImport } from './routes/owner'
 import { Route as NoteRouteImport } from './routes/note'
 import { Route as MoreRouteImport } from './routes/more'
 import { Route as MainRouteImport } from './routes/main'
+import { Route as InstagramRouteImport } from './routes/instagram'
 import { Route as DbConsoleRouteImport } from './routes/db-console'
 import { Route as ConvertRouteImport } from './routes/convert'
 import { Route as FilenameRouteImport } from './routes/$filename'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as NoteIndexRouteImport } from './routes/note.index'
+import { Route as ShsdbCreateRouteImport } from './routes/shsdb.create'
+import { Route as ShsdbIdRouteImport } from './routes/shsdb.$id'
 import { Route as NoteNoteIdRouteImport } from './routes/note.$noteId'
 import { Route as DbCreateRouteImport } from './routes/db.create'
 import { Route as DbIdRouteImport } from './routes/db.$id'
@@ -26,10 +31,21 @@ import { Route as ApiXUserRouteImport } from './routes/api/x/user'
 import { Route as ApiXTweetsRouteImport } from './routes/api/x/tweets'
 import { Route as ApiXDownloadRouteImport } from './routes/api/x/download'
 import { Route as ApiPublicUploadRouteImport } from './routes/api/public/upload'
+import { Route as ApiIgUserRouteImport } from './routes/api/ig/user'
 
 const XRoute = XRouteImport.update({
   id: '/x',
   path: '/x',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TempmailRoute = TempmailRouteImport.update({
+  id: '/tempmail',
+  path: '/tempmail',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShsdbConsoleRoute = ShsdbConsoleRouteImport.update({
+  id: '/shsdb-console',
+  path: '/shsdb-console',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OwnerRoute = OwnerRouteImport.update({
@@ -50,6 +66,11 @@ const MoreRoute = MoreRouteImport.update({
 const MainRoute = MainRouteImport.update({
   id: '/main',
   path: '/main',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InstagramRoute = InstagramRouteImport.update({
+  id: '/instagram',
+  path: '/instagram',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DbConsoleRoute = DbConsoleRouteImport.update({
@@ -76,6 +97,16 @@ const NoteIndexRoute = NoteIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => NoteRoute,
+} as any)
+const ShsdbCreateRoute = ShsdbCreateRouteImport.update({
+  id: '/shsdb/create',
+  path: '/shsdb/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShsdbIdRoute = ShsdbIdRouteImport.update({
+  id: '/shsdb/$id',
+  path: '/shsdb/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const NoteNoteIdRoute = NoteNoteIdRouteImport.update({
   id: '/$noteId',
@@ -112,21 +143,32 @@ const ApiPublicUploadRoute = ApiPublicUploadRouteImport.update({
   path: '/api/public/upload',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiIgUserRoute = ApiIgUserRouteImport.update({
+  id: '/api/ig/user',
+  path: '/api/ig/user',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$filename': typeof FilenameRoute
   '/convert': typeof ConvertRoute
   '/db-console': typeof DbConsoleRoute
+  '/instagram': typeof InstagramRoute
   '/main': typeof MainRoute
   '/more': typeof MoreRoute
   '/note': typeof NoteRouteWithChildren
   '/owner': typeof OwnerRoute
+  '/shsdb-console': typeof ShsdbConsoleRoute
+  '/tempmail': typeof TempmailRoute
   '/x': typeof XRoute
   '/db/$id': typeof DbIdRoute
   '/db/create': typeof DbCreateRoute
   '/note/$noteId': typeof NoteNoteIdRoute
+  '/shsdb/$id': typeof ShsdbIdRoute
+  '/shsdb/create': typeof ShsdbCreateRoute
   '/note/': typeof NoteIndexRoute
+  '/api/ig/user': typeof ApiIgUserRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
   '/api/x/download': typeof ApiXDownloadRoute
   '/api/x/tweets': typeof ApiXTweetsRoute
@@ -137,14 +179,20 @@ export interface FileRoutesByTo {
   '/$filename': typeof FilenameRoute
   '/convert': typeof ConvertRoute
   '/db-console': typeof DbConsoleRoute
+  '/instagram': typeof InstagramRoute
   '/main': typeof MainRoute
   '/more': typeof MoreRoute
   '/owner': typeof OwnerRoute
+  '/shsdb-console': typeof ShsdbConsoleRoute
+  '/tempmail': typeof TempmailRoute
   '/x': typeof XRoute
   '/db/$id': typeof DbIdRoute
   '/db/create': typeof DbCreateRoute
   '/note/$noteId': typeof NoteNoteIdRoute
+  '/shsdb/$id': typeof ShsdbIdRoute
+  '/shsdb/create': typeof ShsdbCreateRoute
   '/note': typeof NoteIndexRoute
+  '/api/ig/user': typeof ApiIgUserRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
   '/api/x/download': typeof ApiXDownloadRoute
   '/api/x/tweets': typeof ApiXTweetsRoute
@@ -156,15 +204,21 @@ export interface FileRoutesById {
   '/$filename': typeof FilenameRoute
   '/convert': typeof ConvertRoute
   '/db-console': typeof DbConsoleRoute
+  '/instagram': typeof InstagramRoute
   '/main': typeof MainRoute
   '/more': typeof MoreRoute
   '/note': typeof NoteRouteWithChildren
   '/owner': typeof OwnerRoute
+  '/shsdb-console': typeof ShsdbConsoleRoute
+  '/tempmail': typeof TempmailRoute
   '/x': typeof XRoute
   '/db/$id': typeof DbIdRoute
   '/db/create': typeof DbCreateRoute
   '/note/$noteId': typeof NoteNoteIdRoute
+  '/shsdb/$id': typeof ShsdbIdRoute
+  '/shsdb/create': typeof ShsdbCreateRoute
   '/note/': typeof NoteIndexRoute
+  '/api/ig/user': typeof ApiIgUserRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
   '/api/x/download': typeof ApiXDownloadRoute
   '/api/x/tweets': typeof ApiXTweetsRoute
@@ -177,15 +231,21 @@ export interface FileRouteTypes {
     | '/$filename'
     | '/convert'
     | '/db-console'
+    | '/instagram'
     | '/main'
     | '/more'
     | '/note'
     | '/owner'
+    | '/shsdb-console'
+    | '/tempmail'
     | '/x'
     | '/db/$id'
     | '/db/create'
     | '/note/$noteId'
+    | '/shsdb/$id'
+    | '/shsdb/create'
     | '/note/'
+    | '/api/ig/user'
     | '/api/public/upload'
     | '/api/x/download'
     | '/api/x/tweets'
@@ -196,14 +256,20 @@ export interface FileRouteTypes {
     | '/$filename'
     | '/convert'
     | '/db-console'
+    | '/instagram'
     | '/main'
     | '/more'
     | '/owner'
+    | '/shsdb-console'
+    | '/tempmail'
     | '/x'
     | '/db/$id'
     | '/db/create'
     | '/note/$noteId'
+    | '/shsdb/$id'
+    | '/shsdb/create'
     | '/note'
+    | '/api/ig/user'
     | '/api/public/upload'
     | '/api/x/download'
     | '/api/x/tweets'
@@ -214,15 +280,21 @@ export interface FileRouteTypes {
     | '/$filename'
     | '/convert'
     | '/db-console'
+    | '/instagram'
     | '/main'
     | '/more'
     | '/note'
     | '/owner'
+    | '/shsdb-console'
+    | '/tempmail'
     | '/x'
     | '/db/$id'
     | '/db/create'
     | '/note/$noteId'
+    | '/shsdb/$id'
+    | '/shsdb/create'
     | '/note/'
+    | '/api/ig/user'
     | '/api/public/upload'
     | '/api/x/download'
     | '/api/x/tweets'
@@ -234,13 +306,19 @@ export interface RootRouteChildren {
   FilenameRoute: typeof FilenameRoute
   ConvertRoute: typeof ConvertRoute
   DbConsoleRoute: typeof DbConsoleRoute
+  InstagramRoute: typeof InstagramRoute
   MainRoute: typeof MainRoute
   MoreRoute: typeof MoreRoute
   NoteRoute: typeof NoteRouteWithChildren
   OwnerRoute: typeof OwnerRoute
+  ShsdbConsoleRoute: typeof ShsdbConsoleRoute
+  TempmailRoute: typeof TempmailRoute
   XRoute: typeof XRoute
   DbIdRoute: typeof DbIdRoute
   DbCreateRoute: typeof DbCreateRoute
+  ShsdbIdRoute: typeof ShsdbIdRoute
+  ShsdbCreateRoute: typeof ShsdbCreateRoute
+  ApiIgUserRoute: typeof ApiIgUserRoute
   ApiPublicUploadRoute: typeof ApiPublicUploadRoute
   ApiXDownloadRoute: typeof ApiXDownloadRoute
   ApiXTweetsRoute: typeof ApiXTweetsRoute
@@ -254,6 +332,20 @@ declare module '@tanstack/react-router' {
       path: '/x'
       fullPath: '/x'
       preLoaderRoute: typeof XRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tempmail': {
+      id: '/tempmail'
+      path: '/tempmail'
+      fullPath: '/tempmail'
+      preLoaderRoute: typeof TempmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shsdb-console': {
+      id: '/shsdb-console'
+      path: '/shsdb-console'
+      fullPath: '/shsdb-console'
+      preLoaderRoute: typeof ShsdbConsoleRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/owner': {
@@ -282,6 +374,13 @@ declare module '@tanstack/react-router' {
       path: '/main'
       fullPath: '/main'
       preLoaderRoute: typeof MainRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/instagram': {
+      id: '/instagram'
+      path: '/instagram'
+      fullPath: '/instagram'
+      preLoaderRoute: typeof InstagramRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/db-console': {
@@ -318,6 +417,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/note/'
       preLoaderRoute: typeof NoteIndexRouteImport
       parentRoute: typeof NoteRoute
+    }
+    '/shsdb/create': {
+      id: '/shsdb/create'
+      path: '/shsdb/create'
+      fullPath: '/shsdb/create'
+      preLoaderRoute: typeof ShsdbCreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shsdb/$id': {
+      id: '/shsdb/$id'
+      path: '/shsdb/$id'
+      fullPath: '/shsdb/$id'
+      preLoaderRoute: typeof ShsdbIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/note/$noteId': {
       id: '/note/$noteId'
@@ -368,6 +481,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicUploadRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/ig/user': {
+      id: '/api/ig/user'
+      path: '/api/ig/user'
+      fullPath: '/api/ig/user'
+      preLoaderRoute: typeof ApiIgUserRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -388,13 +508,19 @@ const rootRouteChildren: RootRouteChildren = {
   FilenameRoute: FilenameRoute,
   ConvertRoute: ConvertRoute,
   DbConsoleRoute: DbConsoleRoute,
+  InstagramRoute: InstagramRoute,
   MainRoute: MainRoute,
   MoreRoute: MoreRoute,
   NoteRoute: NoteRouteWithChildren,
   OwnerRoute: OwnerRoute,
+  ShsdbConsoleRoute: ShsdbConsoleRoute,
+  TempmailRoute: TempmailRoute,
   XRoute: XRoute,
   DbIdRoute: DbIdRoute,
   DbCreateRoute: DbCreateRoute,
+  ShsdbIdRoute: ShsdbIdRoute,
+  ShsdbCreateRoute: ShsdbCreateRoute,
+  ApiIgUserRoute: ApiIgUserRoute,
   ApiPublicUploadRoute: ApiPublicUploadRoute,
   ApiXDownloadRoute: ApiXDownloadRoute,
   ApiXTweetsRoute: ApiXTweetsRoute,
