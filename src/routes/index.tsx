@@ -190,14 +190,59 @@ function DashboardHome() {
       {/* Body Content */}
       <section className="flex-1 flex flex-col items-center justify-center py-10 px-4 max-w-4xl mx-auto w-full space-y-10 z-10">
         
-        {/* Intro */}
-        <div className="text-center space-y-4 max-w-xl">
-          <h1 className="text-[42px] sm:text-[54px] font-black tracking-tighter leading-[1.05] bg-gradient-to-r from-foreground via-purple-400 to-foreground bg-clip-text text-transparent select-none animate-spring-scale">
-            CLOUD OS SPACE
-          </h1>
-          <p className="text-[14.5px] text-muted-foreground font-medium leading-relaxed">
-            Choose a service to launch. Fast, edge-backed, anonymous utilities without tracking or registrations.
-          </p>
+        {/* Intro Layout */}
+        <div className="flex flex-col md:flex-row items-center justify-between w-full gap-8 select-none">
+          {/* Left Column: Intro Text */}
+          <div className="text-center md:text-left space-y-4 max-w-xl">
+            <h1 className="text-[42px] sm:text-[54px] font-black tracking-tighter leading-[1.05] bg-gradient-to-r from-foreground via-purple-400 to-foreground bg-clip-text text-transparent animate-spring-scale">
+              CLOUD OS SPACE
+            </h1>
+            <p className="text-[14.5px] text-muted-foreground font-medium leading-relaxed">
+              Choose a service to launch. Fast, edge-backed, anonymous utilities without tracking or registrations.
+            </p>
+          </div>
+          
+          {/* Right Column: Professional Futuristic Orbital Animation */}
+          <div className="flex items-center justify-center flex-shrink-0 relative">
+            <div className="absolute inset-0 bg-purple-500/10 rounded-full blur-3xl opacity-35 scale-75 pointer-events-none" />
+            <svg 
+              className="w-40 h-40 sm:w-48 sm:h-48 md:w-52 md:h-52 active:scale-95 transition-transform duration-300" 
+              viewBox="0 0 100 100" 
+              fill="none" 
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <defs>
+                <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="var(--color-primary)" stopOpacity="0.45" />
+                  <stop offset="100%" stopColor="var(--color-primary)" stopOpacity="0" />
+                </radialGradient>
+                <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#c084fc" />
+                  <stop offset="50%" stopColor="#f472b6" />
+                  <stop offset="100%" stopColor="#60a5fa" />
+                </linearGradient>
+              </defs>
+              
+              {/* Outer Glow */}
+              <circle cx="50" cy="50" r="30" fill="url(#coreGlow)" className="animate-pulse" style={{ animationDuration: '3s' }} />
+              
+              {/* Concentric Rotating Orbital Rings */}
+              <g className="origin-center animate-spin" style={{ animationDuration: '14s' }}>
+                <ellipse cx="50" cy="50" rx="36" ry="13" stroke="url(#ringGrad)" strokeWidth="0.8" strokeDasharray="6 12" opacity="0.65" transform="rotate(-30 50 50)" />
+              </g>
+              <g className="origin-center animate-spin" style={{ animationDuration: '9s', animationDirection: 'reverse' }}>
+                <ellipse cx="50" cy="50" rx="30" ry="10" stroke="url(#ringGrad)" strokeWidth="0.8" strokeDasharray="16 8" opacity="0.55" transform="rotate(45 50 50)" />
+              </g>
+              <g className="origin-center animate-spin" style={{ animationDuration: '18s' }}>
+                <ellipse cx="50" cy="50" rx="42" ry="16" stroke="url(#ringGrad)" strokeWidth="0.6" strokeDasharray="30 25 10 15" opacity="0.45" transform="rotate(110 50 50)" />
+              </g>
+              
+              {/* Central Database Core Globe */}
+              <circle cx="50" cy="50" r="10" fill="var(--color-card)" stroke="url(#ringGrad)" strokeWidth="1.8" className="shadow-lg" />
+              <circle cx="50" cy="50" r="7" fill="url(#ringGrad)" className="animate-ping" style={{ animationDuration: '3s', opacity: 0.15 }} />
+              <circle cx="50" cy="50" r="5.5" fill="url(#ringGrad)" />
+            </svg>
+          </div>
         </div>
 
         {/* Dashboard Grid */}

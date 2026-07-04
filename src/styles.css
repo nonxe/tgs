@@ -63,26 +63,26 @@
 
 :root {
   --radius: 1rem;
-  --background: oklch(0 0 0); /* Pure Black */
-  --foreground: oklch(0.96 0 0); /* Pure White/Silver */
-  --card: oklch(0.16 0 0); /* Deep Grey #161616 */
-  --card-foreground: oklch(0.96 0 0);
-  --popover: oklch(0.1 0 0); /* #0a0a0a */
-  --popover-foreground: oklch(0.96 0 0);
-  --primary: oklch(0.72 0.19 290); /* Purple #a78bfa */
-  --primary-foreground: oklch(0 0 0);
-  --secondary: oklch(0.1 0 0); /* #0a0a0a */
-  --secondary-foreground: oklch(0.96 0 0);
-  --muted: oklch(0.12 0 0);
-  --muted-foreground: oklch(0.7 0 0); /* iOS Grey */
-  --accent: oklch(0.72 0.19 290); /* Purple */
-  --accent-foreground: oklch(0 0 0);
-  --destructive: oklch(0.55 0.18 20); /* Elegant Red */
+  --background: oklch(0.98 0.005 240); /* Off-white #f8f9fa */
+  --foreground: oklch(0.15 0.01 240); /* Near black #121214 */
+  --card: oklch(1 0 0); /* Pure White #ffffff */
+  --card-foreground: oklch(0.15 0.01 240);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0.01 240);
+  --primary: oklch(0.62 0.22 290); /* Darker purple for light mode contrast */
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.94 0.005 240); /* Light iOS Grey #eff1f5 */
+  --secondary-foreground: oklch(0.15 0.01 240);
+  --muted: oklch(0.92 0.005 240);
+  --muted-foreground: oklch(0.45 0.01 240);
+  --accent: oklch(0.62 0.22 290);
+  --accent-foreground: oklch(1 0 0);
+  --destructive: oklch(0.6 0.18 20);
   --destructive-foreground: oklch(1 0 0);
-  --border: rgba(255, 255, 255, 0.06);
-  --input: rgba(255, 255, 255, 0.08);
-  --ring: oklch(0.72 0.19 290 / 40%);
-  --chart-1: oklch(0.72 0.19 290);
+  --border: rgba(0, 0, 0, 0.08);
+  --input: rgba(0, 0, 0, 0.05);
+  --ring: oklch(0.62 0.22 290 / 30%);
+  --chart-1: oklch(0.62 0.22 290);
   --chart-2: oklch(0.8 0 0);
   --chart-3: oklch(0.6 0 0);
   --chart-4: oklch(0.4 0 0);
