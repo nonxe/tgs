@@ -15,7 +15,8 @@ import {
   Crown,
   Globe,
   Instagram,
-  Mail
+  Mail,
+  Database
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -125,6 +126,14 @@ function DashboardHome() {
       icon: Mail, 
       link: "/tempmail",
       color: "text-violet-400 border-violet-500/20 bg-violet-500/5 hover:border-violet-500/40"
+    },
+    { 
+      id: "shsdb", 
+      title: "shsDB Console", 
+      desc: "Futuristic serverless edge JSON store API, backed by SHS Cloud node networks.", 
+      icon: Database, 
+      link: "/shsdb-console",
+      color: "text-purple-400 border-purple-500/20 bg-purple-500/5 hover:border-purple-500/40"
     },
     { 
       id: "request", 

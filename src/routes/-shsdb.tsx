@@ -186,7 +186,7 @@ export function ShsDbConsole() {
                 <span>shsDB Engine API</span>
               </h3>
               <p className="text-[13px] text-muted-foreground leading-relaxed">
-                shsDB is an ultra-fast, serverless JSON store built on top of our anonymous edge storage engine backed by <code className="text-violet-400">paste.rs</code>. You can dynamically create, publish, and fetch data nodes directly via REST endpoints with full CORS headers.
+                shsDB is an ultra-fast, serverless JSON store built on top of our anonymous edge storage engine backed by <code className="text-violet-400">SHS Cloud</code>. You can dynamically create, publish, and fetch data nodes directly via REST endpoints with full CORS headers.
               </p>
             </div>
 
@@ -243,7 +243,7 @@ export function ShsDbConsole() {
                   <code className="text-[12px] font-black text-foreground">{`${origin}/shsdb/create`}</code>
                 </div>
                 <p className="text-[11.5px] text-muted-foreground leading-relaxed">
-                  Creates a new database node on paste.rs. The body must contain `data` (which can be a JSON object or raw text string). You can optionally send `title` and `url`.
+                  Creates a new database node on SHS Cloud. The body must contain `data` (which can be a JSON object or raw text string). You can optionally send `title` and `url`.
                 </p>
               </div>
 
@@ -408,7 +408,7 @@ export function ShsDbConsole() {
                   className="w-full h-11 rounded-xl bg-violet-600 text-white font-black text-[13px] hover:bg-violet-500 disabled:opacity-40 transition-all flex items-center justify-center gap-2 select-none"
                 >
                   <Send className="size-4" />
-                  <span>{busy ? "Publishing to paste.rs..." : "Create Edge Data Node"}</span>
+                  <span>{busy ? "Publishing to SHS Cloud..." : "Create Edge Data Node"}</span>
                 </button>
               </form>
             )}

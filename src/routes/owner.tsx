@@ -253,14 +253,6 @@ export function OwnerPage({ embed = false }: { embed?: boolean }) {
               <Terminal className="size-4" />
               <span>Developer Mode</span>
             </Link>
-
-            <Link
-              to="/shsdb-console"
-              className="inline-flex items-center gap-2 h-11 px-5 rounded-full border border-violet-500/30 bg-violet-500/10 text-violet-400 font-bold text-[13px] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md w-full sm:w-auto justify-center"
-            >
-              <Terminal className="size-4" />
-              <span>shsDB Console</span>
-            </Link>
           </div>
         </div>
 

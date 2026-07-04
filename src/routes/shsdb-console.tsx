@@ -76,7 +76,7 @@ export function ShsDbConsolePage() {
 
       {/* Footer banner */}
       <footer className="w-full border-t border-border/20 py-6 text-center select-none text-[11px] text-muted-foreground flex-shrink-0 mt-8">
-        <p>shsDB Edge Engine Powered by paste.rs • End-to-End Encrypted Storage Node</p>
+        <p>shsDB Edge Engine Powered by SHS Cloud • End-to-End Encrypted Storage Node</p>
       </footer>
 
     </main>

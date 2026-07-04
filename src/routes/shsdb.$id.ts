@@ -268,7 +268,7 @@ function renderHtmlViewer(responseBody: any, origin: string) {
         </div>
         <div class="meta-item">
           <span class="meta-label">Backend Provider</span>
-          <span class="meta-val">paste.rs</span>
+          <span class="meta-val">SHS Cloud</span>
         </div>
         <div class="meta-item">
           <span class="meta-label">Size</span>
