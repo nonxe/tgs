@@ -148,7 +148,7 @@ function E2eeMessengerPage() {
 
   // E2EE Media Caption Modal states
   const [pendingMediaFile, setPendingMediaFile] = useState<File | null>(null);
-  const [mediaCaptionInput, setMediaCaptionInput] = useState<string>(DEFAULT_VALUE);
+  const [mediaCaptionInput, setMediaCaptionInput] = useState<string>("");
 
   // Like & Comment state arrays
   const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
