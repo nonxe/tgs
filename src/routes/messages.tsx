@@ -648,8 +648,8 @@ function E2eeMessengerPage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      // Upload file permanently to Catbox
-      const res = await fetch("/api/messages/upload", {
+      // Upload file permanently to Catbox using stable public upload endpoint
+      const res = await fetch("/api/public/upload", {
         method: "POST",
         body: formData,
       });
@@ -695,8 +695,8 @@ function E2eeMessengerPage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      // Upload media permanently to Catbox
-      const res = await fetch("/api/messages/upload", {
+      // Upload media permanently to Catbox using stable public upload endpoint
+      const res = await fetch("/api/public/upload", {
         method: "POST",
         body: formData,
       });

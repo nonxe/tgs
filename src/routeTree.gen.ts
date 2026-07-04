@@ -32,7 +32,6 @@ import { Route as ApiXUserRouteImport } from './routes/api/x/user'
 import { Route as ApiXTweetsRouteImport } from './routes/api/x/tweets'
 import { Route as ApiXDownloadRouteImport } from './routes/api/x/download'
 import { Route as ApiPublicUploadRouteImport } from './routes/api/public/upload'
-import { Route as ApiMessagesUploadRouteImport } from './routes/api/messages/upload'
 import { Route as ApiMessagesUpdatepfpRouteImport } from './routes/api/messages/updatepfp'
 import { Route as ApiMessagesSendRouteImport } from './routes/api/messages/send'
 import { Route as ApiMessagesRegisterRouteImport } from './routes/api/messages/register'
@@ -155,11 +154,6 @@ const ApiPublicUploadRoute = ApiPublicUploadRouteImport.update({
   path: '/api/public/upload',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiMessagesUploadRoute = ApiMessagesUploadRouteImport.update({
-  id: '/api/messages/upload',
-  path: '/api/messages/upload',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiMessagesUpdatepfpRoute = ApiMessagesUpdatepfpRouteImport.update({
   id: '/api/messages/updatepfp',
   path: '/api/messages/updatepfp',
@@ -217,7 +211,6 @@ export interface FileRoutesByFullPath {
   '/api/messages/register': typeof ApiMessagesRegisterRoute
   '/api/messages/send': typeof ApiMessagesSendRoute
   '/api/messages/updatepfp': typeof ApiMessagesUpdatepfpRoute
-  '/api/messages/upload': typeof ApiMessagesUploadRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
   '/api/x/download': typeof ApiXDownloadRoute
   '/api/x/tweets': typeof ApiXTweetsRoute
@@ -248,7 +241,6 @@ export interface FileRoutesByTo {
   '/api/messages/register': typeof ApiMessagesRegisterRoute
   '/api/messages/send': typeof ApiMessagesSendRoute
   '/api/messages/updatepfp': typeof ApiMessagesUpdatepfpRoute
-  '/api/messages/upload': typeof ApiMessagesUploadRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
   '/api/x/download': typeof ApiXDownloadRoute
   '/api/x/tweets': typeof ApiXTweetsRoute
@@ -281,7 +273,6 @@ export interface FileRoutesById {
   '/api/messages/register': typeof ApiMessagesRegisterRoute
   '/api/messages/send': typeof ApiMessagesSendRoute
   '/api/messages/updatepfp': typeof ApiMessagesUpdatepfpRoute
-  '/api/messages/upload': typeof ApiMessagesUploadRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
   '/api/x/download': typeof ApiXDownloadRoute
   '/api/x/tweets': typeof ApiXTweetsRoute
@@ -315,7 +306,6 @@ export interface FileRouteTypes {
     | '/api/messages/register'
     | '/api/messages/send'
     | '/api/messages/updatepfp'
-    | '/api/messages/upload'
     | '/api/public/upload'
     | '/api/x/download'
     | '/api/x/tweets'
@@ -346,7 +336,6 @@ export interface FileRouteTypes {
     | '/api/messages/register'
     | '/api/messages/send'
     | '/api/messages/updatepfp'
-    | '/api/messages/upload'
     | '/api/public/upload'
     | '/api/x/download'
     | '/api/x/tweets'
@@ -378,7 +367,6 @@ export interface FileRouteTypes {
     | '/api/messages/register'
     | '/api/messages/send'
     | '/api/messages/updatepfp'
-    | '/api/messages/upload'
     | '/api/public/upload'
     | '/api/x/download'
     | '/api/x/tweets'
@@ -409,7 +397,6 @@ export interface RootRouteChildren {
   ApiMessagesRegisterRoute: typeof ApiMessagesRegisterRoute
   ApiMessagesSendRoute: typeof ApiMessagesSendRoute
   ApiMessagesUpdatepfpRoute: typeof ApiMessagesUpdatepfpRoute
-  ApiMessagesUploadRoute: typeof ApiMessagesUploadRoute
   ApiPublicUploadRoute: typeof ApiPublicUploadRoute
   ApiXDownloadRoute: typeof ApiXDownloadRoute
   ApiXTweetsRoute: typeof ApiXTweetsRoute
@@ -579,13 +566,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicUploadRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/messages/upload': {
-      id: '/api/messages/upload'
-      path: '/api/messages/upload'
-      fullPath: '/api/messages/upload'
-      preLoaderRoute: typeof ApiMessagesUploadRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/messages/updatepfp': {
       id: '/api/messages/updatepfp'
       path: '/api/messages/updatepfp'
@@ -667,7 +647,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMessagesRegisterRoute: ApiMessagesRegisterRoute,
   ApiMessagesSendRoute: ApiMessagesSendRoute,
   ApiMessagesUpdatepfpRoute: ApiMessagesUpdatepfpRoute,
-  ApiMessagesUploadRoute: ApiMessagesUploadRoute,
   ApiPublicUploadRoute: ApiPublicUploadRoute,
   ApiXDownloadRoute: ApiXDownloadRoute,
   ApiXTweetsRoute: ApiXTweetsRoute,
