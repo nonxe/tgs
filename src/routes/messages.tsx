@@ -17,7 +17,11 @@ import {
   Search,
   LogOut,
   Sparkles,
-  ChevronLeft
+  ChevronLeft,
+  Paperclip,
+  Image as ImageIcon,
+  CheckCircle,
+  Camera
 } from "lucide-react";
 
 export const Route = createFileRoute("/messages")({
@@ -69,6 +73,7 @@ function E2eeMessengerPage() {
   const [loggedInUser, setLoggedInUser] = useState<string>("");
   const [myPrivateKey, setMyPrivateKey] = useState<CryptoKey | null>(null);
   const [myAuthHash, setMyAuthHash] = useState<string>("");
+  const [myPfpUrl, setMyPfpUrl] = useState<string>("");
 
   // Responsive mobile view state: "list" (show sidebar of contacts) or "chat" (show active chat pane)
   const [mobileView, setMobileView] = useState<"list" | "chat">("list");
@@ -83,18 +88,25 @@ function E2eeMessengerPage() {
   // Contacts search filter
   const [searchFilter, setSearchFilter] = useState<string>("");
   
-  // Public keys cache to avoid repeated network requests
+  // Public keys & PFPs cache to avoid repeated network requests
   const [publicKeysCache, setPublicKeysCache] = useState<Record<string, CryptoKey>>({});
+  const [pfpsCache, setPfpsCache] = useState<Record<string, string>>({});
   
+  // Upload status states
+  const [pfpUploading, setPfpUploading] = useState<boolean>(false);
+  const [mediaUploading, setMediaUploading] = useState<boolean>(false);
+
   // Messages state
   const [rawMessages, setRawMessages] = useState<DBMessage[]>([]);
   const [decryptedMessages, setDecryptedMessages] = useState<DecryptedMessage[]>([]);
   const [messageInput, setMessageInput] = useState<string>("");
   const [sendLoading, setSendLoading] = useState<boolean>(false);
   
-  // Polling ref
+  // Refs
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
+  const pfpInputRef = useRef<HTMLInputElement | null>(null);
+  const mediaInputRef = useRef<HTMLInputElement | null>(null);
 
   // Sync theme
   useEffect(() => {
@@ -113,6 +125,16 @@ function E2eeMessengerPage() {
         setLoggedInUser(savedUser);
         setMyAuthHash(savedAuthHash);
         setMyPrivateKey(privKey);
+
+        // Fetch my PFP on mount
+        fetch(`/api/messages/publickey?username=${encodeURIComponent(savedUser)}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.success && data.pfpUrl) {
+              setMyPfpUrl(data.pfpUrl);
+            }
+          }).catch(console.error);
+
       }).catch(err => {
         console.error("Failed to restore E2EE private key:", err);
         clearSession();
@@ -164,6 +186,7 @@ function E2eeMessengerPage() {
     setLoggedInUser("");
     setMyAuthHash("");
     setMyPrivateKey(null);
+    setMyPfpUrl("");
     setRawMessages([]);
     setDecryptedMessages([]);
     setActiveContact("");
@@ -375,7 +398,7 @@ function E2eeMessengerPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Authentication failed.");
 
-      const { encryptedPrivateKey, salt } = data;
+      const { encryptedPrivateKey, salt, pfpUrl } = data;
 
       // 2. Derive KDF key from password + salt
       const saltBytes = new Uint8Array(salt.match(/.{1,2}/g).map((byte: string) => parseInt(byte, 16)));
@@ -406,6 +429,7 @@ function E2eeMessengerPage() {
       setLoggedInUser(cleanUser);
       setMyAuthHash(authHash);
       setMyPrivateKey(privKey);
+      if (pfpUrl) setMyPfpUrl(pfpUrl);
 
       // Save to local storage
       localStorage.setItem("e2ee_username", cleanUser);
@@ -445,7 +469,7 @@ function E2eeMessengerPage() {
     }
   };
 
-  // Fetch or retrieve from cache user's ECDH public key
+  // Fetch or retrieve from cache user's ECDH public key & PFP
   const getPeerPublicKey = async (peerUsername: string): Promise<CryptoKey | null> => {
     if (publicKeysCache[peerUsername]) {
       return publicKeysCache[peerUsername];
@@ -460,6 +484,11 @@ function E2eeMessengerPage() {
       const pubKey = await importPublicKeyFromJwk(pubKeyJwk);
       
       setPublicKeysCache(prev => ({ ...prev, [peerUsername]: pubKey }));
+      
+      if (data.pfpUrl) {
+        setPfpsCache(prev => ({ ...prev, [peerUsername]: data.pfpUrl }));
+      }
+
       return pubKey;
     } catch (err) {
       console.error(`Failed to get public key for ${peerUsername}:`, err);
@@ -594,6 +623,137 @@ function E2eeMessengerPage() {
     }
   };
 
+  // --- NEW MEDIA UPLOADING HANDLERS ---
+
+  const handlePfpClick = () => {
+    pfpInputRef.current?.click();
+  };
+
+  const handlePfpUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setPfpUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      // Upload file permanently to Catbox
+      const res = await fetch("/api/messages/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "Upload failed");
+
+      const pfpUrl = data.url;
+
+      // Update PFP URL inside MongoDB collection
+      const updateRes = await fetch("/api/messages/updatepfp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: loggedInUser,
+          authHash: myAuthHash,
+          pfpUrl
+        })
+      });
+
+      const updateData = await updateRes.json();
+      if (!updateRes.ok || !updateData.success) throw new Error(updateData.error || "Failed to update profile picture");
+
+      setMyPfpUrl(pfpUrl);
+    } catch (err: any) {
+      alert(err.message || "Failed to upload profile picture.");
+    } finally {
+      setPfpUploading(false);
+      if (pfpInputRef.current) pfpInputRef.current.value = "";
+    }
+  };
+
+  const handleMediaClick = () => {
+    mediaInputRef.current?.click();
+  };
+
+  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !activeContact || !myPrivateKey) return;
+
+    setMediaUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      // Upload media permanently to Catbox
+      const res = await fetch("/api/messages/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "Upload failed");
+
+      const fileUrl = data.url;
+      const fileType = file.type;
+      const fileName = file.name;
+
+      // Construct special E2EE message prefix content
+      let payload = "";
+      if (fileType.startsWith("image/")) {
+        payload = `[IMAGE]:${fileUrl}`;
+      } else if (fileType.startsWith("video/")) {
+        payload = `[VIDEO]:${fileUrl}`;
+      } else {
+        payload = `[FILE]:${fileName}|${fileUrl}`;
+      }
+
+      // Encrypt payload client side
+      const peerPubKey = await getPeerPublicKey(activeContact);
+      if (!peerPubKey) throw new Error("Recipient public key not available.");
+
+      const sharedKey = await deriveSharedAesKey(myPrivateKey, peerPubKey);
+      const plaintextBytes = new TextEncoder().encode(payload);
+      const iv = window.crypto.getRandomValues(new Uint8Array(12));
+      
+      const cipherBytes = await window.crypto.subtle.encrypt(
+        { name: "AES-GCM", iv },
+        sharedKey,
+        plaintextBytes
+      );
+
+      const ivHex = Array.from(iv).map(b => b.toString(16).padStart(2, "0")).join("");
+      const cipherHex = Array.from(new Uint8Array(cipherBytes))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
+
+      // Send to MongoDB relay
+      const sendRes = await fetch("/api/messages/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sender: loggedInUser,
+          recipient: activeContact,
+          encryptedContent: cipherHex,
+          iv: ivHex,
+          authHash: myAuthHash
+        })
+      });
+
+      if (!sendRes.ok) {
+        const sendData = await sendRes.json();
+        throw new Error(sendData.error || "Failed to transmit message.");
+      }
+
+      fetchMessages();
+    } catch (err: any) {
+      alert(err.message || "Failed to upload and send media.");
+    } finally {
+      setMediaUploading(false);
+      if (mediaInputRef.current) mediaInputRef.current.value = "";
+    }
+  };
+
   const activeMessages = decryptedMessages.filter(
     msg => (msg.sender === activeContact && msg.recipient === loggedInUser) ||
            (msg.sender === loggedInUser && msg.recipient === activeContact)
@@ -626,7 +786,22 @@ function E2eeMessengerPage() {
         }
       `}</style>
 
-      {/* Header (Always Visible on Web and Top of Login) */}
+      {/* Hidden File Inputs */}
+      <input
+        type="file"
+        ref={pfpInputRef}
+        onChange={handlePfpUpload}
+        accept="image/*"
+        className="hidden"
+      />
+      <input
+        type="file"
+        ref={mediaInputRef}
+        onChange={handleMediaUpload}
+        className="hidden"
+      />
+
+      {/* Header */}
       <header className="px-4 py-3.5 flex items-center justify-between border-b border-border/40 backdrop-blur-md sticky top-0 z-40 bg-background/80 flex-shrink-0">
         <div className="flex items-center gap-3">
           <Link
@@ -763,9 +938,35 @@ function E2eeMessengerPage() {
             {/* Logged in User Bar */}
             <div className="px-4 py-3 bg-secondary/15 dark:bg-[#101921]/40 border-b border-border/5 dark:border-[#101921] flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className={`size-8 rounded-full bg-gradient-to-tr ${getAvatarGradient(loggedInUser)} text-white flex items-center justify-center text-[12px] font-black shadow-sm`}>
-                  {loggedInUser.charAt(0).toUpperCase()}
-                </div>
+                {/* User avatar clickable to trigger PFP upload */}
+                {myPfpUrl ? (
+                  <div className="relative group cursor-pointer flex-shrink-0" onClick={handlePfpClick}>
+                    <img src={myPfpUrl} className="size-9 rounded-full object-cover border border-border/20 shadow-sm" />
+                    <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
+                      <Camera className="size-3.5" />
+                    </div>
+                    {pfpUploading && (
+                      <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center text-white">
+                        <Loader2 className="size-3.5 animate-spin" />
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div 
+                    onClick={handlePfpClick} 
+                    className={`size-9 rounded-full bg-gradient-to-tr ${getAvatarGradient(loggedInUser)} text-white flex items-center justify-center text-[13px] font-black shadow-sm cursor-pointer hover:opacity-90 relative group flex-shrink-0`}
+                  >
+                    {loggedInUser.charAt(0).toUpperCase()}
+                    <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
+                      <Camera className="size-3.5" />
+                    </div>
+                    {pfpUploading && (
+                      <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center text-white">
+                        <Loader2 className="size-3.5 animate-spin" />
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div>
                   <span className="text-[13px] font-black block text-foreground leading-none">{loggedInUser}</span>
                   <span className="text-[9.5px] font-semibold text-emerald-500 tracking-wide mt-0.5 block flex items-center gap-0.5">
@@ -838,6 +1039,7 @@ function E2eeMessengerPage() {
               ) : (
                 filteredContacts.map((c) => {
                   const isActive = activeContact === c;
+                  const contactPfp = pfpsCache[c];
                   
                   // Get messages inside this specific chat thread
                   const threadMsgs = decryptedMessages.filter(
@@ -856,10 +1058,14 @@ function E2eeMessengerPage() {
                           : "border-transparent hover:bg-secondary/40 dark:hover:bg-[#202b36] text-muted-foreground hover:text-foreground"
                       }`}
                     >
-                      {/* Avatar with deterministic gradient */}
-                      <div className={`size-10 rounded-full bg-gradient-to-tr ${getAvatarGradient(c)} text-white flex items-center justify-center font-black text-[14px] shadow-sm flex-shrink-0`}>
-                        {c.charAt(0).toUpperCase()}
-                      </div>
+                      {/* Avatar with deterministic gradient or permanent PFP */}
+                      {contactPfp ? (
+                        <img src={contactPfp} className="size-10 rounded-full object-cover shadow-sm flex-shrink-0" />
+                      ) : (
+                        <div className={`size-10 rounded-full bg-gradient-to-tr ${getAvatarGradient(c)} text-white flex items-center justify-center font-black text-[14px] shadow-sm flex-shrink-0`}>
+                          {c.charAt(0).toUpperCase()}
+                        </div>
+                      )}
 
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-center">
@@ -874,7 +1080,13 @@ function E2eeMessengerPage() {
                         </div>
                         {lastMsg ? (
                           <p className="text-[11px] truncate text-muted-foreground dark:text-gray-400 mt-0.5 pr-4">
-                            {lastMsg.plaintext}
+                            {lastMsg.plaintext.startsWith("[IMAGE]:") 
+                              ? "📷 Encrypted Image" 
+                              : lastMsg.plaintext.startsWith("[VIDEO]:") 
+                                ? "🎥 Encrypted Video" 
+                                : lastMsg.plaintext.startsWith("[FILE]:") 
+                                  ? "📁 Encrypted File" 
+                                  : lastMsg.plaintext}
                           </p>
                         ) : (
                           <p className="text-[10px] text-emerald-500 italic mt-0.5 flex items-center gap-0.5">
@@ -912,10 +1124,14 @@ function E2eeMessengerPage() {
                       <ChevronLeft className="size-6" />
                     </button>
                     
-                    {/* Peer avatar */}
-                    <div className={`size-10 rounded-full bg-gradient-to-tr ${getAvatarGradient(activeContact)} text-white flex items-center justify-center font-black text-[14px] shadow-sm flex-shrink-0 mr-3`}>
-                      {activeContact.charAt(0).toUpperCase()}
-                    </div>
+                    {/* Peer PFP or initials circle */}
+                    {pfpsCache[activeContact] ? (
+                      <img src={pfpsCache[activeContact]} className="size-10 rounded-full object-cover shadow-sm flex-shrink-0 mr-3" />
+                    ) : (
+                      <div className={`size-10 rounded-full bg-gradient-to-tr ${getAvatarGradient(activeContact)} text-white flex items-center justify-center font-black text-[14px] shadow-sm flex-shrink-0 mr-3`}>
+                        {activeContact.charAt(0).toUpperCase()}
+                      </div>
+                    )}
                     
                     <div className="truncate">
                       <h3 className="text-[13.5px] font-black leading-tight text-foreground dark:text-gray-100 truncate">
@@ -954,6 +1170,67 @@ function E2eeMessengerPage() {
                   ) : (
                     activeMessages.map((msg) => {
                       const isMe = msg.sender === loggedInUser;
+                      
+                      // Check if message payload is an E2E media item
+                      const isImage = msg.plaintext.startsWith("[IMAGE]:");
+                      const isVideo = msg.plaintext.startsWith("[VIDEO]:");
+                      const isFile = msg.plaintext.startsWith("[FILE]:");
+
+                      let messageContent = null;
+
+                      if (isImage) {
+                        const url = msg.plaintext.substring(8);
+                        messageContent = (
+                          <div className="space-y-1">
+                            <a href={url} target="_blank" rel="noopener noreferrer" className="block overflow-hidden rounded-lg hover:opacity-90 transition-opacity max-w-[260px]">
+                              <img src={url} alt="Media" className="w-full h-auto object-cover max-h-[300px] rounded-lg" />
+                            </a>
+                            <p className="text-[10px] opacity-60 underline text-right select-none">
+                              <a href={url} target="_blank" rel="noopener noreferrer" className={isMe ? "text-white/80" : "text-[#3390ec]"}>
+                                Open full image ↗
+                              </a>
+                            </p>
+                          </div>
+                        );
+                      } else if (isVideo) {
+                        const url = msg.plaintext.substring(8);
+                        messageContent = (
+                          <div className="space-y-1 max-w-[260px]">
+                            <video src={url} controls className="w-full h-auto rounded-lg max-h-[300px]" />
+                            <p className="text-[10px] opacity-60 underline text-right select-none">
+                              <a href={url} target="_blank" rel="noopener noreferrer" className={isMe ? "text-white/80" : "text-[#3390ec]"}>
+                                Open full video ↗
+                              </a>
+                            </p>
+                          </div>
+                        );
+                      } else if (isFile) {
+                        const parts = msg.plaintext.substring(7).split("|");
+                        const fileName = parts[0];
+                        const url = parts[1];
+                        messageContent = (
+                          <div className="flex items-center gap-3 bg-black/10 dark:bg-black/20 p-3 rounded-xl max-w-[280px]">
+                            <div className="size-10 rounded-lg bg-emerald-500/20 text-emerald-500 flex items-center justify-center flex-shrink-0">
+                              <Sparkles className="size-5" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[12.5px] font-black truncate">{fileName}</p>
+                              <a href={url} target="_blank" rel="noopener noreferrer" className={`text-[10.5px] font-bold hover:underline ${
+                                isMe ? "text-white/90" : "text-[#3390ec] dark:text-[#82b1ff]"
+                              }`}>
+                                Download File ↗
+                              </a>
+                            </div>
+                          </div>
+                        );
+                      } else {
+                        messageContent = (
+                          <p className="text-[13px] font-medium leading-relaxed break-words whitespace-pre-wrap select-text">
+                            {msg.plaintext}
+                          </p>
+                        );
+                      }
+
                       return (
                         <div
                           key={msg.id}
@@ -968,9 +1245,7 @@ function E2eeMessengerPage() {
                                 : "bg-white dark:bg-[#182533] border-border/20 dark:border-transparent text-foreground dark:text-gray-100 rounded-bl-[3px]"
                           }`}>
                             <div className="pl-3.5 pr-12.5 pt-2 pb-2.5 min-w-[70px]">
-                              <p className="text-[13px] font-medium leading-relaxed break-words whitespace-pre-wrap select-text">
-                                {msg.plaintext}
-                              </p>
+                              {messageContent}
                               
                               {/* Bottom-right corner timestamp inside bubble */}
                               <span className={`absolute bottom-1 right-2 text-[9px] select-none font-semibold ${
@@ -989,30 +1264,47 @@ function E2eeMessengerPage() {
 
                 {/* Telegram-Style Floating message input bar */}
                 <div className="p-3 sm:p-4 bg-white/70 dark:bg-[#17212b]/80 border-t border-border/10 dark:border-[#101921] backdrop-blur-sm flex-shrink-0">
-                  <form onSubmit={handleSendMessage} className="max-w-4xl mx-auto flex items-center gap-2 relative">
+                  <div className="max-w-4xl mx-auto flex items-center gap-2 relative">
                     
-                    <div className="flex-1 bg-white dark:bg-[#0e1621] border border-border/30 dark:border-[#101921] rounded-[22px] flex items-center shadow-inner py-1 pl-4 pr-1.5">
-                      <input
-                        type="text"
-                        placeholder="Write encrypted message..."
-                        value={messageInput}
-                        onChange={(e) => setMessageInput(e.target.value)}
-                        className="flex-1 min-w-0 bg-transparent text-[13px] text-foreground font-bold outline-none py-1.5 focus:ring-0 placeholder:text-muted-foreground/60"
-                      />
-                    </div>
-
+                    {/* Attach media button */}
                     <button
-                      type="submit"
-                      disabled={sendLoading || !messageInput.trim()}
-                      className="size-9.5 rounded-full bg-[#3390ec] dark:bg-[#2b5278] hover:scale-[1.05] active:scale-[0.95] disabled:opacity-40 text-white flex items-center justify-center shadow-md shadow-black/10 transition-all flex-shrink-0"
+                      type="button"
+                      onClick={handleMediaClick}
+                      disabled={mediaUploading}
+                      title="Attach File (Permanent Catbox)"
+                      className="size-9.5 rounded-full hover:bg-secondary dark:hover:bg-[#202b36] text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors flex-shrink-0 active:scale-95 disabled:opacity-50"
                     >
-                      {sendLoading ? (
-                        <Loader2 className="size-4 animate-spin" />
+                      {mediaUploading ? (
+                        <Loader2 className="size-4.5 animate-spin" />
                       ) : (
-                        <Send className="size-4.5" />
+                        <Paperclip className="size-5" />
                       )}
                     </button>
-                  </form>
+
+                    <form onSubmit={handleSendMessage} className="flex-1 flex items-center gap-2">
+                      <div className="flex-1 bg-white dark:bg-[#0e1621] border border-border/30 dark:border-[#101921] rounded-[22px] flex items-center shadow-inner py-1 pl-4 pr-1.5">
+                        <input
+                          type="text"
+                          placeholder="Write encrypted message..."
+                          value={messageInput}
+                          onChange={(e) => setMessageInput(e.target.value)}
+                          className="flex-1 min-w-0 bg-transparent text-[13px] text-foreground font-bold outline-none py-1.5 focus:ring-0 placeholder:text-muted-foreground/60"
+                        />
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={sendLoading || !messageInput.trim()}
+                        className="size-9.5 rounded-full bg-[#3390ec] dark:bg-[#2b5278] hover:scale-[1.05] active:scale-[0.95] disabled:opacity-40 text-white flex items-center justify-center shadow-md shadow-black/10 transition-all flex-shrink-0"
+                      >
+                        {sendLoading ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          <Send className="size-4.5" />
+                        )}
+                      </button>
+                    </form>
+                  </div>
                 </div>
               </div>
             ) : (
