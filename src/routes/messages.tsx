@@ -502,6 +502,16 @@ function E2eeMessengerPage() {
 
     const list: DecryptedMessage[] = [];
     for (const msg of rawMessages) {
+      // Check if message payload is unencrypted media
+      const isPlainMedia = msg.encryptedContent.startsWith("[IMAGE]:") || 
+                           msg.encryptedContent.startsWith("[VIDEO]:") || 
+                           msg.encryptedContent.startsWith("[FILE]:");
+
+      if (isPlainMedia) {
+        list.push({ ...msg, plaintext: msg.encryptedContent });
+        continue;
+      }
+
       const peer = msg.sender === loggedInUser ? msg.recipient : msg.sender;
       const peerPubKey = await getPeerPublicKey(peer);
 
@@ -678,7 +688,7 @@ function E2eeMessengerPage() {
 
   const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !activeContact || !myPrivateKey) return;
+    if (!file || !activeContact) return;
 
     setMediaUploading(true);
     try {
@@ -698,7 +708,7 @@ function E2eeMessengerPage() {
       const fileType = file.type;
       const fileName = file.name;
 
-      // Construct special E2EE message prefix content
+      // Construct special unencrypted message prefix content
       let payload = "";
       if (fileType.startsWith("image/")) {
         payload = `[IMAGE]:${fileUrl}`;
@@ -708,34 +718,15 @@ function E2eeMessengerPage() {
         payload = `[FILE]:${fileName}|${fileUrl}`;
       }
 
-      // Encrypt payload client side
-      const peerPubKey = await getPeerPublicKey(activeContact);
-      if (!peerPubKey) throw new Error("Recipient public key not available.");
-
-      const sharedKey = await deriveSharedAesKey(myPrivateKey, peerPubKey);
-      const plaintextBytes = new TextEncoder().encode(payload);
-      const iv = window.crypto.getRandomValues(new Uint8Array(12));
-      
-      const cipherBytes = await window.crypto.subtle.encrypt(
-        { name: "AES-GCM", iv },
-        sharedKey,
-        plaintextBytes
-      );
-
-      const ivHex = Array.from(iv).map(b => b.toString(16).padStart(2, "0")).join("");
-      const cipherHex = Array.from(new Uint8Array(cipherBytes))
-        .map(b => b.toString(16).padStart(2, "0"))
-        .join("");
-
-      // Send to MongoDB relay
+      // Send to MongoDB relay directly in plaintext
       const sendRes = await fetch("/api/messages/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           sender: loggedInUser,
           recipient: activeContact,
-          encryptedContent: cipherHex,
-          iv: ivHex,
+          encryptedContent: payload,
+          iv: "000000000000000000000000",
           authHash: myAuthHash
         })
       });
