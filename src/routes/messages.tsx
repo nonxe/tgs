@@ -21,7 +21,13 @@ import {
   Paperclip,
   Image as ImageIcon,
   CheckCircle,
-  Camera
+  Camera,
+  Copy,
+  Trash2,
+  Smile,
+  Info,
+  X,
+  Key
 } from "lucide-react";
 
 export const Route = createFileRoute("/messages")({
@@ -101,6 +107,16 @@ function E2eeMessengerPage() {
   const [decryptedMessages, setDecryptedMessages] = useState<DecryptedMessage[]>([]);
   const [messageInput, setMessageInput] = useState<string>("");
   const [sendLoading, setSendLoading] = useState<boolean>(false);
+
+  // Premium Chat App Features State
+  const [msgSearchQuery, setMsgSearchQuery] = useState<string>("");
+  const [showMsgSearch, setShowMsgSearch] = useState<boolean>(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
+  const [showInfoDrawer, setShowInfoDrawer] = useState<boolean>(false);
+  const [localDeletedMsgs, setLocalDeletedMsgs] = useState<string[]>([]);
+  const [fingerprintCache, setFingerprintCache] = useState<Record<string, string>>({});
+  const [copiedFingerprint, setCopiedFingerprint] = useState<boolean>(false);
+  const [copiedTextId, setCopiedTextId] = useState<string | null>(null);
   
   // Refs
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -130,8 +146,9 @@ function E2eeMessengerPage() {
         fetch(`/api/messages/publickey?username=${encodeURIComponent(savedUser)}`)
           .then(res => res.json())
           .then(data => {
-            if (data.success && data.pfpUrl) {
-              setMyPfpUrl(data.pfpUrl);
+            if (data.success) {
+              if (data.pfpUrl) setMyPfpUrl(data.pfpUrl);
+              calculateFingerprint(savedUser, data.publicKey);
             }
           }).catch(console.error);
 
@@ -192,11 +209,16 @@ function E2eeMessengerPage() {
     setActiveContact("");
     setContacts([]);
     setMobileView("list");
+    setShowInfoDrawer(false);
   };
 
   const handleContactSelect = (c: string) => {
     setActiveContact(c);
     setMobileView("chat");
+    setMsgSearchQuery("");
+    setShowMsgSearch(false);
+    setShowEmojiPicker(false);
+    setShowInfoDrawer(false);
   };
 
   // Avatar deterministic gradient colors based on username hash
@@ -216,6 +238,22 @@ function E2eeMessengerPage() {
     }
     const index = Math.abs(hash) % colors.length;
     return colors[index];
+  };
+
+  // Calculate E2EE Security key fingerprint from JWK public key
+  const calculateFingerprint = async (username: string, publicKeyJwk: string) => {
+    try {
+      const encoder = new TextEncoder();
+      const hash = await crypto.subtle.digest("SHA-256", encoder.encode(publicKeyJwk));
+      const hashArray = Array.from(new Uint8Array(hash));
+      const fingerprint = hashArray
+        .slice(0, 16)
+        .map(b => b.toString(16).toUpperCase().padStart(2, "0"))
+        .join(" ");
+      setFingerprintCache(prev => ({ ...prev, [username]: fingerprint }));
+    } catch (e) {
+      console.error("Fingerprint calculation error:", e);
+    }
   };
 
   // --- CRYPTO HELPERS ---
@@ -365,6 +403,7 @@ function E2eeMessengerPage() {
       setLoggedInUser(cleanUser);
       setMyAuthHash(authHash);
       setMyPrivateKey(keyPair.privateKey);
+      calculateFingerprint(cleanUser, JSON.stringify(pubKeyJwk));
 
       // Save to localStorage
       localStorage.setItem("e2ee_username", cleanUser);
@@ -430,6 +469,7 @@ function E2eeMessengerPage() {
       setMyAuthHash(authHash);
       setMyPrivateKey(privKey);
       if (pfpUrl) setMyPfpUrl(pfpUrl);
+      calculateFingerprint(cleanUser, data.publicKey);
 
       // Save to local storage
       localStorage.setItem("e2ee_username", cleanUser);
@@ -484,7 +524,8 @@ function E2eeMessengerPage() {
       const pubKey = await importPublicKeyFromJwk(pubKeyJwk);
       
       setPublicKeysCache(prev => ({ ...prev, [peerUsername]: pubKey }));
-      
+      calculateFingerprint(peerUsername, data.publicKey);
+
       if (data.pfpUrl) {
         setPfpsCache(prev => ({ ...prev, [peerUsername]: data.pfpUrl }));
       }
@@ -648,7 +689,7 @@ function E2eeMessengerPage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      // Upload file permanently to Catbox using stable public upload endpoint
+      // Upload file permanently to Catbox
       const res = await fetch("/api/public/upload", {
         method: "POST",
         body: formData,
@@ -695,7 +736,7 @@ function E2eeMessengerPage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      // Upload media permanently to Catbox using stable public upload endpoint
+      // Upload media permanently to Catbox
       const res = await fetch("/api/public/upload", {
         method: "POST",
         body: formData,
@@ -745,6 +786,30 @@ function E2eeMessengerPage() {
     }
   };
 
+  const copyToClipboard = (text: string, msgId: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedTextId(msgId);
+    setTimeout(() => setCopiedTextId(null), 2000);
+  };
+
+  const deleteMessageLocally = (msgId: string) => {
+    setLocalDeletedMsgs(prev => [...prev, msgId]);
+  };
+
+  const copyPeerFingerprint = () => {
+    const print = fingerprintCache[activeContact] || "";
+    if (print) {
+      navigator.clipboard.writeText(print);
+      setCopiedFingerprint(true);
+      setTimeout(() => setCopiedFingerprint(false), 2000);
+    }
+  };
+
+  const handleEmojiSelect = (emoji: string) => {
+    setMessageInput(prev => prev + emoji);
+    setShowEmojiPicker(false);
+  };
+
   const activeMessages = decryptedMessages.filter(
     msg => (msg.sender === activeContact && msg.recipient === loggedInUser) ||
            (msg.sender === loggedInUser && msg.recipient === activeContact)
@@ -753,6 +818,167 @@ function E2eeMessengerPage() {
   const filteredContacts = contacts.filter(c => 
     c.toLowerCase().includes(searchFilter.trim().toLowerCase())
   );
+
+  // Emojis list
+  const emojiList = ["😀", "😂", "😍", "👍", "🔥", "🎉", "❤️", "👏", "🙌", "😮", "😢", "😎", "🚀", "🔒", "🤫", "👀", "💯"];
+
+  // Render group of messages with date separators & message search filtering
+  const renderMessageTimeline = () => {
+    let lastDateStr = "";
+    
+    const chatFilteredMsgs = activeMessages.filter(msg => {
+      if (localDeletedMsgs.includes(msg.id)) return false;
+      if (!showMsgSearch || !msgSearchQuery.trim()) return true;
+      return msg.plaintext.toLowerCase().includes(msgSearchQuery.toLowerCase());
+    });
+
+    if (chatFilteredMsgs.length === 0) {
+      return (
+        <div className="h-full flex flex-col items-center justify-center text-center p-8 select-none">
+          <div className="size-14 rounded-2xl bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/10 dark:border-emerald-500/20 flex items-center justify-center mb-3">
+            <Lock className="size-6 text-emerald-500/40 animate-pulse" />
+          </div>
+          <p className="text-[13px] font-black text-foreground">
+            {msgSearchQuery ? "No matching messages" : "Secure Channel Opened"}
+          </p>
+          <p className="text-[11px] text-muted-foreground max-w-[260px] mx-auto mt-0.5 leading-normal">
+            {msgSearchQuery 
+              ? "Try adjusting your search terms to locate messages." 
+              : "Your messages are highly encrypted using local client key pairs. Nobody else can read them."}
+          </p>
+        </div>
+      );
+    }
+
+    return chatFilteredMsgs.map((msg) => {
+      const isMe = msg.sender === loggedInUser;
+      const msgDate = new Date(msg.timestamp);
+      
+      // Date grouping logic
+      const dateStr = msgDate.toLocaleDateString([], { month: "long", day: "numeric", year: "numeric" });
+      const showHeader = dateStr !== lastDateStr;
+      lastDateStr = dateStr;
+      
+      const isImage = msg.plaintext.startsWith("[IMAGE]:");
+      const isVideo = msg.plaintext.startsWith("[VIDEO]:");
+      const isFile = msg.plaintext.startsWith("[FILE]:");
+
+      let messageContent = null;
+
+      if (isImage) {
+        const url = msg.plaintext.substring(8);
+        messageContent = (
+          <div className="space-y-1">
+            <a href={url} target="_blank" rel="noopener noreferrer" className="block overflow-hidden rounded-lg hover:opacity-90 transition-opacity max-w-[260px]">
+              <img src={url} alt="Media" className="w-full h-auto object-cover max-h-[300px] rounded-lg" />
+            </a>
+            <p className="text-[10px] opacity-60 underline text-right select-none">
+              <a href={url} target="_blank" rel="noopener noreferrer" className={isMe ? "text-white/80" : "text-[#3390ec]"}>
+                Open full image ↗
+              </a>
+            </p>
+          </div>
+        );
+      } else if (isVideo) {
+        const url = msg.plaintext.substring(8);
+        messageContent = (
+          <div className="space-y-1 max-w-[260px]">
+            <video src={url} controls className="w-full h-auto rounded-lg max-h-[300px]" />
+            <p className="text-[10px] opacity-60 underline text-right select-none">
+              <a href={url} target="_blank" rel="noopener noreferrer" className={isMe ? "text-white/80" : "text-[#3390ec]"}>
+                Open full video ↗
+              </a>
+            </p>
+          </div>
+        );
+      } else if (isFile) {
+        const parts = msg.plaintext.substring(7).split("|");
+        const fileName = parts[0];
+        const url = parts[1];
+        messageContent = (
+          <div className="flex items-center gap-3 bg-black/10 dark:bg-black/20 p-3 rounded-xl max-w-[280px]">
+            <div className="size-10 rounded-lg bg-emerald-500/20 text-emerald-500 flex items-center justify-center flex-shrink-0">
+              <Sparkles className="size-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[12.5px] font-black truncate">{fileName}</p>
+              <a href={url} target="_blank" rel="noopener noreferrer" className={`text-[10.5px] font-bold hover:underline ${
+                isMe ? "text-white/90" : "text-[#3390ec] dark:text-[#82b1ff]"
+              }`}>
+                Download File ↗
+              </a>
+            </div>
+          </div>
+        );
+      } else {
+        messageContent = (
+          <p className="text-[13px] font-medium leading-relaxed break-words whitespace-pre-wrap select-text">
+            {msg.plaintext}
+          </p>
+        );
+      }
+
+      return (
+        <div key={msg.id} className="space-y-2">
+          {showHeader && (
+            <div className="flex justify-center my-3 select-none animate-fade-in">
+              <span className="bg-black/15 dark:bg-black/45 text-white/90 dark:text-gray-300 text-[10.5px] font-bold px-3 py-1 rounded-full backdrop-blur-md shadow-sm">
+                {dateStr}
+              </span>
+            </div>
+          )}
+          
+          <div className={`flex ${isMe ? "justify-end" : "justify-start"} group relative`}>
+            {/* Telegram-style message bubbles */}
+            <div className={`max-w-[78%] relative shadow-sm rounded-[15px] select-text border transition-all hover:scale-[1.01] ${
+              isMe
+                ? "bg-[#3390ec] dark:bg-[#2b5278] border-[#3390ec]/20 dark:border-[#2b5278]/30 text-white rounded-br-[3px]"
+                : msg.decryptionFailed
+                  ? "bg-rose-500/10 dark:bg-rose-500/5 border-rose-500/25 text-rose-500 rounded-bl-[3px]"
+                  : "bg-white dark:bg-[#182533] border-border/20 dark:border-transparent text-foreground dark:text-gray-100 rounded-bl-[3px]"
+            }`}>
+              <div className="pl-3.5 pr-13 pt-2 pb-2.5 min-w-[80px]">
+                {messageContent}
+                
+                {/* Bottom-right corner timestamp inside bubble */}
+                <span className={`absolute bottom-1 right-2 text-[8.5px] select-none font-semibold ${
+                  isMe ? "text-white/60" : "text-muted-foreground/60"
+                }`}>
+                  {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+            </div>
+
+            {/* Quick Bubble Action overlay on Hover */}
+            <div className={`absolute top-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex items-center gap-1.5 bg-white dark:bg-[#1e2c3a] border border-border/40 dark:border-transparent px-2.5 py-1 rounded-full shadow-lg z-10 select-none ${
+              isMe ? "right-[80%] mr-2" : "left-[80%] ml-2"
+            }`}>
+              <button
+                onClick={() => copyToClipboard(msg.plaintext, msg.id)}
+                title={copiedTextId === msg.id ? "Copied!" : "Copy to clipboard"}
+                className="text-[10px] text-muted-foreground hover:text-foreground font-bold flex items-center gap-0.5 transition-colors"
+              >
+                {copiedTextId === msg.id ? (
+                  <CheckCircle className="size-3.5 text-emerald-500" />
+                ) : (
+                  <Copy className="size-3.5" />
+                )}
+              </button>
+              <span className="w-px h-3 bg-border/40 dark:bg-gray-600" />
+              <button
+                onClick={() => deleteMessageLocally(msg.id)}
+                title="Hide message"
+                className="text-muted-foreground hover:text-rose-500 transition-colors"
+              >
+                <Trash2 className="size-3.5" />
+              </button>
+            </div>
+
+          </div>
+        </div>
+      );
+    });
+  };
 
   return (
     <main className="min-h-screen bg-background text-foreground font-sans transition-colors duration-300 flex flex-col h-screen overflow-hidden relative select-none">
@@ -919,7 +1145,7 @@ function E2eeMessengerPage() {
         </div>
       ) : (
         // E2EE Telegram-Style Chat Screen
-        <div className="flex-1 flex min-h-0 select-text">
+        <div className="flex-1 flex min-h-0 select-text relative">
           
           {/* ───────────────── LEFT PANEL: CONTACTS SIDEBAR ───────────────── */}
           <div className={`w-full md:w-[350px] border-r border-border/10 dark:border-[#101921] flex flex-col min-h-0 flex-shrink-0 bg-white dark:bg-[#17212b] select-none ${
@@ -931,7 +1157,7 @@ function E2eeMessengerPage() {
               <div className="flex items-center gap-2.5">
                 {/* User avatar clickable to trigger PFP upload */}
                 {myPfpUrl ? (
-                  <div className="relative group cursor-pointer flex-shrink-0" onClick={handlePfpClick}>
+                  <div className="relative group cursor-pointer flex-shrink-0 animate-fade-in" onClick={handlePfpClick}>
                     <img src={myPfpUrl} className="size-9 rounded-full object-cover border border-border/20 shadow-sm" />
                     <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
                       <Camera className="size-3.5" />
@@ -1070,13 +1296,13 @@ function E2eeMessengerPage() {
                           )}
                         </div>
                         {lastMsg ? (
-                          <p className="text-[11px] truncate text-muted-foreground dark:text-gray-400 mt-0.5 pr-4">
+                          <p className="text-[11.5px] truncate text-muted-foreground dark:text-gray-400 mt-0.5 pr-4 leading-normal">
                             {lastMsg.plaintext.startsWith("[IMAGE]:") 
-                              ? "📷 Encrypted Image" 
+                              ? "📷 Image URL" 
                               : lastMsg.plaintext.startsWith("[VIDEO]:") 
-                                ? "🎥 Encrypted Video" 
+                                ? "🎥 Video URL" 
                                 : lastMsg.plaintext.startsWith("[FILE]:") 
-                                  ? "📁 Encrypted File" 
+                                  ? "📁 Document Attachment" 
                                   : lastMsg.plaintext}
                           </p>
                         ) : (
@@ -1094,7 +1320,7 @@ function E2eeMessengerPage() {
           </div>
 
           {/* ───────────────── RIGHT PANEL: CHAT TIMELINE ───────────────── */}
-          <div className={`flex-1 flex flex-col min-h-0 bg-[#e7ebf0] dark:bg-[#0e1621] ${
+          <div className={`flex-1 flex flex-col min-h-0 bg-[#e7ebf0] dark:bg-[#0e1621] relative ${
             mobileView === "list" ? "hidden md:flex" : "flex"
           }`}
           style={{
@@ -1102,14 +1328,17 @@ function E2eeMessengerPage() {
             backgroundSize: "20px 20px"
           }}>
             {activeContact ? (
-              <div className="flex-1 flex flex-col min-h-0">
+              <div className="flex-1 flex flex-col min-h-0 relative">
                 
                 {/* Chat window Header */}
-                <div className="px-4 py-3.5 border-b border-border/10 dark:border-[#101921] flex items-center justify-between bg-white/95 dark:bg-[#17212b]/95 backdrop-blur-md flex-shrink-0 select-none shadow-sm">
-                  <div className="flex items-center min-w-0">
+                <div className="px-4 py-3.5 border-b border-border/10 dark:border-[#101921] flex items-center justify-between bg-white/95 dark:bg-[#17212b]/95 backdrop-blur-md flex-shrink-0 select-none shadow-sm relative z-20">
+                  <div className="flex items-center min-w-0 cursor-pointer" onClick={() => setShowInfoDrawer(!showInfoDrawer)}>
                     {/* Back Button for mobile view layout */}
                     <button
-                      onClick={() => setMobileView("list")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMobileView("list");
+                      }}
                       className="md:hidden size-8.5 rounded-full hover:bg-secondary dark:hover:bg-[#202b36] flex items-center justify-center active:scale-95 transition-all mr-2 flex-shrink-0 text-foreground"
                     >
                       <ChevronLeft className="size-6" />
@@ -1117,25 +1346,39 @@ function E2eeMessengerPage() {
                     
                     {/* Peer PFP or initials circle */}
                     {pfpsCache[activeContact] ? (
-                      <img src={pfpsCache[activeContact]} className="size-10 rounded-full object-cover shadow-sm flex-shrink-0 mr-3" />
+                      <img src={pfpsCache[activeContact]} className="size-10 rounded-full object-cover shadow-sm flex-shrink-0 mr-3 hover:opacity-90" />
                     ) : (
-                      <div className={`size-10 rounded-full bg-gradient-to-tr ${getAvatarGradient(activeContact)} text-white flex items-center justify-center font-black text-[14px] shadow-sm flex-shrink-0 mr-3`}>
+                      <div className={`size-10 rounded-full bg-gradient-to-tr ${getAvatarGradient(activeContact)} text-white flex items-center justify-center font-black text-[14px] shadow-sm flex-shrink-0 mr-3 hover:opacity-90`}>
                         {activeContact.charAt(0).toUpperCase()}
                       </div>
                     )}
                     
                     <div className="truncate">
-                      <h3 className="text-[13.5px] font-black leading-tight text-foreground dark:text-gray-100 truncate">
+                      <h3 className="text-[13.5px] font-black leading-tight text-foreground dark:text-gray-100 truncate flex items-center gap-1.5">
                         {activeContact}
+                        <Info className="size-3.5 text-muted-foreground opacity-60" />
                       </h3>
                       <div className="flex items-center gap-1 text-[9px] font-bold text-emerald-500 tracking-wide uppercase mt-1">
-                        <span className="size-1.5 rounded-full bg-emerald-500 inline-block animate-ping" style={{ animationDuration: '2.5s' }} />
-                        <span>E2EE Active channel</span>
+                        <span className="size-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
+                        <span>AES Secure Channel</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {/* Search Messages Icon Toggle */}
+                    <button
+                      onClick={() => setShowMsgSearch(!showMsgSearch)}
+                      className={`size-9 rounded-full flex items-center justify-center active:scale-90 transition-all ${
+                        showMsgSearch 
+                          ? "bg-[#3390ec]/20 text-[#3390ec]" 
+                          : "hover:bg-secondary dark:hover:bg-[#202b36] text-muted-foreground"
+                      }`}
+                      title="Search messages"
+                    >
+                      <Search className="size-4.5" />
+                    </button>
+
                     <div className="hidden sm:flex items-center gap-1.5 bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 text-emerald-500 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider select-none">
                       <ShieldCheck className="size-3.5" />
                       <span>Zero-Knowledge</span>
@@ -1146,115 +1389,55 @@ function E2eeMessengerPage() {
                   </div>
                 </div>
 
+                {/* Inline Message Search Bar */}
+                {showMsgSearch && (
+                  <div className="px-4 py-2 bg-white/90 dark:bg-[#17212b]/95 border-b border-border/10 dark:border-[#101921] flex items-center gap-2 select-none relative z-10 animate-slide-in">
+                    <Search className="size-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      placeholder="Search messages in this thread..."
+                      value={msgSearchQuery}
+                      onChange={(e) => setMsgSearchQuery(e.target.value)}
+                      className="flex-1 bg-transparent text-[12px] font-bold outline-none text-foreground"
+                      autoFocus
+                    />
+                    {msgSearchQuery && (
+                      <button onClick={() => setMsgSearchQuery("")} className="text-[10px] font-black text-muted-foreground hover:text-foreground">
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                )}
+
                 {/* Chat Timeline Scroll container */}
                 <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 min-h-0">
-                  {activeMessages.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-center p-8 select-none">
-                      <div className="size-14 rounded-2xl bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/10 dark:border-emerald-500/20 flex items-center justify-center mb-3">
-                        <Lock className="size-6 text-emerald-500/40 animate-pulse" />
-                      </div>
-                      <p className="text-[13px] font-black text-foreground">Secure Channel Opened</p>
-                      <p className="text-[11px] text-muted-foreground max-w-[260px] mx-auto mt-0.5 leading-normal">
-                        Your messages are highly encrypted using local client key pairs. Nobody else can read them.
-                      </p>
-                    </div>
-                  ) : (
-                    activeMessages.map((msg) => {
-                      const isMe = msg.sender === loggedInUser;
-                      
-                      // Check if message payload is an E2E media item
-                      const isImage = msg.plaintext.startsWith("[IMAGE]:");
-                      const isVideo = msg.plaintext.startsWith("[VIDEO]:");
-                      const isFile = msg.plaintext.startsWith("[FILE]:");
-
-                      let messageContent = null;
-
-                      if (isImage) {
-                        const url = msg.plaintext.substring(8);
-                        messageContent = (
-                          <div className="space-y-1">
-                            <a href={url} target="_blank" rel="noopener noreferrer" className="block overflow-hidden rounded-lg hover:opacity-90 transition-opacity max-w-[260px]">
-                              <img src={url} alt="Media" className="w-full h-auto object-cover max-h-[300px] rounded-lg" />
-                            </a>
-                            <p className="text-[10px] opacity-60 underline text-right select-none">
-                              <a href={url} target="_blank" rel="noopener noreferrer" className={isMe ? "text-white/80" : "text-[#3390ec]"}>
-                                Open full image ↗
-                              </a>
-                            </p>
-                          </div>
-                        );
-                      } else if (isVideo) {
-                        const url = msg.plaintext.substring(8);
-                        messageContent = (
-                          <div className="space-y-1 max-w-[260px]">
-                            <video src={url} controls className="w-full h-auto rounded-lg max-h-[300px]" />
-                            <p className="text-[10px] opacity-60 underline text-right select-none">
-                              <a href={url} target="_blank" rel="noopener noreferrer" className={isMe ? "text-white/80" : "text-[#3390ec]"}>
-                                Open full video ↗
-                              </a>
-                            </p>
-                          </div>
-                        );
-                      } else if (isFile) {
-                        const parts = msg.plaintext.substring(7).split("|");
-                        const fileName = parts[0];
-                        const url = parts[1];
-                        messageContent = (
-                          <div className="flex items-center gap-3 bg-black/10 dark:bg-black/20 p-3 rounded-xl max-w-[280px]">
-                            <div className="size-10 rounded-lg bg-emerald-500/20 text-emerald-500 flex items-center justify-center flex-shrink-0">
-                              <Sparkles className="size-5" />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="text-[12.5px] font-black truncate">{fileName}</p>
-                              <a href={url} target="_blank" rel="noopener noreferrer" className={`text-[10.5px] font-bold hover:underline ${
-                                isMe ? "text-white/90" : "text-[#3390ec] dark:text-[#82b1ff]"
-                              }`}>
-                                Download File ↗
-                              </a>
-                            </div>
-                          </div>
-                        );
-                      } else {
-                        messageContent = (
-                          <p className="text-[13px] font-medium leading-relaxed break-words whitespace-pre-wrap select-text">
-                            {msg.plaintext}
-                          </p>
-                        );
-                      }
-
-                      return (
-                        <div
-                          key={msg.id}
-                          className={`flex ${isMe ? "justify-end" : "justify-start"}`}
-                        >
-                          {/* Telegram-style message bubbles */}
-                          <div className={`max-w-[78%] relative shadow-sm rounded-[15px] select-text border ${
-                            isMe
-                              ? "bg-[#3390ec] dark:bg-[#2b5278] border-[#3390ec]/20 dark:border-[#2b5278]/30 text-white rounded-br-[3px]"
-                              : msg.decryptionFailed
-                                ? "bg-rose-500/10 dark:bg-rose-500/5 border-rose-500/25 text-rose-500 rounded-bl-[3px]"
-                                : "bg-white dark:bg-[#182533] border-border/20 dark:border-transparent text-foreground dark:text-gray-100 rounded-bl-[3px]"
-                          }`}>
-                            <div className="pl-3.5 pr-12.5 pt-2 pb-2.5 min-w-[70px]">
-                              {messageContent}
-                              
-                              {/* Bottom-right corner timestamp inside bubble */}
-                              <span className={`absolute bottom-1 right-2 text-[9px] select-none font-semibold ${
-                                isMe ? "text-white/60" : "text-muted-foreground/60"
-                              }`}>
-                                {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
+                  {renderMessageTimeline()}
                   <div ref={chatEndRef} />
                 </div>
 
+                {/* Floating Emoji Picker Popover overlay */}
+                {showEmojiPicker && (
+                  <div className="mx-4 p-3 bg-white dark:bg-[#17212b] border border-border/30 dark:border-[#101921] rounded-2xl shadow-xl flex flex-wrap gap-2 select-none z-30 relative animate-slide-in">
+                    <div className="w-full flex justify-between items-center text-[10px] font-bold text-muted-foreground px-1 pb-1">
+                      <span>Quick Emojis</span>
+                      <button onClick={() => setShowEmojiPicker(false)}>
+                        <X className="size-3.5" />
+                      </button>
+                    </div>
+                    {emojiList.map(emoji => (
+                      <button
+                        key={emoji}
+                        onClick={() => handleEmojiSelect(emoji)}
+                        className="text-lg hover:scale-125 hover:bg-secondary dark:hover:bg-[#202b36] p-1 rounded transition-transform"
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
                 {/* Telegram-Style Floating message input bar */}
-                <div className="p-3 sm:p-4 bg-white/70 dark:bg-[#17212b]/80 border-t border-border/10 dark:border-[#101921] backdrop-blur-sm flex-shrink-0">
+                <div className="p-3 sm:p-4 bg-white/70 dark:bg-[#17212b]/80 border-t border-border/10 dark:border-[#101921] backdrop-blur-sm flex-shrink-0 relative z-10">
                   <div className="max-w-4xl mx-auto flex items-center gap-2 relative">
                     
                     {/* Attach media button */}
@@ -1270,6 +1453,18 @@ function E2eeMessengerPage() {
                       ) : (
                         <Paperclip className="size-5" />
                       )}
+                    </button>
+
+                    {/* Emoji toggle icon */}
+                    <button
+                      type="button"
+                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                      className={`size-9.5 rounded-full flex items-center justify-center transition-colors flex-shrink-0 active:scale-95 ${
+                        showEmojiPicker ? "bg-secondary dark:bg-[#202b36] text-[#3390ec]" : "text-muted-foreground hover:text-foreground"
+                      }`}
+                      title="Emojis Picker"
+                    >
+                      <Smile className="size-5.5" />
                     </button>
 
                     <form onSubmit={handleSendMessage} className="flex-1 flex items-center gap-2">
@@ -1297,6 +1492,82 @@ function E2eeMessengerPage() {
                     </form>
                   </div>
                 </div>
+
+                {/* ───────────────── RIGHT PANEL: CONTACT INFORMATION DRAWER ───────────────── */}
+                {showInfoDrawer && (
+                  <div className="w-80 border-l border-border/10 dark:border-[#101921] bg-white dark:bg-[#17212b] flex flex-col h-full z-30 select-none absolute right-0 top-0 shadow-2xl animate-slide-in">
+                    {/* Drawer Header */}
+                    <div className="px-4 py-4 border-b border-border/10 dark:border-[#101921] flex items-center justify-between">
+                      <span className="text-[13px] font-black text-foreground uppercase tracking-wider">Contact Info</span>
+                      <button onClick={() => setShowInfoDrawer(false)} className="text-muted-foreground hover:text-foreground">
+                        <X className="size-4.5" />
+                      </button>
+                    </div>
+
+                    {/* Drawer Content */}
+                    <div className="flex-1 overflow-y-auto p-5 space-y-6">
+                      
+                      {/* Big Avatar */}
+                      <div className="text-center space-y-3">
+                        {pfpsCache[activeContact] ? (
+                          <img src={pfpsCache[activeContact]} className="size-24 rounded-full object-cover border-2 border-emerald-500/20 shadow-lg mx-auto" />
+                        ) : (
+                          <div className={`size-24 rounded-full bg-gradient-to-tr ${getAvatarGradient(activeContact)} text-white flex items-center justify-center font-black text-[32px] shadow-lg mx-auto`}>
+                            {activeContact.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <div>
+                          <h4 className="text-[16px] font-black text-foreground leading-tight">{activeContact}</h4>
+                          <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-wider mt-1">E2EE Verified Node</p>
+                        </div>
+                      </div>
+
+                      <hr className="border-border/10 dark:border-[#101921]" />
+
+                      {/* E2EE Fingerprint Key */}
+                      <div className="space-y-2">
+                        <h5 className="text-[11px] font-black text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                          <Key className="size-3.5 text-emerald-500" />
+                          Security Fingerprint
+                        </h5>
+                        
+                        {fingerprintCache[activeContact] ? (
+                          <div className="bg-secondary/50 dark:bg-[#0e1621] border border-border/30 dark:border-[#101921] rounded-xl p-3.5 space-y-3 select-text">
+                            <code className="text-[10.5px] font-black block text-center break-words font-mono leading-relaxed tracking-wider">
+                              {fingerprintCache[activeContact]}
+                            </code>
+                            <button
+                              onClick={copyPeerFingerprint}
+                              className="w-full h-8.5 rounded-lg border border-border hover:bg-secondary dark:hover:bg-[#202b36] flex items-center justify-center gap-1.5 text-[11px] font-black transition-all select-none"
+                            >
+                              {copiedFingerprint ? (
+                                <>
+                                  <CheckCircle className="size-3.5 text-emerald-500" />
+                                  <span>Copied Fingerprint</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="size-3.5 text-muted-foreground" />
+                                  <span>Copy Fingerprint</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="text-[11px] text-muted-foreground py-2 italic">
+                            Generating fingerprint...
+                          </div>
+                        )}
+                        
+                        <p className="text-[9.5px] text-muted-foreground leading-normal mt-1">
+                          This numeric fingerprint represents a SHA-256 hash of {activeContact}'s ECDH P-256 public key. Compare this code with your peer to guarantee that nobody is inspecting your E2EE channels.
+                        </p>
+                      </div>
+
+                    </div>
+                  </div>
+                )}
+
               </div>
             ) : (
               // Desktop empty state
