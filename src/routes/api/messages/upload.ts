@@ -18,10 +18,15 @@ async function handleUpload(request: Request) {
       });
     }
 
+    const filename = file.name || "upload";
+    const fileType = file.type || "application/octet-stream";
+    const arrayBuffer = await file.arrayBuffer();
+    const blob = new Blob([arrayBuffer], { type: fileType });
+
     // Forward file to Catbox API (Permanent)
     const catboxFormData = new FormData();
     catboxFormData.append("reqtype", "fileupload");
-    catboxFormData.append("fileToUpload", file);
+    catboxFormData.append("fileToUpload", blob, filename);
 
     const res = await fetch("https://catbox.moe/user/api.php", {
       method: "POST",
