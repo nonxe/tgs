@@ -14,7 +14,8 @@ import {
   X,
   Crown,
   Globe,
-  Instagram
+  Instagram,
+  Mail
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -116,6 +117,14 @@ function DashboardHome() {
       icon: Instagram, 
       link: "/instagram",
       color: "text-pink-400 border-pink-500/20 bg-pink-500/5 hover:border-pink-500/40"
+    },
+    { 
+      id: "tempmail", 
+      title: "Temp Mail", 
+      desc: "Generate temporary anonymous disposable email addresses to prevent spam.", 
+      icon: Mail, 
+      link: "/tempmail",
+      color: "text-violet-400 border-violet-500/20 bg-violet-500/5 hover:border-violet-500/40"
     },
     { 
       id: "request", 

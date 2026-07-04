@@ -12,7 +12,8 @@ import {
   ChevronRight,
   Info,
   Globe,
-  Instagram
+  Instagram,
+  Mail
 } from "lucide-react";
 
 export const Route = createFileRoute("/more")({
@@ -89,6 +90,7 @@ export function MorePage({ embed = false }: { embed?: boolean }) {
         <div className="md:col-span-1 flex md:flex-col gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-none w-full select-none">
           {[
             { id: "chat", label: "AI Chatbot", icon: MessageSquare },
+            { id: "tempmail", label: "Temp Mail", icon: Mail },
             { id: "igview", label: "IG Viewer", icon: Instagram },
             { id: "xview", label: "X Viewer", icon: Globe }
           ].map((tab) => {
@@ -102,6 +104,8 @@ export function MorePage({ embed = false }: { embed?: boolean }) {
                     window.open("/x", "_blank");
                   } else if (tab.id === "igview") {
                     window.open("/instagram", "_blank");
+                  } else if (tab.id === "tempmail") {
+                    window.open("/tempmail", "_blank");
                   } else {
                     setActiveTab(tab.id as TabType);
                   }
