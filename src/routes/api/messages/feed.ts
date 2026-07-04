@@ -34,7 +34,9 @@ async function handleGetFeed(request: Request) {
         username: post.username,
         content: post.content,
         mediaUrl: post.mediaUrl,
-        timestamp: post.timestamp
+        timestamp: post.timestamp,
+        likes: post.likes || [],
+        comments: post.comments || []
       }))
     }), {
       status: 200,

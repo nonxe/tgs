@@ -36,8 +36,12 @@ import { Route as ApiMessagesUpdatepfpRouteImport } from './routes/api/messages/
 import { Route as ApiMessagesSendRouteImport } from './routes/api/messages/send'
 import { Route as ApiMessagesRegisterRouteImport } from './routes/api/messages/register'
 import { Route as ApiMessagesPublickeyRouteImport } from './routes/api/messages/publickey'
+import { Route as ApiMessagesPostRouteImport } from './routes/api/messages/post'
 import { Route as ApiMessagesListRouteImport } from './routes/api/messages/list'
+import { Route as ApiMessagesFeedRouteImport } from './routes/api/messages/feed'
 import { Route as ApiIgUserRouteImport } from './routes/api/ig/user'
+import { Route as ApiMessagesFeedLikeRouteImport } from './routes/api/messages/feed/like'
+import { Route as ApiMessagesFeedCommentRouteImport } from './routes/api/messages/feed/comment'
 
 const XRoute = XRouteImport.update({
   id: '/x',
@@ -174,15 +178,35 @@ const ApiMessagesPublickeyRoute = ApiMessagesPublickeyRouteImport.update({
   path: '/api/messages/publickey',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMessagesPostRoute = ApiMessagesPostRouteImport.update({
+  id: '/api/messages/post',
+  path: '/api/messages/post',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiMessagesListRoute = ApiMessagesListRouteImport.update({
   id: '/api/messages/list',
   path: '/api/messages/list',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMessagesFeedRoute = ApiMessagesFeedRouteImport.update({
+  id: '/api/messages/feed',
+  path: '/api/messages/feed',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiIgUserRoute = ApiIgUserRouteImport.update({
   id: '/api/ig/user',
   path: '/api/ig/user',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMessagesFeedLikeRoute = ApiMessagesFeedLikeRouteImport.update({
+  id: '/like',
+  path: '/like',
+  getParentRoute: () => ApiMessagesFeedRoute,
+} as any)
+const ApiMessagesFeedCommentRoute = ApiMessagesFeedCommentRouteImport.update({
+  id: '/comment',
+  path: '/comment',
+  getParentRoute: () => ApiMessagesFeedRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -206,7 +230,9 @@ export interface FileRoutesByFullPath {
   '/shsdb/create': typeof ShsdbCreateRoute
   '/note/': typeof NoteIndexRoute
   '/api/ig/user': typeof ApiIgUserRoute
+  '/api/messages/feed': typeof ApiMessagesFeedRouteWithChildren
   '/api/messages/list': typeof ApiMessagesListRoute
+  '/api/messages/post': typeof ApiMessagesPostRoute
   '/api/messages/publickey': typeof ApiMessagesPublickeyRoute
   '/api/messages/register': typeof ApiMessagesRegisterRoute
   '/api/messages/send': typeof ApiMessagesSendRoute
@@ -215,6 +241,8 @@ export interface FileRoutesByFullPath {
   '/api/x/download': typeof ApiXDownloadRoute
   '/api/x/tweets': typeof ApiXTweetsRoute
   '/api/x/user': typeof ApiXUserRoute
+  '/api/messages/feed/comment': typeof ApiMessagesFeedCommentRoute
+  '/api/messages/feed/like': typeof ApiMessagesFeedLikeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -236,7 +264,9 @@ export interface FileRoutesByTo {
   '/shsdb/create': typeof ShsdbCreateRoute
   '/note': typeof NoteIndexRoute
   '/api/ig/user': typeof ApiIgUserRoute
+  '/api/messages/feed': typeof ApiMessagesFeedRouteWithChildren
   '/api/messages/list': typeof ApiMessagesListRoute
+  '/api/messages/post': typeof ApiMessagesPostRoute
   '/api/messages/publickey': typeof ApiMessagesPublickeyRoute
   '/api/messages/register': typeof ApiMessagesRegisterRoute
   '/api/messages/send': typeof ApiMessagesSendRoute
@@ -245,6 +275,8 @@ export interface FileRoutesByTo {
   '/api/x/download': typeof ApiXDownloadRoute
   '/api/x/tweets': typeof ApiXTweetsRoute
   '/api/x/user': typeof ApiXUserRoute
+  '/api/messages/feed/comment': typeof ApiMessagesFeedCommentRoute
+  '/api/messages/feed/like': typeof ApiMessagesFeedLikeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -268,7 +300,9 @@ export interface FileRoutesById {
   '/shsdb/create': typeof ShsdbCreateRoute
   '/note/': typeof NoteIndexRoute
   '/api/ig/user': typeof ApiIgUserRoute
+  '/api/messages/feed': typeof ApiMessagesFeedRouteWithChildren
   '/api/messages/list': typeof ApiMessagesListRoute
+  '/api/messages/post': typeof ApiMessagesPostRoute
   '/api/messages/publickey': typeof ApiMessagesPublickeyRoute
   '/api/messages/register': typeof ApiMessagesRegisterRoute
   '/api/messages/send': typeof ApiMessagesSendRoute
@@ -277,6 +311,8 @@ export interface FileRoutesById {
   '/api/x/download': typeof ApiXDownloadRoute
   '/api/x/tweets': typeof ApiXTweetsRoute
   '/api/x/user': typeof ApiXUserRoute
+  '/api/messages/feed/comment': typeof ApiMessagesFeedCommentRoute
+  '/api/messages/feed/like': typeof ApiMessagesFeedLikeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -301,7 +337,9 @@ export interface FileRouteTypes {
     | '/shsdb/create'
     | '/note/'
     | '/api/ig/user'
+    | '/api/messages/feed'
     | '/api/messages/list'
+    | '/api/messages/post'
     | '/api/messages/publickey'
     | '/api/messages/register'
     | '/api/messages/send'
@@ -310,6 +348,8 @@ export interface FileRouteTypes {
     | '/api/x/download'
     | '/api/x/tweets'
     | '/api/x/user'
+    | '/api/messages/feed/comment'
+    | '/api/messages/feed/like'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -331,7 +371,9 @@ export interface FileRouteTypes {
     | '/shsdb/create'
     | '/note'
     | '/api/ig/user'
+    | '/api/messages/feed'
     | '/api/messages/list'
+    | '/api/messages/post'
     | '/api/messages/publickey'
     | '/api/messages/register'
     | '/api/messages/send'
@@ -340,6 +382,8 @@ export interface FileRouteTypes {
     | '/api/x/download'
     | '/api/x/tweets'
     | '/api/x/user'
+    | '/api/messages/feed/comment'
+    | '/api/messages/feed/like'
   id:
     | '__root__'
     | '/'
@@ -362,7 +406,9 @@ export interface FileRouteTypes {
     | '/shsdb/create'
     | '/note/'
     | '/api/ig/user'
+    | '/api/messages/feed'
     | '/api/messages/list'
+    | '/api/messages/post'
     | '/api/messages/publickey'
     | '/api/messages/register'
     | '/api/messages/send'
@@ -371,6 +417,8 @@ export interface FileRouteTypes {
     | '/api/x/download'
     | '/api/x/tweets'
     | '/api/x/user'
+    | '/api/messages/feed/comment'
+    | '/api/messages/feed/like'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -392,7 +440,9 @@ export interface RootRouteChildren {
   ShsdbIdRoute: typeof ShsdbIdRoute
   ShsdbCreateRoute: typeof ShsdbCreateRoute
   ApiIgUserRoute: typeof ApiIgUserRoute
+  ApiMessagesFeedRoute: typeof ApiMessagesFeedRouteWithChildren
   ApiMessagesListRoute: typeof ApiMessagesListRoute
+  ApiMessagesPostRoute: typeof ApiMessagesPostRoute
   ApiMessagesPublickeyRoute: typeof ApiMessagesPublickeyRoute
   ApiMessagesRegisterRoute: typeof ApiMessagesRegisterRoute
   ApiMessagesSendRoute: typeof ApiMessagesSendRoute
@@ -594,11 +644,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMessagesPublickeyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/messages/post': {
+      id: '/api/messages/post'
+      path: '/api/messages/post'
+      fullPath: '/api/messages/post'
+      preLoaderRoute: typeof ApiMessagesPostRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/messages/list': {
       id: '/api/messages/list'
       path: '/api/messages/list'
       fullPath: '/api/messages/list'
       preLoaderRoute: typeof ApiMessagesListRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/messages/feed': {
+      id: '/api/messages/feed'
+      path: '/api/messages/feed'
+      fullPath: '/api/messages/feed'
+      preLoaderRoute: typeof ApiMessagesFeedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/ig/user': {
@@ -607,6 +671,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/ig/user'
       preLoaderRoute: typeof ApiIgUserRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/messages/feed/like': {
+      id: '/api/messages/feed/like'
+      path: '/like'
+      fullPath: '/api/messages/feed/like'
+      preLoaderRoute: typeof ApiMessagesFeedLikeRouteImport
+      parentRoute: typeof ApiMessagesFeedRoute
+    }
+    '/api/messages/feed/comment': {
+      id: '/api/messages/feed/comment'
+      path: '/comment'
+      fullPath: '/api/messages/feed/comment'
+      preLoaderRoute: typeof ApiMessagesFeedCommentRouteImport
+      parentRoute: typeof ApiMessagesFeedRoute
     }
   }
 }
@@ -622,6 +700,20 @@ const NoteRouteChildren: NoteRouteChildren = {
 }
 
 const NoteRouteWithChildren = NoteRoute._addFileChildren(NoteRouteChildren)
+
+interface ApiMessagesFeedRouteChildren {
+  ApiMessagesFeedCommentRoute: typeof ApiMessagesFeedCommentRoute
+  ApiMessagesFeedLikeRoute: typeof ApiMessagesFeedLikeRoute
+}
+
+const ApiMessagesFeedRouteChildren: ApiMessagesFeedRouteChildren = {
+  ApiMessagesFeedCommentRoute: ApiMessagesFeedCommentRoute,
+  ApiMessagesFeedLikeRoute: ApiMessagesFeedLikeRoute,
+}
+
+const ApiMessagesFeedRouteWithChildren = ApiMessagesFeedRoute._addFileChildren(
+  ApiMessagesFeedRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -642,7 +734,9 @@ const rootRouteChildren: RootRouteChildren = {
   ShsdbIdRoute: ShsdbIdRoute,
   ShsdbCreateRoute: ShsdbCreateRoute,
   ApiIgUserRoute: ApiIgUserRoute,
+  ApiMessagesFeedRoute: ApiMessagesFeedRouteWithChildren,
   ApiMessagesListRoute: ApiMessagesListRoute,
+  ApiMessagesPostRoute: ApiMessagesPostRoute,
   ApiMessagesPublickeyRoute: ApiMessagesPublickeyRoute,
   ApiMessagesRegisterRoute: ApiMessagesRegisterRoute,
   ApiMessagesSendRoute: ApiMessagesSendRoute,

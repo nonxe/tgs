@@ -27,7 +27,8 @@ import {
   Smile,
   Info,
   X,
-  Key
+  Key,
+  Heart
 } from "lucide-react";
 
 export const Route = createFileRoute("/messages")({
@@ -63,6 +64,23 @@ interface DBMessage {
 interface DecryptedMessage extends DBMessage {
   plaintext: string;
   decryptionFailed?: boolean;
+}
+
+interface FeedComment {
+  id: string;
+  username: string;
+  text: string;
+  timestamp: string;
+}
+
+interface FeedPost {
+  id: string;
+  username: string;
+  content: string;
+  mediaUrl: string;
+  timestamp: string;
+  likes: string[];
+  comments: FeedComment[];
 }
 
 function E2eeMessengerPage() {
@@ -119,14 +137,22 @@ function E2eeMessengerPage() {
   const [copiedTextId, setCopiedTextId] = useState<string | null>(null);
 
   // Profile Feed/Stories States
-  const [peerFeedPosts, setPeerFeedPosts] = useState<any[]>([]);
+  const [peerFeedPosts, setPeerFeedPosts] = useState<FeedPost[]>([]);
   const [feedLoading, setFeedLoading] = useState<boolean>(false);
   const [showMyFeedDrawer, setShowMyFeedDrawer] = useState<boolean>(false);
-  const [myFeedPosts, setMyFeedPosts] = useState<any[]>([]);
+  const [myFeedPosts, setMyFeedPosts] = useState<FeedPost[]>([]);
   const [myFeedLoading, setMyFeedLoading] = useState<boolean>(false);
   const [newPostText, setNewPostText] = useState<string>("");
   const [newPostMediaUrl, setNewPostMediaUrl] = useState<string>("");
   const [postUploading, setPostUploading] = useState<boolean>(false);
+
+  // E2EE Media Caption Modal states
+  const [pendingMediaFile, setPendingMediaFile] = useState<File | null>(null);
+  const [mediaCaptionInput, setMediaCaptionInput] = useState<string>(DEFAULT_VALUE);
+
+  // Like & Comment state arrays
+  const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
+  const [commentsOpen, setCommentsOpen] = useState<Record<string, boolean>>({});
   
   // Refs
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -753,14 +779,22 @@ function E2eeMessengerPage() {
     mediaInputRef.current?.click();
   };
 
-  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Open caption modal when file selected in chat instead of uploading immediately
+  const handleMediaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !activeContact) return;
+    setPendingMediaFile(file);
+    setMediaCaptionInput("");
+  };
+
+  // Triggered on clicking Send inside the Caption E2EE modal
+  const confirmMediaUploadAndSend = async () => {
+    if (!pendingMediaFile || !activeContact) return;
 
     setMediaUploading(true);
     try {
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", pendingMediaFile);
 
       // Upload media permanently to Catbox
       const res = await fetch("/api/public/upload", {
@@ -772,8 +806,8 @@ function E2eeMessengerPage() {
       if (!res.ok || !data.success) throw new Error(data.error || "Upload failed");
 
       const fileUrl = data.url;
-      const fileType = file.type;
-      const fileName = file.name;
+      const fileType = pendingMediaFile.type;
+      const fileName = pendingMediaFile.name;
 
       // Construct special unencrypted message prefix content
       let payload = "";
@@ -783,6 +817,11 @@ function E2eeMessengerPage() {
         payload = `[VIDEO]:${fileUrl}`;
       } else {
         payload = `[FILE]:${fileName}|${fileUrl}`;
+      }
+
+      // Add optional caption if present
+      if (mediaCaptionInput.trim()) {
+        payload = `${payload}||${mediaCaptionInput.trim()}`;
       }
 
       // Send to MongoDB relay directly in plaintext
@@ -803,6 +842,8 @@ function E2eeMessengerPage() {
         throw new Error(sendData.error || "Failed to transmit message.");
       }
 
+      setPendingMediaFile(null);
+      setMediaCaptionInput("");
       fetchMessages();
     } catch (err: any) {
       alert(err.message || "Failed to upload and send media.");
@@ -904,6 +945,70 @@ function E2eeMessengerPage() {
     }
   };
 
+  // --- LIKES & COMMENTS ACTIONS ---
+
+  const handleLikeClick = async (postId: string, isMyFeed: boolean) => {
+    try {
+      const res = await fetch("/api/messages/feed/like", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: loggedInUser,
+          authHash: myAuthHash,
+          postId
+        })
+      });
+
+      if (res.ok) {
+        if (isMyFeed) {
+          fetchMyFeed();
+        } else {
+          fetchPeerFeed(activeContact);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to toggle like:", err);
+    }
+  };
+
+  const toggleComments = (postId: string) => {
+    setCommentsOpen(prev => ({ ...prev, [postId]: !prev[postId] }));
+  };
+
+  const handleCommentChange = (postId: string, value: string) => {
+    setCommentInputs(prev => ({ ...prev, [postId]: value }));
+  };
+
+  const handleSendComment = async (e: React.FormEvent, postId: string, isMyFeed: boolean) => {
+    e.preventDefault();
+    const commentText = commentInputs[postId]?.trim();
+    if (!commentText) return;
+
+    try {
+      const res = await fetch("/api/messages/feed/comment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: loggedInUser,
+          authHash: myAuthHash,
+          postId,
+          text: commentText
+        })
+      });
+
+      if (res.ok) {
+        setCommentInputs(prev => ({ ...prev, [postId]: "" }));
+        if (isMyFeed) {
+          fetchMyFeed();
+        } else {
+          fetchPeerFeed(activeContact);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to post comment:", err);
+    }
+  };
+
   const copyToClipboard = (text: string, msgId: string) => {
     navigator.clipboard.writeText(text);
     setCopiedTextId(msgId);
@@ -977,19 +1082,28 @@ function E2eeMessengerPage() {
       const showHeader = dateStr !== lastDateStr;
       lastDateStr = dateStr;
       
-      const isImage = msg.plaintext.startsWith("[IMAGE]:");
-      const isVideo = msg.plaintext.startsWith("[VIDEO]:");
-      const isFile = msg.plaintext.startsWith("[FILE]:");
+      const parts = msg.plaintext.split("||");
+      const mainPayload = parts[0];
+      const captionText = parts.slice(1).join("||"); // join back in case caption had ||
+
+      const isImage = mainPayload.startsWith("[IMAGE]:");
+      const isVideo = mainPayload.startsWith("[VIDEO]:");
+      const isFile = mainPayload.startsWith("[FILE]:");
 
       let messageContent = null;
 
       if (isImage) {
-        const url = msg.plaintext.substring(8);
+        const url = mainPayload.substring(8);
         messageContent = (
-          <div className="space-y-1">
-            <a href={url} target="_blank" rel="noopener noreferrer" className="block overflow-hidden rounded-lg hover:opacity-90 transition-opacity max-w-[260px]">
-              <img src={url} alt="Media" className="w-full h-auto object-cover max-h-[300px] rounded-lg" />
+          <div className="space-y-1.5 max-w-[260px]">
+            <a href={url} target="_blank" rel="noopener noreferrer" className="block overflow-hidden rounded-lg hover:opacity-90 transition-opacity">
+              <img src={url} alt="Media" className="w-full h-auto object-contain max-h-[350px] rounded-lg bg-black/5 dark:bg-black/20" />
             </a>
+            {captionText && (
+              <p className="text-[12.5px] font-medium leading-relaxed break-words text-foreground dark:text-gray-100 mt-1 select-text">
+                {captionText}
+              </p>
+            )}
             <p className="text-[10px] opacity-60 underline text-right select-none">
               <a href={url} target="_blank" rel="noopener noreferrer" className={isMe ? "text-white/80" : "text-[#3390ec]"}>
                 Open full image ↗
@@ -998,10 +1112,15 @@ function E2eeMessengerPage() {
           </div>
         );
       } else if (isVideo) {
-        const url = msg.plaintext.substring(8);
+        const url = mainPayload.substring(8);
         messageContent = (
-          <div className="space-y-1 max-w-[260px]">
-            <video src={url} controls className="w-full h-auto rounded-lg max-h-[300px]" />
+          <div className="space-y-1.5 max-w-[260px]">
+            <video src={url} controls className="w-full h-auto rounded-lg max-h-[350px] bg-black/10" />
+            {captionText && (
+              <p className="text-[12.5px] font-medium leading-relaxed break-words text-foreground dark:text-gray-100 mt-1 select-text">
+                {captionText}
+              </p>
+            )}
             <p className="text-[10px] opacity-60 underline text-right select-none">
               <a href={url} target="_blank" rel="noopener noreferrer" className={isMe ? "text-white/80" : "text-[#3390ec]"}>
                 Open full video ↗
@@ -1010,22 +1129,29 @@ function E2eeMessengerPage() {
           </div>
         );
       } else if (isFile) {
-        const parts = msg.plaintext.substring(7).split("|");
-        const fileName = parts[0];
-        const url = parts[1];
+        const fileParts = mainPayload.substring(7).split("|");
+        const fileName = fileParts[0];
+        const url = fileParts[1];
         messageContent = (
-          <div className="flex items-center gap-3 bg-black/10 dark:bg-black/20 p-3 rounded-xl max-w-[280px]">
-            <div className="size-10 rounded-lg bg-emerald-500/20 text-emerald-500 flex items-center justify-center flex-shrink-0">
-              <Sparkles className="size-5" />
+          <div className="space-y-1.5 max-w-[280px]">
+            <div className="flex items-center gap-3 bg-black/10 dark:bg-black/20 p-3 rounded-xl">
+              <div className="size-10 rounded-lg bg-emerald-500/20 text-emerald-500 flex items-center justify-center flex-shrink-0">
+                <Sparkles className="size-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[12.5px] font-black truncate">{fileName}</p>
+                <a href={url} target="_blank" rel="noopener noreferrer" className={`text-[10.5px] font-bold hover:underline ${
+                  isMe ? "text-white/90" : "text-[#3390ec] dark:text-[#82b1ff]"
+                }`}>
+                  Download File ↗
+                </a>
+              </div>
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[12.5px] font-black truncate">{fileName}</p>
-              <a href={url} target="_blank" rel="noopener noreferrer" className={`text-[10.5px] font-bold hover:underline ${
-                isMe ? "text-white/90" : "text-[#3390ec] dark:text-[#82b1ff]"
-              }`}>
-                Download File ↗
-              </a>
-            </div>
+            {captionText && (
+              <p className="text-[12.5px] font-medium leading-relaxed break-words text-foreground dark:text-gray-100 mt-1 select-text px-1">
+                {captionText}
+              </p>
+            )}
           </div>
         );
       } else {
@@ -1096,6 +1222,110 @@ function E2eeMessengerPage() {
         </div>
       );
     });
+  };
+
+  // Render a feed post inside drawers with Likes & Collapsible Comments Section
+  const renderFeedPostItem = (post: FeedPost, isMyFeed: boolean) => {
+    const isLikedByMe = post.likes?.includes(loggedInUser);
+    const commentsList = post.comments || [];
+    const isCommentsOpen = !!commentsOpen[post.id];
+
+    return (
+      <div key={post.id} className="bg-background border border-border/30 dark:border-[#101921] rounded-xl p-3 space-y-3 relative shadow-sm hover:scale-[1.01] transition-transform select-text">
+        {/* Post timestamp */}
+        <span className="absolute top-2 right-3 text-[9px] text-muted-foreground select-none">
+          {new Date(post.timestamp).toLocaleDateString([], { month: "short", day: "numeric" })}
+        </span>
+        
+        <p className="text-[12px] font-black text-emerald-500 select-none">@{post.username}</p>
+        
+        {/* Fully show media ratio: no crop, object-contain, flexible height */}
+        {post.mediaUrl && (
+          <div className="rounded-lg overflow-hidden max-h-[350px] bg-black/5 dark:bg-black/45 border border-border/15 flex items-center justify-center select-none">
+            {post.mediaUrl.match(/\.(mp4|webm|ogg)$/i) || post.mediaUrl.includes("video") ? (
+              <video src={post.mediaUrl} controls className="w-full h-auto max-h-[350px] object-contain" />
+            ) : (
+              <img src={post.mediaUrl} alt="Post Media" className="w-full h-auto max-h-[350px] object-contain" />
+            )}
+          </div>
+        )}
+
+        {post.content && (
+          <p className="text-[12px] font-medium leading-relaxed text-foreground whitespace-pre-wrap">{post.content}</p>
+        )}
+
+        {/* Action Panel: Like and Comments trigger */}
+        <div className="flex items-center gap-4 pt-1 border-t border-border/10 dark:border-[#101921]/50 text-muted-foreground select-none text-[11px] font-bold">
+          {/* Like button */}
+          <button
+            onClick={() => handleLikeClick(post.id, isMyFeed)}
+            className={`flex items-center gap-1.5 transition-colors ${
+              isLikedByMe ? "text-rose-500" : "hover:text-rose-500 text-muted-foreground/60"
+            }`}
+          >
+            <Heart className={`size-4.5 ${isLikedByMe ? "fill-rose-500" : ""}`} />
+            <span>{post.likes?.length || 0}</span>
+          </button>
+
+          {/* Comment trigger */}
+          <button
+            onClick={() => toggleComments(post.id)}
+            className={`flex items-center gap-1.5 hover:text-[#3390ec] transition-colors ${
+              isCommentsOpen ? "text-[#3390ec]" : "text-muted-foreground/60"
+            }`}
+          >
+            <MessageSquare className="size-4.5" />
+            <span>{commentsList.length}</span>
+          </button>
+        </div>
+
+        {/* Collapsible Comments Section */}
+        {isCommentsOpen && (
+          <div className="pt-2.5 border-t border-border/10 dark:border-[#101921]/40 space-y-3 animate-slide-in">
+            {/* Comments List */}
+            {commentsList.length > 0 && (
+              <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
+                {commentsList.map(comment => (
+                  <div key={comment.id} className="flex gap-2.5 items-start text-[11px] bg-secondary/20 dark:bg-[#0e1621]/40 p-2 rounded-lg">
+                    {/* Small initials circle */}
+                    <div className={`size-5 rounded-full bg-gradient-to-tr ${getAvatarGradient(comment.username)} text-white flex items-center justify-center font-black text-[8px] flex-shrink-0 mt-0.5`}>
+                      {comment.username.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex justify-between items-center select-none">
+                        <span className="font-black text-emerald-500 truncate">@{comment.username}</span>
+                        <span className="text-[8px] text-muted-foreground/60">
+                          {new Date(comment.timestamp).toLocaleDateString([], { month: "short", day: "numeric" })}
+                        </span>
+                      </div>
+                      <p className="text-foreground dark:text-gray-300 font-medium break-words leading-relaxed mt-0.5">{comment.text}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Comment Input Form */}
+            <form onSubmit={(e) => handleSendComment(e, post.id, isMyFeed)} className="flex gap-2 items-center select-none">
+              <input
+                type="text"
+                placeholder="Write a comment..."
+                value={commentInputs[post.id] || ""}
+                onChange={(e) => handleCommentChange(post.id, e.target.value)}
+                className="flex-1 h-8 bg-secondary/50 dark:bg-[#0e1621] border border-border/30 dark:border-transparent rounded-lg px-2.5 text-[11px] font-bold outline-none focus:border-emerald-500/40"
+              />
+              <button
+                type="submit"
+                disabled={!commentInputs[post.id]?.trim()}
+                className="h-8 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white text-[10px] font-black transition-all flex items-center justify-center"
+              >
+                Reply
+              </button>
+            </form>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -1264,7 +1494,7 @@ function E2eeMessengerPage() {
             >
               <div className="flex items-center gap-2.5">
                 {myPfpUrl ? (
-                  <img src={myPfpUrl} className="size-9 rounded-full object-cover border border-border/20 shadow-sm" />
+                  <img src={myPfpUrl} className="size-9 rounded-full object-cover border border-border/20 shadow-sm animate-fade-in" />
                 ) : (
                   <div className={`size-9 rounded-full bg-gradient-to-tr ${getAvatarGradient(loggedInUser)} text-white flex items-center justify-center text-[13px] font-black shadow-sm`}>
                     {loggedInUser.charAt(0).toUpperCase()}
@@ -1363,7 +1593,7 @@ function E2eeMessengerPage() {
                     >
                       {/* Avatar with deterministic gradient or permanent PFP */}
                       {contactPfp ? (
-                        <img src={contactPfp} className="size-10 rounded-full object-cover shadow-sm flex-shrink-0" />
+                        <img src={contactPfp} className="size-10 rounded-full object-cover shadow-sm flex-shrink-0 animate-fade-in" />
                       ) : (
                         <div className={`size-10 rounded-full bg-gradient-to-tr ${getAvatarGradient(c)} text-white flex items-center justify-center font-black text-[14px] shadow-sm flex-shrink-0`}>
                           {c.charAt(0).toUpperCase()}
@@ -1453,25 +1683,25 @@ function E2eeMessengerPage() {
                   <h5 className="text-[11px] font-black text-muted-foreground uppercase tracking-wider">Post to my Profile Feed</h5>
                   <form onSubmit={handleCreatePost} className="space-y-3 bg-secondary/15 dark:bg-[#101921]/20 p-3 rounded-xl border border-border/30 dark:border-transparent">
                     <textarea
-                      placeholder="Write what's on your mind..."
+                      placeholder="Write what's on your mind... (optional if media attached)"
                       value={newPostText}
                       onChange={(e) => setNewPostText(e.target.value)}
                       className="w-full min-h-[60px] bg-background border border-border/30 dark:border-[#101921] rounded-lg p-2 text-[12px] font-bold outline-none focus:border-emerald-500/40 resize-none"
                     />
 
                     {newPostMediaUrl && (
-                      <div className="relative rounded-lg overflow-hidden border border-border/30 max-h-[120px] bg-black/10">
+                      <div className="relative rounded-lg overflow-hidden border border-border/30 max-h-[220px] bg-black/15 flex items-center justify-center">
                         {newPostMediaUrl.match(/\.(mp4|webm|ogg)$/i) ? (
-                          <video src={newPostMediaUrl} className="w-full h-auto max-h-[120px] object-cover" />
+                          <video src={newPostMediaUrl} className="w-full h-auto max-h-[220px] object-contain" />
                         ) : (
-                          <img src={newPostMediaUrl} alt="Attached Media" className="w-full h-auto max-h-[120px] object-cover" />
+                          <img src={newPostMediaUrl} alt="Attached Media" className="w-full h-auto max-h-[220px] object-contain" />
                         )}
                         <button
                           type="button"
                           onClick={() => setNewPostMediaUrl("")}
-                          className="absolute top-1 right-1 size-5 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-black"
+                          className="absolute top-1.5 right-1.5 size-6 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-black"
                         >
-                          <X className="size-3" />
+                          <X className="size-3.5" />
                         </button>
                       </div>
                     )}
@@ -1511,30 +1741,8 @@ function E2eeMessengerPage() {
                   ) : myFeedPosts.length === 0 ? (
                     <p className="text-[11px] text-muted-foreground italic text-center py-4 select-none">No posts published yet.</p>
                   ) : (
-                    <div className="space-y-3">
-                      {myFeedPosts.map(post => (
-                        <div key={post.id} className="bg-background border border-border/30 dark:border-[#101921] rounded-xl p-3 space-y-2 relative shadow-sm hover:scale-[1.01] transition-transform">
-                          <span className="absolute top-2 right-3 text-[9px] text-muted-foreground select-none">
-                            {new Date(post.timestamp).toLocaleDateString([], { month: "short", day: "numeric" })}
-                          </span>
-                          
-                          <p className="text-[12px] font-black text-emerald-500 select-none">@{post.username}</p>
-                          
-                          {post.mediaUrl && (
-                            <div className="rounded-lg overflow-hidden max-h-[180px] bg-black/10">
-                              {post.mediaUrl.match(/\.(mp4|webm|ogg)$/i) || post.mediaUrl.includes("video") ? (
-                                <video src={post.mediaUrl} controls className="w-full h-auto max-h-[180px]" />
-                              ) : (
-                                <img src={post.mediaUrl} alt="Post Media" className="w-full h-auto max-h-[180px] object-cover" />
-                              )}
-                            </div>
-                          )}
-
-                          {post.content && (
-                            <p className="text-[12px] font-medium leading-relaxed text-foreground select-text">{post.content}</p>
-                          )}
-                        </div>
-                      ))}
+                    <div className="space-y-4">
+                      {myFeedPosts.map(post => renderFeedPostItem(post, true))}
                     </div>
                   )}
                 </div>
@@ -1805,29 +2013,8 @@ function E2eeMessengerPage() {
                             No posts shared on profile yet.
                           </p>
                         ) : (
-                          <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
-                            {peerFeedPosts.map(post => (
-                              <div key={post.id} className="bg-secondary/45 dark:bg-[#0e1621] border border-border/30 dark:border-transparent rounded-xl p-3 space-y-2 shadow-sm hover:scale-[1.01] transition-transform">
-                                <div className="flex justify-between items-center text-[9px] text-muted-foreground select-none">
-                                  <span className="font-black text-emerald-500">@{post.username}</span>
-                                  <span>{new Date(post.timestamp).toLocaleDateString([], { month: "short", day: "numeric" })}</span>
-                                </div>
-
-                                {post.mediaUrl && (
-                                  <div className="rounded-lg overflow-hidden max-h-[150px] bg-black/10">
-                                    {post.mediaUrl.match(/\.(mp4|webm|ogg)$/i) || post.mediaUrl.includes("video") ? (
-                                      <video src={post.mediaUrl} controls className="w-full h-auto max-h-[150px]" />
-                                    ) : (
-                                      <img src={post.mediaUrl} alt="Feed Media" className="w-full h-auto max-h-[150px] object-cover" />
-                                    )}
-                                  </div>
-                                )}
-
-                                {post.content && (
-                                  <p className="text-[11.5px] font-medium leading-relaxed text-foreground select-text">{post.content}</p>
-                                )}
-                              </div>
-                            ))}
+                          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
+                            {peerFeedPosts.map(post => renderFeedPostItem(post, false))}
                           </div>
                         )}
                       </div>
@@ -1853,6 +2040,69 @@ function E2eeMessengerPage() {
             )}
           </div>
 
+        </div>
+      )}
+
+      {/* Pending Media Caption Modal */}
+      {pendingMediaFile && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 select-none">
+          <div className="w-full max-w-sm bg-white dark:bg-[#17212b] border border-border/30 dark:border-[#101921] rounded-[24px] p-5 shadow-2xl flex flex-col space-y-4 animate-spring-scale select-text">
+            <div className="flex justify-between items-center select-none">
+              <span className="text-[13px] font-black uppercase text-muted-foreground tracking-wider">Send Media Attachment</span>
+              <button onClick={() => { setPendingMediaFile(null); setMediaCaptionInput(""); }} className="text-muted-foreground hover:text-foreground">
+                <X className="size-4.5" />
+              </button>
+            </div>
+
+            {/* Media Preview */}
+            <div className="rounded-xl overflow-hidden max-h-[200px] bg-black/10 flex items-center justify-center border border-border/20 select-none">
+              {pendingMediaFile.type.startsWith("image/") ? (
+                <img src={URL.createObjectURL(pendingMediaFile)} className="max-h-[200px] object-contain w-full h-auto" />
+              ) : pendingMediaFile.type.startsWith("video/") ? (
+                <video src={URL.createObjectURL(pendingMediaFile)} className="max-h-[200px] object-contain w-full h-auto" />
+              ) : (
+                <div className="p-8 text-center text-muted-foreground">
+                  <Paperclip className="size-10 mx-auto mb-2 text-emerald-500/40" />
+                  <p className="text-[12px] font-bold truncate max-w-[200px]">{pendingMediaFile.name}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Caption Input */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-black uppercase text-muted-foreground tracking-wider block select-none">Add a Caption (Optional)</label>
+              <textarea
+                placeholder="Write an optional caption..."
+                value={mediaCaptionInput}
+                onChange={(e) => setMediaCaptionInput(e.target.value)}
+                className="w-full h-16 bg-secondary/30 dark:bg-[#0e1621] border border-border/30 dark:border-transparent rounded-xl p-3 text-[12.5px] font-bold outline-none focus:border-emerald-500/40 resize-none"
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-2 justify-end select-none">
+              <button
+                onClick={() => { setPendingMediaFile(null); setMediaCaptionInput(""); }}
+                className="h-10 px-4 rounded-xl border border-border hover:bg-secondary dark:hover:bg-[#202b36] text-[12px] font-black"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmMediaUploadAndSend}
+                disabled={mediaUploading}
+                className="h-10 px-5 rounded-xl bg-[#3390ec] dark:bg-[#2b5278] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-40 text-white text-[12px] font-black transition-all flex items-center gap-1.5"
+              >
+                {mediaUploading ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <>
+                    <Send className="size-3.5" />
+                    <span>Send</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
