@@ -16,7 +16,8 @@ import {
   Globe,
   Instagram,
   Mail,
-  Database
+  Database,
+  MessageSquare
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -134,6 +135,14 @@ function DashboardHome() {
       icon: Database, 
       link: "/shsdb-console",
       color: "text-purple-400 border-purple-500/20 bg-purple-500/5 hover:border-purple-500/40"
+    },
+    {
+      id: "messenger",
+      title: "SHS Messenger",
+      desc: "End-to-End Encrypted private messaging system using AES-GCM & ECDH key exchange.",
+      icon: MessageSquare,
+      link: "/messages",
+      color: "text-emerald-400 border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500/40"
     },
     { 
       id: "request", 

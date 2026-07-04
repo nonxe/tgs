@@ -16,4 +16,11 @@ export default defineConfig({
   // (e.g. `NITRO_PRESET=vercel bun run build`). Inside Lovable's build the
   // preset is forced to Cloudflare and this override is ignored.
   nitro: process.env.NITRO_PRESET ? { preset: process.env.NITRO_PRESET } : undefined,
+  vite: {
+    resolve: {
+      alias: {
+        "punycode/": "punycode",
+      },
+    },
+  },
 });

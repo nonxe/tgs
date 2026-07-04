@@ -13,7 +13,8 @@ import {
   Info,
   Globe,
   Instagram,
-  Mail
+  Mail,
+  Lock
 } from "lucide-react";
 
 export const Route = createFileRoute("/more")({
@@ -90,6 +91,7 @@ export function MorePage({ embed = false }: { embed?: boolean }) {
         <div className="md:col-span-1 flex md:flex-col gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-none w-full select-none">
           {[
             { id: "chat", label: "AI Chatbot", icon: MessageSquare },
+            { id: "messages", label: "SHS Chat", icon: Lock },
             { id: "tempmail", label: "Temp Mail", icon: Mail },
             { id: "igview", label: "IG Viewer", icon: Instagram },
             { id: "xview", label: "X Viewer", icon: Globe }
@@ -106,6 +108,8 @@ export function MorePage({ embed = false }: { embed?: boolean }) {
                     window.open("/instagram", "_blank");
                   } else if (tab.id === "tempmail") {
                     window.open("/tempmail", "_blank");
+                  } else if (tab.id === "messages") {
+                    window.open("/messages", "_blank");
                   } else {
                     setActiveTab(tab.id as TabType);
                   }

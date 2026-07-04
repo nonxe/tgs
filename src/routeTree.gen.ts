@@ -15,6 +15,7 @@ import { Route as ShsdbConsoleRouteImport } from './routes/shsdb-console'
 import { Route as OwnerRouteImport } from './routes/owner'
 import { Route as NoteRouteImport } from './routes/note'
 import { Route as MoreRouteImport } from './routes/more'
+import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as MainRouteImport } from './routes/main'
 import { Route as InstagramRouteImport } from './routes/instagram'
 import { Route as DbConsoleRouteImport } from './routes/db-console'
@@ -31,6 +32,10 @@ import { Route as ApiXUserRouteImport } from './routes/api/x/user'
 import { Route as ApiXTweetsRouteImport } from './routes/api/x/tweets'
 import { Route as ApiXDownloadRouteImport } from './routes/api/x/download'
 import { Route as ApiPublicUploadRouteImport } from './routes/api/public/upload'
+import { Route as ApiMessagesSendRouteImport } from './routes/api/messages/send'
+import { Route as ApiMessagesRegisterRouteImport } from './routes/api/messages/register'
+import { Route as ApiMessagesPublickeyRouteImport } from './routes/api/messages/publickey'
+import { Route as ApiMessagesListRouteImport } from './routes/api/messages/list'
 import { Route as ApiIgUserRouteImport } from './routes/api/ig/user'
 
 const XRoute = XRouteImport.update({
@@ -61,6 +66,11 @@ const NoteRoute = NoteRouteImport.update({
 const MoreRoute = MoreRouteImport.update({
   id: '/more',
   path: '/more',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MessagesRoute = MessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MainRoute = MainRouteImport.update({
@@ -143,6 +153,26 @@ const ApiPublicUploadRoute = ApiPublicUploadRouteImport.update({
   path: '/api/public/upload',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMessagesSendRoute = ApiMessagesSendRouteImport.update({
+  id: '/api/messages/send',
+  path: '/api/messages/send',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMessagesRegisterRoute = ApiMessagesRegisterRouteImport.update({
+  id: '/api/messages/register',
+  path: '/api/messages/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMessagesPublickeyRoute = ApiMessagesPublickeyRouteImport.update({
+  id: '/api/messages/publickey',
+  path: '/api/messages/publickey',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMessagesListRoute = ApiMessagesListRouteImport.update({
+  id: '/api/messages/list',
+  path: '/api/messages/list',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiIgUserRoute = ApiIgUserRouteImport.update({
   id: '/api/ig/user',
   path: '/api/ig/user',
@@ -156,6 +186,7 @@ export interface FileRoutesByFullPath {
   '/db-console': typeof DbConsoleRoute
   '/instagram': typeof InstagramRoute
   '/main': typeof MainRoute
+  '/messages': typeof MessagesRoute
   '/more': typeof MoreRoute
   '/note': typeof NoteRouteWithChildren
   '/owner': typeof OwnerRoute
@@ -169,6 +200,10 @@ export interface FileRoutesByFullPath {
   '/shsdb/create': typeof ShsdbCreateRoute
   '/note/': typeof NoteIndexRoute
   '/api/ig/user': typeof ApiIgUserRoute
+  '/api/messages/list': typeof ApiMessagesListRoute
+  '/api/messages/publickey': typeof ApiMessagesPublickeyRoute
+  '/api/messages/register': typeof ApiMessagesRegisterRoute
+  '/api/messages/send': typeof ApiMessagesSendRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
   '/api/x/download': typeof ApiXDownloadRoute
   '/api/x/tweets': typeof ApiXTweetsRoute
@@ -181,6 +216,7 @@ export interface FileRoutesByTo {
   '/db-console': typeof DbConsoleRoute
   '/instagram': typeof InstagramRoute
   '/main': typeof MainRoute
+  '/messages': typeof MessagesRoute
   '/more': typeof MoreRoute
   '/owner': typeof OwnerRoute
   '/shsdb-console': typeof ShsdbConsoleRoute
@@ -193,6 +229,10 @@ export interface FileRoutesByTo {
   '/shsdb/create': typeof ShsdbCreateRoute
   '/note': typeof NoteIndexRoute
   '/api/ig/user': typeof ApiIgUserRoute
+  '/api/messages/list': typeof ApiMessagesListRoute
+  '/api/messages/publickey': typeof ApiMessagesPublickeyRoute
+  '/api/messages/register': typeof ApiMessagesRegisterRoute
+  '/api/messages/send': typeof ApiMessagesSendRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
   '/api/x/download': typeof ApiXDownloadRoute
   '/api/x/tweets': typeof ApiXTweetsRoute
@@ -206,6 +246,7 @@ export interface FileRoutesById {
   '/db-console': typeof DbConsoleRoute
   '/instagram': typeof InstagramRoute
   '/main': typeof MainRoute
+  '/messages': typeof MessagesRoute
   '/more': typeof MoreRoute
   '/note': typeof NoteRouteWithChildren
   '/owner': typeof OwnerRoute
@@ -219,6 +260,10 @@ export interface FileRoutesById {
   '/shsdb/create': typeof ShsdbCreateRoute
   '/note/': typeof NoteIndexRoute
   '/api/ig/user': typeof ApiIgUserRoute
+  '/api/messages/list': typeof ApiMessagesListRoute
+  '/api/messages/publickey': typeof ApiMessagesPublickeyRoute
+  '/api/messages/register': typeof ApiMessagesRegisterRoute
+  '/api/messages/send': typeof ApiMessagesSendRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
   '/api/x/download': typeof ApiXDownloadRoute
   '/api/x/tweets': typeof ApiXTweetsRoute
@@ -233,6 +278,7 @@ export interface FileRouteTypes {
     | '/db-console'
     | '/instagram'
     | '/main'
+    | '/messages'
     | '/more'
     | '/note'
     | '/owner'
@@ -246,6 +292,10 @@ export interface FileRouteTypes {
     | '/shsdb/create'
     | '/note/'
     | '/api/ig/user'
+    | '/api/messages/list'
+    | '/api/messages/publickey'
+    | '/api/messages/register'
+    | '/api/messages/send'
     | '/api/public/upload'
     | '/api/x/download'
     | '/api/x/tweets'
@@ -258,6 +308,7 @@ export interface FileRouteTypes {
     | '/db-console'
     | '/instagram'
     | '/main'
+    | '/messages'
     | '/more'
     | '/owner'
     | '/shsdb-console'
@@ -270,6 +321,10 @@ export interface FileRouteTypes {
     | '/shsdb/create'
     | '/note'
     | '/api/ig/user'
+    | '/api/messages/list'
+    | '/api/messages/publickey'
+    | '/api/messages/register'
+    | '/api/messages/send'
     | '/api/public/upload'
     | '/api/x/download'
     | '/api/x/tweets'
@@ -282,6 +337,7 @@ export interface FileRouteTypes {
     | '/db-console'
     | '/instagram'
     | '/main'
+    | '/messages'
     | '/more'
     | '/note'
     | '/owner'
@@ -295,6 +351,10 @@ export interface FileRouteTypes {
     | '/shsdb/create'
     | '/note/'
     | '/api/ig/user'
+    | '/api/messages/list'
+    | '/api/messages/publickey'
+    | '/api/messages/register'
+    | '/api/messages/send'
     | '/api/public/upload'
     | '/api/x/download'
     | '/api/x/tweets'
@@ -308,6 +368,7 @@ export interface RootRouteChildren {
   DbConsoleRoute: typeof DbConsoleRoute
   InstagramRoute: typeof InstagramRoute
   MainRoute: typeof MainRoute
+  MessagesRoute: typeof MessagesRoute
   MoreRoute: typeof MoreRoute
   NoteRoute: typeof NoteRouteWithChildren
   OwnerRoute: typeof OwnerRoute
@@ -319,6 +380,10 @@ export interface RootRouteChildren {
   ShsdbIdRoute: typeof ShsdbIdRoute
   ShsdbCreateRoute: typeof ShsdbCreateRoute
   ApiIgUserRoute: typeof ApiIgUserRoute
+  ApiMessagesListRoute: typeof ApiMessagesListRoute
+  ApiMessagesPublickeyRoute: typeof ApiMessagesPublickeyRoute
+  ApiMessagesRegisterRoute: typeof ApiMessagesRegisterRoute
+  ApiMessagesSendRoute: typeof ApiMessagesSendRoute
   ApiPublicUploadRoute: typeof ApiPublicUploadRoute
   ApiXDownloadRoute: typeof ApiXDownloadRoute
   ApiXTweetsRoute: typeof ApiXTweetsRoute
@@ -367,6 +432,13 @@ declare module '@tanstack/react-router' {
       path: '/more'
       fullPath: '/more'
       preLoaderRoute: typeof MoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/messages': {
+      id: '/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof MessagesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/main': {
@@ -481,6 +553,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicUploadRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/messages/send': {
+      id: '/api/messages/send'
+      path: '/api/messages/send'
+      fullPath: '/api/messages/send'
+      preLoaderRoute: typeof ApiMessagesSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/messages/register': {
+      id: '/api/messages/register'
+      path: '/api/messages/register'
+      fullPath: '/api/messages/register'
+      preLoaderRoute: typeof ApiMessagesRegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/messages/publickey': {
+      id: '/api/messages/publickey'
+      path: '/api/messages/publickey'
+      fullPath: '/api/messages/publickey'
+      preLoaderRoute: typeof ApiMessagesPublickeyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/messages/list': {
+      id: '/api/messages/list'
+      path: '/api/messages/list'
+      fullPath: '/api/messages/list'
+      preLoaderRoute: typeof ApiMessagesListRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/ig/user': {
       id: '/api/ig/user'
       path: '/api/ig/user'
@@ -510,6 +610,7 @@ const rootRouteChildren: RootRouteChildren = {
   DbConsoleRoute: DbConsoleRoute,
   InstagramRoute: InstagramRoute,
   MainRoute: MainRoute,
+  MessagesRoute: MessagesRoute,
   MoreRoute: MoreRoute,
   NoteRoute: NoteRouteWithChildren,
   OwnerRoute: OwnerRoute,
@@ -521,6 +622,10 @@ const rootRouteChildren: RootRouteChildren = {
   ShsdbIdRoute: ShsdbIdRoute,
   ShsdbCreateRoute: ShsdbCreateRoute,
   ApiIgUserRoute: ApiIgUserRoute,
+  ApiMessagesListRoute: ApiMessagesListRoute,
+  ApiMessagesPublickeyRoute: ApiMessagesPublickeyRoute,
+  ApiMessagesRegisterRoute: ApiMessagesRegisterRoute,
+  ApiMessagesSendRoute: ApiMessagesSendRoute,
   ApiPublicUploadRoute: ApiPublicUploadRoute,
   ApiXDownloadRoute: ApiXDownloadRoute,
   ApiXTweetsRoute: ApiXTweetsRoute,
