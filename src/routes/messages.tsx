@@ -117,12 +117,23 @@ function E2eeMessengerPage() {
   const [fingerprintCache, setFingerprintCache] = useState<Record<string, string>>({});
   const [copiedFingerprint, setCopiedFingerprint] = useState<boolean>(false);
   const [copiedTextId, setCopiedTextId] = useState<string | null>(null);
+
+  // Profile Feed/Stories States
+  const [peerFeedPosts, setPeerFeedPosts] = useState<any[]>([]);
+  const [feedLoading, setFeedLoading] = useState<boolean>(false);
+  const [showMyFeedDrawer, setShowMyFeedDrawer] = useState<boolean>(false);
+  const [myFeedPosts, setMyFeedPosts] = useState<any[]>([]);
+  const [myFeedLoading, setMyFeedLoading] = useState<boolean>(false);
+  const [newPostText, setNewPostText] = useState<string>("");
+  const [newPostMediaUrl, setNewPostMediaUrl] = useState<string>("");
+  const [postUploading, setPostUploading] = useState<boolean>(false);
   
   // Refs
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const pfpInputRef = useRef<HTMLInputElement | null>(null);
   const mediaInputRef = useRef<HTMLInputElement | null>(null);
+  const feedMediaInputRef = useRef<HTMLInputElement | null>(null);
 
   // Sync theme
   useEffect(() => {
@@ -189,6 +200,20 @@ function E2eeMessengerPage() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [decryptedMessages, activeContact]);
 
+  // Fetch peer feed when drawer opens or peer changes
+  useEffect(() => {
+    if (activeContact && showInfoDrawer) {
+      fetchPeerFeed(activeContact);
+    }
+  }, [activeContact, showInfoDrawer]);
+
+  // Fetch my feed when my feed drawer opens
+  useEffect(() => {
+    if (showMyFeedDrawer && loggedInUser) {
+      fetchMyFeed();
+    }
+  }, [showMyFeedDrawer, loggedInUser]);
+
   const toggleTheme = () => {
     const next = theme === "dark" ? "light" : "dark";
     setTheme(next);
@@ -210,6 +235,7 @@ function E2eeMessengerPage() {
     setContacts([]);
     setMobileView("list");
     setShowInfoDrawer(false);
+    setShowMyFeedDrawer(false);
   };
 
   const handleContactSelect = (c: string) => {
@@ -786,6 +812,98 @@ function E2eeMessengerPage() {
     }
   };
 
+  // --- PROFILE FEED HANDLERS ---
+
+  const fetchPeerFeed = async (peerName: string) => {
+    setFeedLoading(true);
+    try {
+      const res = await fetch(`/api/messages/feed?username=${encodeURIComponent(peerName)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setPeerFeedPosts(data.posts || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch peer feed:", err);
+    } finally {
+      setFeedLoading(false);
+    }
+  };
+
+  const fetchMyFeed = async () => {
+    setMyFeedLoading(true);
+    try {
+      const res = await fetch(`/api/messages/feed?username=${encodeURIComponent(loggedInUser)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setMyFeedPosts(data.posts || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch my feed:", err);
+    } finally {
+      setMyFeedLoading(false);
+    }
+  };
+
+  const handleFeedMediaClick = () => {
+    feedMediaInputRef.current?.click();
+  };
+
+  const handleFeedMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setPostUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/public/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "Upload failed");
+
+      setNewPostMediaUrl(data.url);
+    } catch (err: any) {
+      alert(err.message || "Failed to upload feed media.");
+    } finally {
+      setPostUploading(false);
+      if (feedMediaInputRef.current) feedMediaInputRef.current.value = "";
+    }
+  };
+
+  const handleCreatePost = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPostText.trim() && !newPostMediaUrl.trim()) return;
+
+    setPostUploading(true);
+    try {
+      const res = await fetch("/api/messages/post", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: loggedInUser,
+          authHash: myAuthHash,
+          content: newPostText.trim(),
+          mediaUrl: newPostMediaUrl.trim()
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "Failed to post.");
+
+      setNewPostText("");
+      setNewPostMediaUrl("");
+      fetchMyFeed();
+    } catch (err: any) {
+      alert(err.message || "Failed to create post.");
+    } finally {
+      setPostUploading(false);
+    }
+  };
+
   const copyToClipboard = (text: string, msgId: string) => {
     navigator.clipboard.writeText(text);
     setCopiedTextId(msgId);
@@ -834,7 +952,7 @@ function E2eeMessengerPage() {
 
     if (chatFilteredMsgs.length === 0) {
       return (
-        <div className="h-full flex flex-col items-center justify-center text-center p-8 select-none">
+        <div className="h-full flex flex-col items-center justify-center text-center p-8 select-none animate-fade-in">
           <div className="size-14 rounded-2xl bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/10 dark:border-emerald-500/20 flex items-center justify-center mb-3">
             <Lock className="size-6 text-emerald-500/40 animate-pulse" />
           </div>
@@ -919,9 +1037,9 @@ function E2eeMessengerPage() {
       }
 
       return (
-        <div key={msg.id} className="space-y-2">
+        <div key={msg.id} className="space-y-2 animate-fade-in">
           {showHeader && (
-            <div className="flex justify-center my-3 select-none animate-fade-in">
+            <div className="flex justify-center my-3 select-none">
               <span className="bg-black/15 dark:bg-black/45 text-white/90 dark:text-gray-300 text-[10.5px] font-bold px-3 py-1 rounded-full backdrop-blur-md shadow-sm">
                 {dateStr}
               </span>
@@ -983,26 +1101,6 @@ function E2eeMessengerPage() {
   return (
     <main className="min-h-screen bg-background text-foreground font-sans transition-colors duration-300 flex flex-col h-screen overflow-hidden relative select-none">
       
-      {/* Dynamic Telegram Chat Theme Colors Injection */}
-      <style>{`
-        :root {
-          --tg-sidebar-bg-dark: #17212b;
-          --tg-sidebar-bg-light: #ffffff;
-          
-          --tg-chat-bg-dark: #0e1621;
-          --tg-chat-bg-light: #e7ebf0;
-          
-          --tg-border-dark: #101921;
-          --tg-border-light: #e5e7eb;
-          
-          --tg-bubble-sent-dark: #2b5278;
-          --tg-bubble-sent-light: #3390ec;
-          
-          --tg-bubble-received-dark: #182533;
-          --tg-bubble-received-light: #ffffff;
-        }
-      `}</style>
-
       {/* Hidden File Inputs */}
       <input
         type="file"
@@ -1015,6 +1113,13 @@ function E2eeMessengerPage() {
         type="file"
         ref={mediaInputRef}
         onChange={handleMediaUpload}
+        className="hidden"
+      />
+      <input
+        type="file"
+        ref={feedMediaInputRef}
+        onChange={handleFeedMediaUpload}
+        accept="image/*,video/*"
         className="hidden"
       />
 
@@ -1152,50 +1257,31 @@ function E2eeMessengerPage() {
             mobileView === "chat" ? "hidden md:flex" : "flex"
           }`}>
             
-            {/* Logged in User Bar */}
-            <div className="px-4 py-3 bg-secondary/15 dark:bg-[#101921]/40 border-b border-border/5 dark:border-[#101921] flex items-center justify-between">
+            {/* Logged in User Bar (Clickable to open profile settings/feed drawer) */}
+            <div 
+              onClick={() => setShowMyFeedDrawer(true)}
+              className="px-4 py-3 bg-secondary/15 dark:bg-[#101921]/40 border-b border-border/5 dark:border-[#101921] flex items-center justify-between cursor-pointer hover:bg-secondary/20 dark:hover:bg-[#202b36] transition-colors"
+            >
               <div className="flex items-center gap-2.5">
-                {/* User avatar clickable to trigger PFP upload */}
                 {myPfpUrl ? (
-                  <div className="relative group cursor-pointer flex-shrink-0 animate-fade-in" onClick={handlePfpClick}>
-                    <img src={myPfpUrl} className="size-9 rounded-full object-cover border border-border/20 shadow-sm" />
-                    <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
-                      <Camera className="size-3.5" />
-                    </div>
-                    {pfpUploading && (
-                      <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center text-white">
-                        <Loader2 className="size-3.5 animate-spin" />
-                      </div>
-                    )}
-                  </div>
+                  <img src={myPfpUrl} className="size-9 rounded-full object-cover border border-border/20 shadow-sm" />
                 ) : (
-                  <div 
-                    onClick={handlePfpClick} 
-                    className={`size-9 rounded-full bg-gradient-to-tr ${getAvatarGradient(loggedInUser)} text-white flex items-center justify-center text-[13px] font-black shadow-sm cursor-pointer hover:opacity-90 relative group flex-shrink-0`}
-                  >
+                  <div className={`size-9 rounded-full bg-gradient-to-tr ${getAvatarGradient(loggedInUser)} text-white flex items-center justify-center text-[13px] font-black shadow-sm`}>
                     {loggedInUser.charAt(0).toUpperCase()}
-                    <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
-                      <Camera className="size-3.5" />
-                    </div>
-                    {pfpUploading && (
-                      <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center text-white">
-                        <Loader2 className="size-3.5 animate-spin" />
-                      </div>
-                    )}
                   </div>
                 )}
                 <div>
                   <span className="text-[13px] font-black block text-foreground leading-none">{loggedInUser}</span>
                   <span className="text-[9.5px] font-semibold text-emerald-500 tracking-wide mt-0.5 block flex items-center gap-0.5">
                     <span className="size-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
-                    Secure node online
+                    My Channel & Profile
                   </span>
                 </div>
               </div>
 
               {/* Add contact mini button */}
               <div className="flex items-center gap-1.5">
-                <div className="text-[10px] font-black uppercase text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                <div className="text-[9.5px] font-black uppercase text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
                   SHS Cloud
                 </div>
               </div>
@@ -1319,6 +1405,143 @@ function E2eeMessengerPage() {
             </div>
           </div>
 
+          {/* ───────────────── LEFT PANEL OVERLAY: MY PROFILE & FEED DRAWER ───────────────── */}
+          {showMyFeedDrawer && (
+            <div className="absolute inset-y-0 left-0 w-full md:w-[350px] bg-white dark:bg-[#17212b] border-r border-border/10 dark:border-[#101921] z-50 flex flex-col min-h-0 animate-slide-in select-none">
+              {/* Header */}
+              <div className="px-4 py-4 border-b border-border/10 dark:border-[#101921] flex items-center justify-between bg-secondary/10">
+                <div className="flex items-center gap-2">
+                  <User className="size-4 text-emerald-500" />
+                  <span className="text-[13px] font-black text-foreground uppercase tracking-wider">My Profile & Feed</span>
+                </div>
+                <button onClick={() => setShowMyFeedDrawer(false)} className="text-muted-foreground hover:text-foreground">
+                  <X className="size-4.5" />
+                </button>
+              </div>
+
+              {/* Scrollable Container */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-5 select-text">
+                {/* Profile Section */}
+                <div className="text-center space-y-3">
+                  <div className="relative group cursor-pointer w-24 h-24 mx-auto" onClick={handlePfpClick}>
+                    {myPfpUrl ? (
+                      <img src={myPfpUrl} className="size-24 rounded-full object-cover border-2 border-emerald-500/20 shadow-lg" />
+                    ) : (
+                      <div className={`size-24 rounded-full bg-gradient-to-tr ${getAvatarGradient(loggedInUser)} text-white flex items-center justify-center font-black text-[32px] shadow-lg`}>
+                        {loggedInUser.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity select-none">
+                      <Camera className="size-5" />
+                    </div>
+                    {pfpUploading && (
+                      <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center text-white select-none">
+                        <Loader2 className="size-5 animate-spin" />
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="text-[15px] font-black text-foreground leading-tight">{loggedInUser}</h4>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 select-none">Click photo to update avatar</p>
+                  </div>
+                </div>
+
+                <hr className="border-border/10 dark:border-[#101921]" />
+
+                {/* Create Feed Post Form */}
+                <div className="space-y-3 select-none">
+                  <h5 className="text-[11px] font-black text-muted-foreground uppercase tracking-wider">Post to my Profile Feed</h5>
+                  <form onSubmit={handleCreatePost} className="space-y-3 bg-secondary/15 dark:bg-[#101921]/20 p-3 rounded-xl border border-border/30 dark:border-transparent">
+                    <textarea
+                      placeholder="Write what's on your mind..."
+                      value={newPostText}
+                      onChange={(e) => setNewPostText(e.target.value)}
+                      className="w-full min-h-[60px] bg-background border border-border/30 dark:border-[#101921] rounded-lg p-2 text-[12px] font-bold outline-none focus:border-emerald-500/40 resize-none"
+                    />
+
+                    {newPostMediaUrl && (
+                      <div className="relative rounded-lg overflow-hidden border border-border/30 max-h-[120px] bg-black/10">
+                        {newPostMediaUrl.match(/\.(mp4|webm|ogg)$/i) ? (
+                          <video src={newPostMediaUrl} className="w-full h-auto max-h-[120px] object-cover" />
+                        ) : (
+                          <img src={newPostMediaUrl} alt="Attached Media" className="w-full h-auto max-h-[120px] object-cover" />
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setNewPostMediaUrl("")}
+                          className="absolute top-1 right-1 size-5 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-black"
+                        >
+                          <X className="size-3" />
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="flex justify-between items-center">
+                      <button
+                        type="button"
+                        onClick={handleFeedMediaClick}
+                        disabled={postUploading}
+                        className="h-8 px-2.5 rounded-lg border border-border hover:bg-secondary dark:hover:bg-[#202b36] flex items-center gap-1 text-[11px] font-black"
+                      >
+                        <Paperclip className="size-3.5" />
+                        <span>Add Media</span>
+                      </button>
+
+                      <button
+                        type="submit"
+                        disabled={postUploading || (!newPostText.trim() && !newPostMediaUrl.trim())}
+                        className="h-8 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white text-[11px] font-black transition-all flex items-center gap-1"
+                      >
+                        {postUploading ? <Loader2 className="size-3 animate-spin" /> : <Send className="size-3" />}
+                        <span>Publish</span>
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                <hr className="border-border/10 dark:border-[#101921]" />
+
+                {/* My Posts Timeline */}
+                <div className="space-y-3">
+                  <h5 className="text-[11px] font-black text-muted-foreground uppercase tracking-wider select-none">My Feed Timeline</h5>
+                  {myFeedLoading ? (
+                    <div className="flex justify-center py-6">
+                      <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : myFeedPosts.length === 0 ? (
+                    <p className="text-[11px] text-muted-foreground italic text-center py-4 select-none">No posts published yet.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {myFeedPosts.map(post => (
+                        <div key={post.id} className="bg-background border border-border/30 dark:border-[#101921] rounded-xl p-3 space-y-2 relative shadow-sm hover:scale-[1.01] transition-transform">
+                          <span className="absolute top-2 right-3 text-[9px] text-muted-foreground select-none">
+                            {new Date(post.timestamp).toLocaleDateString([], { month: "short", day: "numeric" })}
+                          </span>
+                          
+                          <p className="text-[12px] font-black text-emerald-500 select-none">@{post.username}</p>
+                          
+                          {post.mediaUrl && (
+                            <div className="rounded-lg overflow-hidden max-h-[180px] bg-black/10">
+                              {post.mediaUrl.match(/\.(mp4|webm|ogg)$/i) || post.mediaUrl.includes("video") ? (
+                                <video src={post.mediaUrl} controls className="w-full h-auto max-h-[180px]" />
+                              ) : (
+                                <img src={post.mediaUrl} alt="Post Media" className="w-full h-auto max-h-[180px] object-cover" />
+                              )}
+                            </div>
+                          )}
+
+                          {post.content && (
+                            <p className="text-[12px] font-medium leading-relaxed text-foreground select-text">{post.content}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* ───────────────── RIGHT PANEL: CHAT TIMELINE ───────────────── */}
           <div className={`flex-1 flex flex-col min-h-0 bg-[#e7ebf0] dark:bg-[#0e1621] relative ${
             mobileView === "list" ? "hidden md:flex" : "flex"
@@ -1346,7 +1569,7 @@ function E2eeMessengerPage() {
                     
                     {/* Peer PFP or initials circle */}
                     {pfpsCache[activeContact] ? (
-                      <img src={pfpsCache[activeContact]} className="size-10 rounded-full object-cover shadow-sm flex-shrink-0 mr-3 hover:opacity-90" />
+                      <img src={pfpsCache[activeContact]} className="size-10 rounded-full object-cover shadow-sm flex-shrink-0 mr-3 hover:opacity-90 animate-fade-in" />
                     ) : (
                       <div className={`size-10 rounded-full bg-gradient-to-tr ${getAvatarGradient(activeContact)} text-white flex items-center justify-center font-black text-[14px] shadow-sm flex-shrink-0 mr-3 hover:opacity-90`}>
                         {activeContact.charAt(0).toUpperCase()}
@@ -1385,7 +1608,7 @@ function E2eeMessengerPage() {
                     </div>
                     
                     {/* Secure badge indicator */}
-                    <ShieldCheck className="size-5.5 text-emerald-500 flex-shrink-0" />
+                    <ShieldCheck className="size-5.5 text-emerald-500 flex-shrink-0 animate-pulse" />
                   </div>
                 </div>
 
@@ -1560,8 +1783,53 @@ function E2eeMessengerPage() {
                         )}
                         
                         <p className="text-[9.5px] text-muted-foreground leading-normal mt-1">
-                          This numeric fingerprint represents a SHA-256 hash of {activeContact}'s ECDH P-256 public key. Compare this code with your peer to guarantee that nobody is inspecting your E2EE channels.
+                          This numeric fingerprint represents a SHA-256 hash of {activeContact}'s ECDH P-256 public key.
                         </p>
+                      </div>
+
+                      <hr className="border-border/10 dark:border-[#101921]" />
+
+                      {/* Peer Feed Section */}
+                      <div className="space-y-3">
+                        <h5 className="text-[11px] font-black text-muted-foreground uppercase tracking-wider flex items-center gap-1 select-none">
+                          <ImageIcon className="size-3.5 text-emerald-500" />
+                          @{activeContact}'s Feed & Posts
+                        </h5>
+
+                        {feedLoading ? (
+                          <div className="flex justify-center py-6 select-none">
+                            <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                          </div>
+                        ) : peerFeedPosts.length === 0 ? (
+                          <p className="text-[11px] text-muted-foreground italic text-center py-4 select-none">
+                            No posts shared on profile yet.
+                          </p>
+                        ) : (
+                          <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                            {peerFeedPosts.map(post => (
+                              <div key={post.id} className="bg-secondary/45 dark:bg-[#0e1621] border border-border/30 dark:border-transparent rounded-xl p-3 space-y-2 shadow-sm hover:scale-[1.01] transition-transform">
+                                <div className="flex justify-between items-center text-[9px] text-muted-foreground select-none">
+                                  <span className="font-black text-emerald-500">@{post.username}</span>
+                                  <span>{new Date(post.timestamp).toLocaleDateString([], { month: "short", day: "numeric" })}</span>
+                                </div>
+
+                                {post.mediaUrl && (
+                                  <div className="rounded-lg overflow-hidden max-h-[150px] bg-black/10">
+                                    {post.mediaUrl.match(/\.(mp4|webm|ogg)$/i) || post.mediaUrl.includes("video") ? (
+                                      <video src={post.mediaUrl} controls className="w-full h-auto max-h-[150px]" />
+                                    ) : (
+                                      <img src={post.mediaUrl} alt="Feed Media" className="w-full h-auto max-h-[150px] object-cover" />
+                                    )}
+                                  </div>
+                                )}
+
+                                {post.content && (
+                                  <p className="text-[11.5px] font-medium leading-relaxed text-foreground select-text">{post.content}</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
 
                     </div>
