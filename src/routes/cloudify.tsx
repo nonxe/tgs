@@ -203,7 +203,7 @@ function CloudifyMusicPage() {
       data = await res.json();
     } catch (e) {
       if (res.status === 413) {
-        throw new Error(`File "${file.name}" is too large. Please select a smaller file.`);
+        throw new Error(`File "${file.name}" is too large. Server rejected upload. (If self-hosting VPS, configure Nginx client_max_body_size)`);
       }
       throw new Error(`Upload failed (${res.status}). Server returned non-JSON response.`);
     }

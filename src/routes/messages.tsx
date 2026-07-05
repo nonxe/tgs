@@ -950,7 +950,7 @@ function E2eeMessengerPage() {
         data = await res.json();
       } catch (e) {
         if (res.status === 413) {
-          throw new Error("Profile image is too large. Please select a smaller file.");
+          throw new Error("Profile image too large. Server rejected upload. (If self-hosting VPS, configure Nginx client_max_body_size)");
         }
         throw new Error(`Upload failed (${res.status}). Server returned non-JSON response.`);
       }
@@ -1013,7 +1013,7 @@ function E2eeMessengerPage() {
         data = await res.json();
       } catch (e) {
         if (res.status === 413) {
-          throw new Error("Media file is too large. Please select a smaller file.");
+          throw new Error("Media file too large. Server rejected upload. (If self-hosting VPS, configure Nginx client_max_body_size)");
         }
         throw new Error(`Upload failed (${res.status}). Server returned non-JSON response.`);
       }
@@ -1123,7 +1123,7 @@ function E2eeMessengerPage() {
         data = await res.json();
       } catch (e) {
         if (res.status === 413) {
-          throw new Error("Feed media is too large. Please select a smaller file.");
+          throw new Error("Feed media too large. Server rejected upload. (If self-hosting VPS, configure Nginx client_max_body_size)");
         }
         throw new Error(`Upload failed (${res.status}). Server returned non-JSON response.`);
       }
