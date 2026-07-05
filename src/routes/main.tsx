@@ -180,7 +180,7 @@ export function FileCloudPage({ embed = false }: { embed?: boolean }) {
         } catch {
           const respText = xhr.responseText || "";
           if (xhr.status === 413 || respText.includes("Too Large") || respText.includes("Request Entity Too Large")) {
-            reject(new Error("File is too large (max 4.5MB). Please compress or select a smaller file."));
+            reject(new Error("File is too large. Please select a smaller file."));
           } else {
             reject(new Error(`Upload failed (${xhr.status})`));
           }

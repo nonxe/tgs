@@ -951,7 +951,7 @@ function E2eeMessengerPage() {
         data = JSON.parse(text);
       } catch (e) {
         if (res.status === 413 || text.includes("Too Large") || text.includes("Request Entity Too Large")) {
-          throw new Error("Profile image is too large (max 4.5MB). Please choose a compressed image.");
+          throw new Error("Profile image is too large. Please select a smaller file.");
         }
         throw new Error(`Upload failed (${res.status}). Server returned non-JSON response.`);
       }
@@ -1015,7 +1015,7 @@ function E2eeMessengerPage() {
         data = JSON.parse(text);
       } catch (e) {
         if (res.status === 413 || text.includes("Too Large") || text.includes("Request Entity Too Large")) {
-          throw new Error("Media file is too large (max 4.5MB). Please choose a compressed file.");
+          throw new Error("Media file is too large. Please select a smaller file.");
         }
         throw new Error(`Upload failed (${res.status}). Server returned non-JSON response.`);
       }
@@ -1125,7 +1125,7 @@ function E2eeMessengerPage() {
         data = JSON.parse(text);
       } catch (e) {
         if (res.status === 413 || text.includes("Too Large") || text.includes("Request Entity Too Large")) {
-          throw new Error("Feed media is too large (max 4.5MB). Please select a compressed file.");
+          throw new Error("Feed media is too large. Please select a smaller file.");
         }
         throw new Error(`Upload failed (${res.status}). Server returned non-JSON response.`);
       }

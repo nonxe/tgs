@@ -204,7 +204,7 @@ function CloudifyMusicPage() {
       data = JSON.parse(text);
     } catch (e) {
       if (res.status === 413 || text.includes("Too Large") || text.includes("Request Entity Too Large")) {
-        throw new Error(`File "${file.name}" is too large (max 4.5MB). Please upload a compressed version.`);
+        throw new Error(`File "${file.name}" is too large. Please select a smaller file.`);
       }
       throw new Error(`Upload failed (${res.status}). Server returned non-JSON response.`);
     }
