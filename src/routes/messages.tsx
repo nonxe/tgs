@@ -153,6 +153,24 @@ function E2eeMessengerPage() {
   // Like & Comment state arrays
   const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
   const [commentsOpen, setCommentsOpen] = useState<Record<string, boolean>>({});
+
+  // Profile Info States (DOB and Religion)
+  const [myDob, setMyDob] = useState<string>("");
+  const [myReligion, setMyReligion] = useState<string>("");
+  const [mySubReligion, setMySubReligion] = useState<string>("");
+  const [editingProfile, setEditingProfile] = useState<boolean>(false);
+  const [profileSaving, setProfileSaving] = useState<boolean>(false);
+
+  // Cached profile details for peer contacts
+  const [dobsCache, setDobsCache] = useState<Record<string, string>>({});
+  const [religionsCache, setReligionsCache] = useState<Record<string, string>>({});
+
+  // Swipeable Religion Alert Pop-up states
+  const [showReligionNote, setShowReligionNote] = useState<boolean>(false);
+  const [noteSwipeOffset, setNoteSwipeOffset] = useState<number>(0);
+  const [isSwipingNote, setIsSwipingNote] = useState<boolean>(false);
+  const swipeStartXRef = useRef<number>(0);
+  const noteTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Refs
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -185,6 +203,17 @@ function E2eeMessengerPage() {
           .then(data => {
             if (data.success) {
               if (data.pfpUrl) setMyPfpUrl(data.pfpUrl);
+              if (data.dob) setMyDob(data.dob);
+              if (data.religion) {
+                const match = data.religion.match(/^Christianity \(([^)]+)\)$/);
+                if (match) {
+                  setMyReligion("Christianity");
+                  setMySubReligion(match[1]);
+                } else {
+                  setMyReligion(data.religion);
+                  setMySubReligion("");
+                }
+              }
               calculateFingerprint(savedUser, data.publicKey);
             }
           }).catch(console.error);
@@ -197,6 +226,7 @@ function E2eeMessengerPage() {
 
     return () => {
       if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+      if (noteTimerRef.current) clearTimeout(noteTimerRef.current);
     };
   }, []);
 
@@ -255,6 +285,9 @@ function E2eeMessengerPage() {
     setMyAuthHash("");
     setMyPrivateKey(null);
     setMyPfpUrl("");
+    setMyDob("");
+    setMyReligion("");
+    setMySubReligion("");
     setRawMessages([]);
     setDecryptedMessages([]);
     setActiveContact("");
@@ -529,6 +562,17 @@ function E2eeMessengerPage() {
       setMyAuthHash(authHash);
       setMyPrivateKey(privKey);
       if (pfpUrl) setMyPfpUrl(pfpUrl);
+      if (data.dob) setMyDob(data.dob);
+      if (data.religion) {
+        const match = data.religion.match(/^Christianity \(([^)]+)\)$/);
+        if (match) {
+          setMyReligion("Christianity");
+          setMySubReligion(match[1]);
+        } else {
+          setMyReligion(data.religion);
+          setMySubReligion("");
+        }
+      }
       calculateFingerprint(cleanUser, data.publicKey);
 
       // Save to local storage
@@ -588,6 +632,12 @@ function E2eeMessengerPage() {
 
       if (data.pfpUrl) {
         setPfpsCache(prev => ({ ...prev, [peerUsername]: data.pfpUrl }));
+      }
+      if (data.dob) {
+        setDobsCache(prev => ({ ...prev, [peerUsername]: data.dob }));
+      }
+      if (data.religion) {
+        setReligionsCache(prev => ({ ...prev, [peerUsername]: data.religion }));
       }
 
       return pubKey;
@@ -1014,6 +1064,123 @@ function E2eeMessengerPage() {
       }
     } catch (err) {
       console.error("Failed to post comment:", err);
+    }
+  };
+
+  // --- PROFILE UPDATE OPERATIONS ---
+
+  const handleUpdateProfile = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setProfileSaving(true);
+
+    try {
+      let religionStr = myReligion;
+      if (myReligion === "Christianity" && mySubReligion) {
+        religionStr = `Christianity (${mySubReligion})`;
+      }
+
+      const res = await fetch("/api/messages/updateprofile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: loggedInUser,
+          authHash: myAuthHash,
+          dob: myDob || null,
+          religion: religionStr || null
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "Failed to update profile.");
+
+      setEditingProfile(false);
+      alert("Profile updated successfully!");
+    } catch (err: any) {
+      alert(err.message || "Failed to update profile.");
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
+  const handleRemoveProfileField = async (field: "dob" | "religion") => {
+    setProfileSaving(true);
+    try {
+      let nextDob = myDob;
+      let nextReligion = myReligion;
+      let nextSubReligion = mySubReligion;
+
+      if (field === "dob") {
+        nextDob = "";
+        setMyDob("");
+      } else {
+        nextReligion = "";
+        nextSubReligion = "";
+        setMyReligion("");
+        setMySubReligion("");
+      }
+
+      let religionStr = nextReligion;
+      if (nextReligion === "Christianity" && nextSubReligion) {
+        religionStr = `Christianity (${nextSubReligion})`;
+      }
+
+      const res = await fetch("/api/messages/updateprofile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: loggedInUser,
+          authHash: myAuthHash,
+          dob: nextDob || null,
+          religion: religionStr || null
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "Failed to clear field.");
+
+      alert(`${field === "dob" ? "Date of Birth" : "Religious Identity"} removed.`);
+    } catch (err: any) {
+      alert(err.message || "Failed to clear field.");
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
+  // Swipeable Pop-up Note System
+  const triggerReligionNote = () => {
+    setShowReligionNote(true);
+    setNoteSwipeOffset(0);
+    if (noteTimerRef.current) clearTimeout(noteTimerRef.current);
+    noteTimerRef.current = setTimeout(() => {
+      setShowReligionNote(false);
+    }, 8000);
+  };
+
+  const handleNoteDragStart = (clientX: number) => {
+    setIsSwipingNote(true);
+    swipeStartXRef.current = clientX;
+    if (noteTimerRef.current) {
+      clearTimeout(noteTimerRef.current);
+      noteTimerRef.current = null;
+    }
+  };
+
+  const handleNoteDragMove = (clientX: number) => {
+    if (!isSwipingNote) return;
+    const deltaX = clientX - swipeStartXRef.current;
+    setNoteSwipeOffset(deltaX);
+  };
+
+  const handleNoteDragEnd = () => {
+    if (!isSwipingNote) return;
+    setIsSwipingNote(false);
+    if (Math.abs(noteSwipeOffset) > 100) {
+      setShowReligionNote(false);
+    } else {
+      setNoteSwipeOffset(0);
+      noteTimerRef.current = setTimeout(() => {
+        setShowReligionNote(false);
+      }, 8000);
     }
   };
 
@@ -1686,6 +1853,135 @@ function E2eeMessengerPage() {
 
                 <hr className="border-border/10 dark:border-[#101921]" />
 
+                {/* Profile Information (DOB & Religion) */}
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center select-none">
+                    <h5 className="text-[11px] font-black text-muted-foreground uppercase tracking-wider">Profile Information</h5>
+                    <button
+                      onClick={() => {
+                        setEditingProfile(!editingProfile);
+                        if (!editingProfile && !myReligion) {
+                          triggerReligionNote();
+                        }
+                      }}
+                      className="text-[11.5px] font-black text-emerald-500 hover:underline"
+                    >
+                      {editingProfile ? "Cancel" : "Edit Details"}
+                    </button>
+                  </div>
+
+                  {editingProfile ? (
+                    <form onSubmit={handleUpdateProfile} className="space-y-4 bg-secondary/15 dark:bg-[#101921]/20 p-3.5 rounded-xl border border-border/30 dark:border-transparent">
+                      {/* Date of Birth input */}
+                      <div className="space-y-1 select-none">
+                        <label className="text-[9.5px] font-black uppercase text-muted-foreground tracking-wider block">Date of Birth</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="date"
+                            value={myDob}
+                            onChange={(e) => setMyDob(e.target.value)}
+                            className="flex-1 h-9 bg-background border border-border/30 dark:border-[#101921] rounded-lg px-2.5 text-[12px] font-bold outline-none focus:border-emerald-500/40"
+                          />
+                          {myDob && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveProfileField("dob")}
+                              className="h-9 px-2.5 rounded-lg border border-rose-500/25 bg-rose-500/5 hover:bg-rose-500/10 text-rose-500 text-[11px] font-black flex items-center justify-center"
+                              title="Remove DOB"
+                            >
+                              <Trash2 className="size-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Religion Select input */}
+                      <div className="space-y-2 select-none">
+                        <label className="text-[9.5px] font-black uppercase text-muted-foreground tracking-wider block">Religious Identity</label>
+                        <div className="flex gap-2">
+                          <select
+                            value={myReligion}
+                            onChange={(e) => {
+                              setMyReligion(e.target.value);
+                              if (e.target.value !== "Christianity") {
+                                setMySubReligion("");
+                              }
+                              triggerReligionNote();
+                            }}
+                            className="flex-1 h-9 bg-background border border-border/30 dark:border-[#101921] rounded-lg px-2 text-[12px] font-bold outline-none focus:border-emerald-500/40"
+                          >
+                            <option value="">-- Choose Identity (Optional) --</option>
+                            <option value="Atheism">Atheism</option>
+                            <option value="Agnosticism">Agnosticism</option>
+                            <option value="Christianity">Christianity</option>
+                            <option value="Buddhism">Buddhism</option>
+                            <option value="Judaism">Judaism</option>
+                            <option value="Other">Other</option>
+                          </select>
+
+                          {myReligion && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveProfileField("religion")}
+                              className="h-9 px-2.5 rounded-lg border border-rose-500/25 bg-rose-500/5 hover:bg-rose-500/10 text-rose-500 text-[11px] font-black flex items-center justify-center"
+                              title="Remove Religion"
+                            >
+                              <Trash2 className="size-4" />
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Nested Christianity Select list */}
+                        {myReligion === "Christianity" && (
+                          <div className="pl-2 border-l-2 border-emerald-500/30 space-y-1 bg-background/40 p-2 rounded-r-lg">
+                            <span className="text-[9px] font-black text-muted-foreground uppercase tracking-wider block">Denomination</span>
+                            <select
+                              value={mySubReligion}
+                              onChange={(e) => setMySubReligion(e.target.value)}
+                              required
+                              className="w-full h-8 bg-background border border-border/30 dark:border-[#101921] rounded-lg px-2 text-[11px] font-bold outline-none focus:border-emerald-500/40"
+                            >
+                              <option value="">-- Choose Denomination --</option>
+                              <option value="Catholicism">Catholicism</option>
+                              <option value="Eastern Orthodoxy">Eastern Orthodoxy</option>
+                              <option value="Oriental Orthodoxy">Oriental Orthodoxy</option>
+                              <option value="Protestantism">Protestantism</option>
+                            </select>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Submit */}
+                      <button
+                        type="submit"
+                        disabled={profileSaving}
+                        className="w-full h-9 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white text-[12px] font-black transition-all flex items-center justify-center gap-1.5"
+                      >
+                        {profileSaving ? <Loader2 className="size-3.5 animate-spin" /> : <CheckCircle className="size-3.5" />}
+                        <span>Save Profile Details</span>
+                      </button>
+                    </form>
+                  ) : (
+                    // Display mode in My Profile Drawer
+                    <div className="bg-secondary/15 dark:bg-[#101921]/10 p-3 rounded-xl border border-border/20 space-y-2.5 text-[12.5px] font-bold">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] uppercase text-muted-foreground font-black">Date of Birth</span>
+                        <span className="text-foreground">
+                          {myDob ? new Date(myDob).toLocaleDateString([], { month: "long", day: "numeric", year: "numeric" }) : "Not specified"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] uppercase text-muted-foreground font-black">Religion</span>
+                        <span className="text-foreground">
+                          {myReligion ? (mySubReligion ? `${myReligion} (${mySubReligion})` : myReligion) : "Not specified"}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <hr className="border-border/10 dark:border-[#101921]" />
+
                 {/* Create Feed Post Form */}
                 <div className="space-y-3 select-none">
                   <h5 className="text-[11px] font-black text-muted-foreground uppercase tracking-wider">Post to my Profile Feed</h5>
@@ -1963,6 +2259,34 @@ function E2eeMessengerPage() {
 
                       <hr className="border-border/10 dark:border-[#101921]" />
 
+                      {/* Peer Details Panel (DOB & Religion) */}
+                      {(dobsCache[activeContact] || religionsCache[activeContact]) && (
+                        <div className="bg-secondary/35 dark:bg-[#101921]/30 rounded-xl p-3.5 space-y-2.5 border border-border/10 text-[12.5px] font-bold">
+                          {dobsCache[activeContact] && (
+                            <div className="flex justify-between items-center">
+                              <span className="text-[10px] uppercase text-muted-foreground font-black flex items-center gap-1">
+                                🎂 DOB
+                              </span>
+                              <span className="text-foreground dark:text-gray-200">
+                                {new Date(dobsCache[activeContact]).toLocaleDateString([], { month: "long", day: "numeric", year: "numeric" })}
+                              </span>
+                            </div>
+                          )}
+                          {religionsCache[activeContact] && (
+                            <div className="flex justify-between items-center">
+                              <span className="text-[10px] uppercase text-muted-foreground font-black flex items-center gap-1">
+                                🕊️ Religion
+                              </span>
+                              <span className="text-foreground dark:text-gray-200 truncate max-w-[150px]" title={religionsCache[activeContact]}>
+                                {religionsCache[activeContact]}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      <hr className="border-border/10 dark:border-[#101921]" />
+
                       {/* E2EE Fingerprint Key */}
                       <div className="space-y-2">
                         <h5 className="text-[11px] font-black text-muted-foreground uppercase tracking-wider flex items-center gap-1">
@@ -2048,6 +2372,46 @@ function E2eeMessengerPage() {
             )}
           </div>
 
+        </div>
+      )}
+
+      {/* Swipeable Note Pop-up */}
+      {showReligionNote && (
+        <div
+          className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] max-w-sm w-[90%] select-none active:cursor-grabbing cursor-grab"
+          style={{
+            transform: `translate(calc(-50% + ${noteSwipeOffset}px), 0px) rotate(${noteSwipeOffset * 0.04}deg)`,
+            opacity: Math.max(0, 1 - Math.abs(noteSwipeOffset) / 250),
+            transition: isSwipingNote ? "none" : "transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.25s ease"
+          }}
+          onTouchStart={(e) => handleNoteDragStart(e.touches[0].clientX)}
+          onTouchMove={(e) => handleNoteDragMove(e.touches[0].clientX)}
+          onTouchEnd={handleNoteDragEnd}
+          onMouseDown={(e) => handleNoteDragStart(e.clientX)}
+          onMouseMove={(e) => {
+            if (e.buttons === 1) handleNoteDragMove(e.clientX);
+          }}
+          onMouseUp={handleNoteDragEnd}
+          onMouseLeave={handleNoteDragEnd}
+        >
+          <div className="bg-[#1c2c3e]/90 text-white rounded-2xl border border-emerald-500/30 p-4 shadow-2xl backdrop-blur-md relative flex items-start gap-3">
+            <Info className="size-5 text-emerald-500 flex-shrink-0 mt-0.5 animate-bounce" />
+            <div className="flex-1 space-y-1">
+              <h6 className="text-[11px] font-black uppercase text-emerald-500 tracking-wider">Note</h6>
+              <p className="text-[12px] font-bold leading-normal text-gray-200">
+                We respect all the religions but recognize only a few of them.
+              </p>
+              <p className="text-[8.5px] font-bold text-gray-400/80 pt-0.5 select-none">
+                ← Swipe left or right to dismiss • Auto-dismiss in 8s →
+              </p>
+            </div>
+            <button
+              onClick={() => setShowReligionNote(false)}
+              className="text-gray-400 hover:text-white flex-shrink-0"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
         </div>
       )}
 

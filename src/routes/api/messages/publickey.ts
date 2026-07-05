@@ -35,7 +35,9 @@ async function handleGetPublicKey(request: Request) {
       publicKey: user.publicKey,
       encryptedPrivateKey: user.encryptedPrivateKey, // Also return this so they can download and decrypt it locally during login!
       salt: user.salt,
-      pfpUrl: user.pfpUrl
+      pfpUrl: user.pfpUrl,
+      dob: user.dob || null,
+      religion: user.religion || null
     }), {
       status: 200,
       headers: CORS_HEADERS,
