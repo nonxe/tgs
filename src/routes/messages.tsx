@@ -2378,11 +2378,11 @@ function E2eeMessengerPage() {
       {/* Swipeable Note Pop-up */}
       {showReligionNote && (
         <div
-          className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] max-w-sm w-[90%] select-none active:cursor-grabbing cursor-grab"
+          className="fixed top-6 left-4 right-4 md:left-0 md:right-0 mx-auto max-w-sm z-[200] select-none active:cursor-grabbing cursor-grab"
           style={{
-            transform: `translate(calc(-50% + ${noteSwipeOffset}px), 0px) rotate(${noteSwipeOffset * 0.04}deg)`,
-            opacity: Math.max(0, 1 - Math.abs(noteSwipeOffset) / 250),
-            transition: isSwipingNote ? "none" : "transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.25s ease"
+            transform: `translateX(${noteSwipeOffset}px) rotate(${noteSwipeOffset * 0.03}deg)`,
+            opacity: Math.max(0, 1 - Math.abs(noteSwipeOffset) / 200),
+            transition: isSwipingNote ? "none" : "transform 0.3s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.3s ease"
           }}
           onTouchStart={(e) => handleNoteDragStart(e.touches[0].clientX)}
           onTouchMove={(e) => handleNoteDragMove(e.touches[0].clientX)}
@@ -2394,20 +2394,33 @@ function E2eeMessengerPage() {
           onMouseUp={handleNoteDragEnd}
           onMouseLeave={handleNoteDragEnd}
         >
-          <div className="bg-[#1c2c3e]/90 text-white rounded-2xl border border-emerald-500/30 p-4 shadow-2xl backdrop-blur-md relative flex items-start gap-3">
-            <Info className="size-5 text-emerald-500 flex-shrink-0 mt-0.5 animate-bounce" />
-            <div className="flex-1 space-y-1">
-              <h6 className="text-[11px] font-black uppercase text-emerald-500 tracking-wider">Note</h6>
-              <p className="text-[12px] font-bold leading-normal text-gray-200">
+          <div className="bg-[#0b0c0d] text-white rounded-2xl border border-zinc-800/80 p-4.5 shadow-[0_12px_40px_rgba(0,0,0,0.85)] backdrop-blur-lg flex items-start gap-3.5">
+            <div className="size-8.5 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center flex-shrink-0 text-amber-500/90 shadow-inner">
+              <Info className="size-4 animate-pulse" />
+            </div>
+            
+            <div className="flex-1 min-w-0 space-y-1">
+              <div className="flex items-center gap-1.5 select-none">
+                <span className="text-[9px] font-black uppercase text-zinc-400 tracking-widest bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800/60">
+                  System Notice
+                </span>
+                <span className="text-[8.5px] text-zinc-500 font-bold select-none">• E2EE Secured</span>
+              </div>
+              
+              <p className="text-[12px] font-medium leading-relaxed text-zinc-200 pr-1">
                 We respect all the religions but recognize only a few of them.
               </p>
-              <p className="text-[8.5px] font-bold text-gray-400/80 pt-0.5 select-none">
-                ← Swipe left or right to dismiss • Auto-dismiss in 8s →
-              </p>
+              
+              <div className="flex items-center gap-1 text-[8.5px] font-semibold text-zinc-500 select-none pt-0.5">
+                <span>← Swipe left or right to dismiss</span>
+                <span>•</span>
+                <span>Auto-hides in 8s →</span>
+              </div>
             </div>
+
             <button
               onClick={() => setShowReligionNote(false)}
-              className="text-gray-400 hover:text-white flex-shrink-0"
+              className="text-zinc-500 hover:text-white transition-colors duration-150 flex-shrink-0 -mt-1 -mr-1 p-1 rounded-lg hover:bg-zinc-900"
             >
               <X className="size-4" />
             </button>
