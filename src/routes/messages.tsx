@@ -924,45 +924,7 @@ function E2eeMessengerPage() {
     }
   };
 
-  const uploadFileViaSupabaseCatboxRelay = async (file: File, retention = "permanent"): Promise<string> => {
-    // 1. Get signed upload URL from our API
-    const sigRes = await fetch(`/api/public/upload?action=getSignedUrl&filename=${encodeURIComponent(file.name)}`);
-    const sigData = await sigRes.json();
-    if (!sigRes.ok || !sigData.success) {
-      throw new Error(sigData.error || "Failed to generate upload session.");
-    }
-
-    const { signedUrl, slug } = sigData;
-
-    // 2. Upload file directly to Supabase storage (bypasses Vercel payload limit!)
-    const uploadRes = await fetch(signedUrl, {
-      method: "PUT",
-      body: file,
-      headers: {
-        "Content-Type": file.type || "application/octet-stream",
-      },
-    });
-
-    if (!uploadRes.ok) {
-      throw new Error(`Direct upload failed (${uploadRes.status})`);
-    }
-
-    // 3. Construct public URL of the uploaded object
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://tdvxawjaxnymlducozxd.supabase.co";
-    const publicUrl = `${supabaseUrl}/storage/v1/object/public/file-uploads/${slug}`;
-
-    // 4. Request the backend server to transfer the file to Catbox permanently and clean up Supabase
-    const transRes = await fetch(`/api/public/upload?supabaseUrl=${encodeURIComponent(publicUrl)}&slug=${encodeURIComponent(slug)}&retention=${retention}`, {
-      method: "POST",
-    });
-
-    const transData = await transRes.json();
-    if (!transRes.ok || !transData.success) {
-      throw new Error(transData.error || "Failed to finalize permanent upload.");
-    }
-
-    return transData.url;
-  };
+  // --- NEW MEDIA UPLOADING HANDLERS ---
 
   const handlePfpClick = () => {
     pfpInputRef.current?.click();
@@ -974,7 +936,27 @@ function E2eeMessengerPage() {
 
     setPfpUploading(true);
     try {
-      const pfpUrl = await uploadFileViaSupabaseCatboxRelay(file, "permanent");
+      const formData = new FormData();
+      formData.append("file", file);
+
+      // Upload file permanently to Catbox
+      const res = await fetch("/api/public/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      let data;
+      try {
+        data = await res.json();
+      } catch (e) {
+        if (res.status === 413) {
+          throw new Error("Profile image is too large. Please select a smaller file.");
+        }
+        throw new Error(`Upload failed (${res.status}). Server returned non-JSON response.`);
+      }
+      if (!res.ok || !data.success) throw new Error(data.error || "Upload failed");
+
+      const pfpUrl = data.url;
 
       // Update PFP URL inside MongoDB collection
       const updateRes = await fetch("/api/messages/updatepfp", {
@@ -1017,7 +999,27 @@ function E2eeMessengerPage() {
 
     setMediaUploading(true);
     try {
-      const fileUrl = await uploadFileViaSupabaseCatboxRelay(pendingMediaFile, "permanent");
+      const formData = new FormData();
+      formData.append("file", pendingMediaFile);
+
+      // Upload media permanently to Catbox
+      const res = await fetch("/api/public/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      let data;
+      try {
+        data = await res.json();
+      } catch (e) {
+        if (res.status === 413) {
+          throw new Error("Media file is too large. Please select a smaller file.");
+        }
+        throw new Error(`Upload failed (${res.status}). Server returned non-JSON response.`);
+      }
+      if (!res.ok || !data.success) throw new Error(data.error || "Upload failed");
+
+      const fileUrl = data.url;
 
       const fileType = pendingMediaFile.type;
       const fileName = pendingMediaFile.name;
@@ -1108,9 +1110,26 @@ function E2eeMessengerPage() {
 
     setPostUploading(true);
     try {
-      const fileUrl = await uploadFileViaSupabaseCatboxRelay(file, "permanent");
+      const formData = new FormData();
+      formData.append("file", file);
 
-      setNewPostMediaUrl(fileUrl);
+      const res = await fetch("/api/public/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      let data;
+      try {
+        data = await res.json();
+      } catch (e) {
+        if (res.status === 413) {
+          throw new Error("Feed media is too large. Please select a smaller file.");
+        }
+        throw new Error(`Upload failed (${res.status}). Server returned non-JSON response.`);
+      }
+      if (!res.ok || !data.success) throw new Error(data.error || "Upload failed");
+
+      setNewPostMediaUrl(data.url);
     } catch (err: any) {
       alert(err.message || "Failed to upload feed media.");
     } finally {
