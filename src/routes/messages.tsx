@@ -192,36 +192,42 @@ function E2eeMessengerPage() {
     const savedPrivKeyJwk = localStorage.getItem("e2ee_private_key_jwk");
 
     if (savedUser && savedAuthHash && savedPrivKeyJwk) {
-      importPrivateKeyFromJwk(JSON.parse(savedPrivKeyJwk)).then((privKey) => {
-        setLoggedInUser(savedUser);
-        setMyAuthHash(savedAuthHash);
-        setMyPrivateKey(privKey);
+      try {
+        const parsedJwk = JSON.parse(savedPrivKeyJwk);
+        importPrivateKeyFromJwk(parsedJwk).then((privKey) => {
+          setLoggedInUser(savedUser);
+          setMyAuthHash(savedAuthHash);
+          setMyPrivateKey(privKey);
 
-        // Fetch my PFP on mount
-        fetch(`/api/messages/publickey?username=${encodeURIComponent(savedUser)}`)
-          .then(res => res.json())
-          .then(data => {
-            if (data.success) {
-              if (data.pfpUrl) setMyPfpUrl(data.pfpUrl);
-              if (data.dob) setMyDob(data.dob);
-              if (data.religion) {
-                const match = data.religion.match(/^Christianity \(([^)]+)\)$/);
-                if (match) {
-                  setMyReligion("Christianity");
-                  setMySubReligion(match[1]);
-                } else {
-                  setMyReligion(data.religion);
-                  setMySubReligion("");
+          // Fetch my PFP on mount
+          fetch(`/api/messages/publickey?username=${encodeURIComponent(savedUser)}`)
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                if (data.pfpUrl) setMyPfpUrl(data.pfpUrl);
+                if (data.dob) setMyDob(data.dob);
+                if (data.religion) {
+                  const match = data.religion.match(/^Christianity \(([^)]+)\)$/);
+                  if (match) {
+                    setMyReligion("Christianity");
+                    setMySubReligion(match[1]);
+                  } else {
+                    setMyReligion(data.religion);
+                    setMySubReligion("");
+                  }
                 }
+                calculateFingerprint(savedUser, data.publicKey);
               }
-              calculateFingerprint(savedUser, data.publicKey);
-            }
-          }).catch(console.error);
+            }).catch(console.error);
 
-      }).catch(err => {
-        console.error("Failed to restore E2EE private key:", err);
+        }).catch(err => {
+          console.error("Failed to restore E2EE private key:", err);
+          clearSession();
+        });
+      } catch (err) {
+        console.error("Failed to parse saved private key JWK:", err);
         clearSession();
-      });
+      }
     }
 
     return () => {
@@ -653,31 +659,49 @@ function E2eeMessengerPage() {
 
     const list: DecryptedMessage[] = [];
     for (const msg of rawMessages) {
-      // Check if message payload is unencrypted media
-      const isPlainMedia = msg.encryptedContent.startsWith("[IMAGE]:") || 
-                           msg.encryptedContent.startsWith("[VIDEO]:") || 
-                           msg.encryptedContent.startsWith("[FILE]:");
-
-      if (isPlainMedia) {
-        list.push({ ...msg, plaintext: msg.encryptedContent });
-        continue;
-      }
-
-      const peer = msg.sender === loggedInUser ? msg.recipient : msg.sender;
-      const peerPubKey = await getPeerPublicKey(peer);
-
-      if (!peerPubKey) {
-        list.push({ ...msg, plaintext: "[Secure Message — Waiting for peer key...]", decryptionFailed: true });
-        continue;
-      }
-
       try {
+        if (!msg || !msg.encryptedContent) {
+          list.push({ ...msg, plaintext: "[Secure Message — Malformed payload]", decryptionFailed: true });
+          continue;
+        }
+
+        // Check if message payload is unencrypted media
+        const isPlainMedia = msg.encryptedContent.startsWith("[IMAGE]:") || 
+                             msg.encryptedContent.startsWith("[VIDEO]:") || 
+                             msg.encryptedContent.startsWith("[FILE]:");
+
+        if (isPlainMedia) {
+          list.push({ ...msg, plaintext: msg.encryptedContent });
+          continue;
+        }
+
+        const peer = msg.sender === loggedInUser ? msg.recipient : msg.sender;
+        if (!peer) {
+          list.push({ ...msg, plaintext: "[Secure Message — Unknown contact]", decryptionFailed: true });
+          continue;
+        }
+
+        const peerPubKey = await getPeerPublicKey(peer);
+
+        if (!peerPubKey) {
+          list.push({ ...msg, plaintext: "[Secure Message — Waiting for peer key...]", decryptionFailed: true });
+          continue;
+        }
+
         // Derive shared AES key
         const sharedKey = await deriveSharedAesKey(myPrivateKey, peerPubKey);
 
-        // Convert hex strings to byte arrays
-        const ivBytes = new Uint8Array(msg.iv.match(/.{1,2}/g)!.map((byte: string) => parseInt(byte, 16)));
-        const cipherBytes = new Uint8Array(msg.encryptedContent.match(/.{1,2}/g)!.map((byte: string) => parseInt(byte, 16)));
+        // Convert hex strings to byte arrays safely
+        const ivMatches = msg.iv ? msg.iv.match(/.{1,2}/g) : null;
+        const cipherMatches = msg.encryptedContent ? msg.encryptedContent.match(/.{1,2}/g) : null;
+
+        if (!ivMatches || !cipherMatches) {
+          list.push({ ...msg, plaintext: "[Decryption Failed — Invalid hex format]", decryptionFailed: true });
+          continue;
+        }
+
+        const ivBytes = new Uint8Array(ivMatches.map((byte: string) => parseInt(byte, 16)));
+        const cipherBytes = new Uint8Array(cipherMatches.map((byte: string) => parseInt(byte, 16)));
 
         // Decrypt
         const plaintextBuffer = await window.crypto.subtle.decrypt(
@@ -689,7 +713,7 @@ function E2eeMessengerPage() {
         const plaintext = new TextDecoder().decode(plaintextBuffer);
         list.push({ ...msg, plaintext });
       } catch (err) {
-        console.error("Decryption error:", err);
+        console.error("Decryption error for message:", msg?.id, err);
         list.push({ ...msg, plaintext: "[Decryption Failed — Key Mismatch]", decryptionFailed: true });
       }
     }
