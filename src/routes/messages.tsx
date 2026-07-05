@@ -243,10 +243,18 @@ function E2eeMessengerPage() {
           const savedMaikoMsgs = localStorage.getItem("maiko_ai_messages_" + savedUser);
           if (savedMaikoMsgs) {
             try {
-              setMaikoMessages(JSON.parse(savedMaikoMsgs));
+              const parsed = JSON.parse(savedMaikoMsgs);
+              if (Array.isArray(parsed)) {
+                setMaikoMessages(parsed);
+              } else {
+                setMaikoMessages([]);
+              }
             } catch (e) {
               console.error("Failed to parse Maiko AI messages:", e);
+              setMaikoMessages([]);
             }
+          } else {
+            setMaikoMessages([]);
           }
 
         }).catch(err => {
@@ -622,10 +630,18 @@ function E2eeMessengerPage() {
       const savedMaikoMsgs = localStorage.getItem("maiko_ai_messages_" + cleanUser);
       if (savedMaikoMsgs) {
         try {
-          setMaikoMessages(JSON.parse(savedMaikoMsgs));
+          const parsed = JSON.parse(savedMaikoMsgs);
+          if (Array.isArray(parsed)) {
+            setMaikoMessages(parsed);
+          } else {
+            setMaikoMessages([]);
+          }
         } catch (e) {
           console.error("Failed to parse Maiko AI messages:", e);
+          setMaikoMessages([]);
         }
+      } else {
+        setMaikoMessages([]);
       }
 
       // Save to local storage
