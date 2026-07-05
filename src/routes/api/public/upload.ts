@@ -33,9 +33,6 @@ async function uploadToBackend(file: any, retention: string): Promise<string> {
       const res = await fetch("https://catbox.moe/user/api.php", {
         method: "POST",
         body: fd,
-        headers: { 
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" 
-        },
       });
       const text = (await res.text()).trim();
       if (res.ok && text.startsWith("http")) {
@@ -56,9 +53,6 @@ async function uploadToBackend(file: any, retention: string): Promise<string> {
   const res = await fetch("https://litterbox.catbox.moe/resources/internals/api.php", {
     method: "POST",
     body: fd,
-    headers: { 
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" 
-    },
   });
   const text = (await res.text()).trim();
   if (!res.ok || !text.startsWith("http")) {
