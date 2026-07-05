@@ -83,6 +83,22 @@ interface FeedPost {
   comments: FeedComment[];
 }
 
+interface MaikoMessage {
+  id: string;
+  sender: "user" | "maiko";
+  plaintext: string;
+  timestamp: string;
+}
+
+// Verified Account Checkmark Component matching user example
+const VerifiedTick = () => (
+  <span className="inline-flex items-center justify-center size-3.5 bg-[#4cd0e0] text-white rounded-full flex-shrink-0 ml-1 shadow-sm" title="Verified Account">
+    <svg viewBox="0 0 24 24" className="size-2.5 stroke-white fill-none stroke-[4.5]" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  </span>
+);
+
 function E2eeMessengerPage() {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
 
@@ -171,6 +187,9 @@ function E2eeMessengerPage() {
   const [isSwipingNote, setIsSwipingNote] = useState<boolean>(false);
   const swipeStartXRef = useRef<number>(0);
   const noteTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Maiko AI Chat History State
+  const [maikoMessages, setMaikoMessages] = useState<MaikoMessage[]>([]);
   
   // Refs
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -183,7 +202,7 @@ function E2eeMessengerPage() {
   useEffect(() => {
     const saved = localStorage.getItem("theme") as "light" | "dark" | null;
     const t = saved || "dark";
-    setTheme(t);
+    setTheme(t === "light" ? "light" : "dark");
     document.documentElement.classList.toggle("dark", t === "dark");
 
     // Try loading session from localStorage
@@ -219,6 +238,16 @@ function E2eeMessengerPage() {
                 calculateFingerprint(savedUser, data.publicKey);
               }
             }).catch(console.error);
+
+          // Load Maiko AI local chat history
+          const savedMaikoMsgs = localStorage.getItem("maiko_ai_messages_" + savedUser);
+          if (savedMaikoMsgs) {
+            try {
+              setMaikoMessages(JSON.parse(savedMaikoMsgs));
+            } catch (e) {
+              console.error("Failed to parse Maiko AI messages:", e);
+            }
+          }
 
         }).catch(err => {
           console.error("Failed to restore E2EE private key:", err);
@@ -260,11 +289,11 @@ function E2eeMessengerPage() {
   // Scroll to bottom of chat
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [decryptedMessages, activeContact]);
+  }, [decryptedMessages, maikoMessages, activeContact]);
 
   // Fetch peer feed when drawer opens or peer changes
   useEffect(() => {
-    if (activeContact && showInfoDrawer) {
+    if (activeContact && showInfoDrawer && activeContact !== "Maiko AI") {
       fetchPeerFeed(activeContact);
     }
   }, [activeContact, showInfoDrawer]);
@@ -275,6 +304,13 @@ function E2eeMessengerPage() {
       fetchMyFeed();
     }
   }, [showMyFeedDrawer, loggedInUser]);
+
+  // Sync Maiko AI chat history to localStorage
+  useEffect(() => {
+    if (loggedInUser && maikoMessages.length > 0) {
+      localStorage.setItem("maiko_ai_messages_" + loggedInUser, JSON.stringify(maikoMessages));
+    }
+  }, [maikoMessages, loggedInUser]);
 
   const toggleTheme = () => {
     const next = theme === "dark" ? "light" : "dark";
@@ -296,6 +332,7 @@ function E2eeMessengerPage() {
     setMySubReligion("");
     setRawMessages([]);
     setDecryptedMessages([]);
+    setMaikoMessages([]);
     setActiveContact("");
     setContacts([]);
     setMobileView("list");
@@ -581,6 +618,16 @@ function E2eeMessengerPage() {
       }
       calculateFingerprint(cleanUser, data.publicKey);
 
+      // Load Maiko AI local chat history
+      const savedMaikoMsgs = localStorage.getItem("maiko_ai_messages_" + cleanUser);
+      if (savedMaikoMsgs) {
+        try {
+          setMaikoMessages(JSON.parse(savedMaikoMsgs));
+        } catch (e) {
+          console.error("Failed to parse Maiko AI messages:", e);
+        }
+      }
+
       // Save to local storage
       localStorage.setItem("e2ee_username", cleanUser);
       localStorage.setItem("e2ee_auth_hash", authHash);
@@ -755,7 +802,15 @@ function E2eeMessengerPage() {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!messageInput.trim() || !activeContact || !myPrivateKey) return;
+    if (!messageInput.trim() || !activeContact) return;
+
+    // Route message to Maiko AI if it's the active contact
+    if (activeContact === "Maiko AI") {
+      await handleSendMaikoMessage(messageInput);
+      return;
+    }
+
+    if (!myPrivateKey) return;
 
     setSendLoading(true);
     try {
@@ -803,6 +858,51 @@ function E2eeMessengerPage() {
       fetchMessages(); // Immediately fetch to update local list
     } catch (err: any) {
       alert(err.message || "Failed to encrypt/send message.");
+    } finally {
+      setSendLoading(false);
+    }
+  };
+
+  // --- MAIKO AI CHAT HANDLER ---
+
+  const handleSendMaikoMessage = async (text: string) => {
+    if (!text.trim()) return;
+
+    // 1. Add user message to local timeline
+    const userMsg: MaikoMessage = {
+      id: `user-${Date.now()}`,
+      sender: "user",
+      plaintext: text.trim(),
+      timestamp: new Date().toISOString()
+    };
+    
+    setMaikoMessages(prev => [...prev, userMsg]);
+    setMessageInput("");
+    setSendLoading(true);
+
+    try {
+      // 2. Query Maiko AI endpoint
+      const res = await fetch(`https://tdoqjbentujzffjzxndo.supabase.co/functions/v1/ai?prompt=${encodeURIComponent(text.trim())}`);
+      if (!res.ok) throw new Error("AI Service temporarily unavailable.");
+      
+      const data = await res.json();
+      
+      const aiMsg: MaikoMessage = {
+        id: `maiko-${Date.now()}`,
+        sender: "maiko",
+        plaintext: data.reply || "No response received.",
+        timestamp: new Date().toISOString()
+      };
+      
+      setMaikoMessages(prev => [...prev, aiMsg]);
+    } catch (err: any) {
+      const errorMsg: MaikoMessage = {
+        id: `maiko-err-${Date.now()}`,
+        sender: "maiko",
+        plaintext: `⚠️ Maiko AI: ${err.message || "Failed to contact AI service."}`,
+        timestamp: new Date().toISOString()
+      };
+      setMaikoMessages(prev => [...prev, errorMsg]);
     } finally {
       setSendLoading(false);
     }
@@ -1244,8 +1344,89 @@ function E2eeMessengerPage() {
   // Emojis list
   const emojiList = ["😀", "😂", "😍", "👍", "🔥", "🎉", "❤️", "👏", "🙌", "😮", "😢", "😎", "🚀", "🔒", "🤫", "👀", "💯"];
 
+  // Render Maiko AI timeline
+  const renderMaikoTimeline = () => {
+    if (maikoMessages.length === 0) {
+      return (
+        <div className="h-full flex flex-col items-center justify-center text-center p-8 select-none animate-fade-in">
+          <div className="size-16 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-600 p-0.5 shadow-lg animate-pulse mb-4">
+            <div className="w-full h-full bg-[#17212b] rounded-full flex items-center justify-center text-white">
+              <Sparkles className="size-7 text-cyan-400" />
+            </div>
+          </div>
+          <h3 className="text-[14px] font-black text-foreground flex items-center justify-center">
+            Chat with Maiko AI
+            <VerifiedTick />
+          </h3>
+          <p className="text-[11px] text-muted-foreground max-w-[280px] mx-auto mt-1 leading-normal font-bold">
+            Ask Maiko anything! She can answer questions, summarize text, or assist with calculations.
+          </p>
+        </div>
+      );
+    }
+
+    return maikoMessages.map((msg) => {
+      const isMe = msg.sender === "user";
+      const msgDate = new Date(msg.timestamp);
+      
+      return (
+        <div key={msg.id} className="space-y-2 animate-fade-in">
+          <div className={`flex ${isMe ? "justify-end" : "justify-start"} group relative`}>
+            {/* AI Avatar prefix on the left for AI messages */}
+            {!isMe && (
+              <div className="size-7 rounded-full bg-gradient-to-tr from-cyan-400 to-purple-600 p-0.5 mr-2 flex-shrink-0 shadow select-none self-end mb-0.5">
+                <div className="w-full h-full bg-[#17212b] rounded-full flex items-center justify-center text-white">
+                  <Sparkles className="size-3 text-cyan-400" />
+                </div>
+              </div>
+            )}
+
+            <div className={`max-w-[78%] relative shadow-sm rounded-[15px] select-text border transition-all hover:scale-[1.01] ${
+              isMe
+                ? "bg-[#3390ec] dark:bg-[#2b5278] border-[#3390ec]/20 dark:border-[#2b5278]/30 text-white rounded-br-[3px]"
+                : "bg-white dark:bg-[#182533] border-cyan-500/20 dark:border-cyan-500/10 shadow-[0_0_12px_rgba(34,211,238,0.03)] text-foreground dark:text-gray-100 rounded-bl-[3px]"
+            }`}>
+              <div className="pl-3.5 pr-13 pt-2 pb-2.5 min-w-[80px]">
+                <p className="text-[13px] font-medium leading-relaxed break-words whitespace-pre-wrap select-text">
+                  {msg.plaintext}
+                </p>
+                <span className={`absolute bottom-1 right-2 text-[8.5px] select-none font-semibold ${
+                  isMe ? "text-white/60" : "text-muted-foreground/60"
+                }`}>
+                  {msgDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+            </div>
+
+            {/* Quick Bubble Action overlay */}
+            <div className={`absolute top-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex items-center gap-1.5 bg-white dark:bg-[#1e2c3a] border border-border/40 dark:border-transparent px-2.5 py-1 rounded-full shadow-lg z-10 select-none ${
+              isMe ? "right-[80%] mr-2" : "left-[80%] ml-2"
+            }`}>
+              <button
+                onClick={() => copyToClipboard(msg.plaintext, msg.id)}
+                title={copiedTextId === msg.id ? "Copied!" : "Copy to clipboard"}
+                className="text-[10px] text-muted-foreground hover:text-foreground font-bold flex items-center gap-0.5 transition-colors"
+              >
+                {copiedTextId === msg.id ? (
+                  <CheckCircle className="size-3.5 text-emerald-500" />
+                ) : (
+                  <Copy className="size-3.5" />
+                )}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      );
+    });
+  };
+
   // Render group of messages with date separators & message search filtering
   const renderMessageTimeline = () => {
+    if (activeContact === "Maiko AI") {
+      return renderMaikoTimeline();
+    }
+
     let lastDateStr = "";
     
     const chatFilteredMsgs = activeMessages.filter(msg => {
@@ -1527,6 +1708,8 @@ function E2eeMessengerPage() {
     );
   };
 
+  const isMaiko = activeContact === "Maiko AI";
+
   return (
     <main className="min-h-screen bg-background text-foreground font-sans transition-colors duration-300 flex flex-col h-screen overflow-hidden relative select-none">
       
@@ -1757,9 +1940,51 @@ function E2eeMessengerPage() {
               <div className="text-[9.5px] font-bold text-muted-foreground/60 uppercase tracking-wider px-3 py-1.5 flex items-center justify-between">
                 <span>Direct Encrypted Channels</span>
                 <span className="text-[8px] bg-[#3390ec]/20 text-[#3390ec] dark:text-[#82b1ff] px-1.5 py-0.5 rounded-full font-black">
-                  {filteredContacts.length}
+                  {filteredContacts.length + (activeContact === "Maiko AI" || !searchFilter || "maiko ai".includes(searchFilter.trim().toLowerCase()) ? 1 : 0)}
                 </span>
               </div>
+
+              {/* Pinned Maiko AI Chat entry */}
+              {(!searchFilter || "maiko ai".includes(searchFilter.trim().toLowerCase())) && (
+                <div
+                  onClick={() => handleContactSelect("Maiko AI")}
+                  className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border ${
+                    activeContact === "Maiko AI"
+                      ? "bg-[#3390ec]/10 dark:bg-[#2b5278]/20 border-[#3390ec]/30 dark:border-[#2b5278]/40 text-foreground shadow-sm"
+                      : "border-transparent hover:bg-secondary/40 dark:hover:bg-[#202b36] text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {/* Glowing neon AI ring avatar */}
+                  <div className="size-10 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-600 p-0.5 flex-shrink-0 shadow-md animate-pulse">
+                    <div className="w-full h-full bg-[#17212b] rounded-full flex items-center justify-center text-white">
+                      <Sparkles className="size-5 text-cyan-400" />
+                    </div>
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[12.5px] font-black text-foreground dark:text-gray-200 flex items-center">
+                        Maiko AI
+                        <VerifiedTick />
+                      </span>
+                      {maikoMessages.length > 0 && (
+                        <span className="text-[9px] text-muted-foreground/60 select-none">
+                          {new Date(maikoMessages[maikoMessages.length - 1].timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      )}
+                    </div>
+                    {maikoMessages.length > 0 ? (
+                      <p className="text-[11.5px] truncate text-muted-foreground dark:text-gray-400 mt-0.5 pr-4 leading-normal">
+                        {maikoMessages[maikoMessages.length - 1].plaintext}
+                      </p>
+                    ) : (
+                      <p className="text-[10px] text-cyan-500 font-bold mt-0.5">
+                        Ask Maiko anything...
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
               
               {filteredContacts.length === 0 ? (
                 <div className="text-center py-12 px-4 select-none">
@@ -2103,8 +2328,13 @@ function E2eeMessengerPage() {
                       <ChevronLeft className="size-6" />
                     </button>
                     
-                    {/* Peer PFP or initials circle */}
-                    {pfpsCache[activeContact] ? (
+                    {isMaiko ? (
+                      <div className="size-10 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-600 p-0.5 mr-3 flex-shrink-0 shadow-md">
+                        <div className="w-full h-full bg-[#17212b] rounded-full flex items-center justify-center text-white">
+                          <Sparkles className="size-5 text-cyan-400" />
+                        </div>
+                      </div>
+                    ) : pfpsCache[activeContact] ? (
                       <img src={pfpsCache[activeContact]} className="size-10 rounded-full object-cover shadow-sm flex-shrink-0 mr-3 hover:opacity-90 animate-fade-in" />
                     ) : (
                       <div className={`size-10 rounded-full bg-gradient-to-tr ${getAvatarGradient(activeContact)} text-white flex items-center justify-center font-black text-[14px] shadow-sm flex-shrink-0 mr-3 hover:opacity-90`}>
@@ -2113,30 +2343,41 @@ function E2eeMessengerPage() {
                     )}
                     
                     <div className="truncate">
-                      <h3 className="text-[13.5px] font-black leading-tight text-foreground dark:text-gray-100 truncate flex items-center gap-1.5">
-                        {activeContact}
-                        <Info className="size-3.5 text-muted-foreground opacity-60" />
+                      <h3 className="text-[13.5px] font-black leading-tight text-foreground dark:text-gray-100 truncate flex items-center gap-1">
+                        {isMaiko ? "Maiko AI" : activeContact}
+                        {isMaiko ? <VerifiedTick /> : <Info className="size-3.5 text-muted-foreground opacity-60" />}
                       </h3>
                       <div className="flex items-center gap-1 text-[9px] font-bold text-emerald-500 tracking-wide uppercase mt-1">
-                        <span className="size-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
-                        <span>AES Secure Channel</span>
+                        {isMaiko ? (
+                          <>
+                            <span className="size-1.5 rounded-full bg-cyan-500 inline-block animate-pulse" />
+                            <span className="text-cyan-500">Verified AI Assistant</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="size-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
+                            <span>AES Secure Channel</span>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    {/* Search Messages Icon Toggle */}
-                    <button
-                      onClick={() => setShowMsgSearch(!showMsgSearch)}
-                      className={`size-9 rounded-full flex items-center justify-center active:scale-90 transition-all ${
-                        showMsgSearch 
-                          ? "bg-[#3390ec]/20 text-[#3390ec]" 
-                          : "hover:bg-secondary dark:hover:bg-[#202b36] text-muted-foreground"
-                      }`}
-                      title="Search messages"
-                    >
-                      <Search className="size-4.5" />
-                    </button>
+                    {/* Search Messages Icon Toggle (Hidden for Maiko) */}
+                    {!isMaiko && (
+                      <button
+                        onClick={() => setShowMsgSearch(!showMsgSearch)}
+                        className={`size-9 rounded-full flex items-center justify-center active:scale-90 transition-all ${
+                          showMsgSearch 
+                            ? "bg-[#3390ec]/20 text-[#3390ec]" 
+                            : "hover:bg-secondary dark:hover:bg-[#202b36] text-muted-foreground"
+                        }`}
+                        title="Search messages"
+                      >
+                        <Search className="size-4.5" />
+                      </button>
+                    )}
 
                     <div className="hidden sm:flex items-center gap-1.5 bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 text-emerald-500 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider select-none">
                       <ShieldCheck className="size-3.5" />
@@ -2149,7 +2390,7 @@ function E2eeMessengerPage() {
                 </div>
 
                 {/* Inline Message Search Bar */}
-                {showMsgSearch && (
+                {showMsgSearch && !isMaiko && (
                   <div className="px-4 py-2 bg-white/90 dark:bg-[#17212b]/95 border-b border-border/10 dark:border-[#101921] flex items-center gap-2 select-none relative z-10 animate-slide-in">
                     <Search className="size-4 text-muted-foreground" />
                     <input
@@ -2199,20 +2440,22 @@ function E2eeMessengerPage() {
                 <div className="p-3 sm:p-4 bg-white/70 dark:bg-[#17212b]/80 border-t border-border/10 dark:border-[#101921] backdrop-blur-sm flex-shrink-0 relative z-10">
                   <div className="max-w-4xl mx-auto flex items-center gap-2 relative">
                     
-                    {/* Attach media button */}
-                    <button
-                      type="button"
-                      onClick={handleMediaClick}
-                      disabled={mediaUploading}
-                      title="Attach File (Permanent Catbox)"
-                      className="size-9.5 rounded-full hover:bg-secondary dark:hover:bg-[#202b36] text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors flex-shrink-0 active:scale-95 disabled:opacity-50"
-                    >
-                      {mediaUploading ? (
-                        <Loader2 className="size-4.5 animate-spin" />
-                      ) : (
-                        <Paperclip className="size-5" />
-                      )}
-                    </button>
+                    {/* Attach media button (Hidden for Maiko AI) */}
+                    {!isMaiko && (
+                      <button
+                        type="button"
+                        onClick={handleMediaClick}
+                        disabled={mediaUploading}
+                        title="Attach File (Permanent Catbox)"
+                        className="size-9.5 rounded-full hover:bg-secondary dark:hover:bg-[#202b36] text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors flex-shrink-0 active:scale-95 disabled:opacity-50"
+                      >
+                        {mediaUploading ? (
+                          <Loader2 className="size-4.5 animate-spin" />
+                        ) : (
+                          <Paperclip className="size-5" />
+                        )}
+                      </button>
+                    )}
 
                     {/* Emoji toggle icon */}
                     <button
@@ -2230,7 +2473,7 @@ function E2eeMessengerPage() {
                       <div className="flex-1 bg-white dark:bg-[#0e1621] border border-border/30 dark:border-[#101921] rounded-[22px] flex items-center shadow-inner py-1 pl-4 pr-1.5">
                         <input
                           type="text"
-                          placeholder="Write encrypted message..."
+                          placeholder={isMaiko ? "Ask Maiko AI..." : "Write encrypted message..."}
                           value={messageInput}
                           onChange={(e) => setMessageInput(e.target.value)}
                           className="flex-1 min-w-0 bg-transparent text-[13px] text-foreground font-bold outline-none py-1.5 focus:ring-0 placeholder:text-muted-foreground/60"
@@ -2257,7 +2500,9 @@ function E2eeMessengerPage() {
                   <div className="w-80 border-l border-border/10 dark:border-[#101921] bg-white dark:bg-[#17212b] flex flex-col h-full z-30 select-none absolute right-0 top-0 shadow-2xl animate-slide-in">
                     {/* Drawer Header */}
                     <div className="px-4 py-4 border-b border-border/10 dark:border-[#101921] flex items-center justify-between">
-                      <span className="text-[13px] font-black text-foreground uppercase tracking-wider">Contact Info</span>
+                      <span className="text-[13px] font-black text-foreground uppercase tracking-wider">
+                        {isMaiko ? "AI Profile" : "Contact Info"}
+                      </span>
                       <button onClick={() => setShowInfoDrawer(false)} className="text-muted-foreground hover:text-foreground">
                         <X className="size-4.5" />
                       </button>
@@ -2266,114 +2511,177 @@ function E2eeMessengerPage() {
                     {/* Drawer Content */}
                     <div className="flex-1 overflow-y-auto p-5 space-y-6">
                       
-                      {/* Big Avatar */}
-                      <div className="text-center space-y-3">
-                        {pfpsCache[activeContact] ? (
-                          <img src={pfpsCache[activeContact]} className="size-24 rounded-full object-cover border-2 border-emerald-500/20 shadow-lg mx-auto" />
-                        ) : (
-                          <div className={`size-24 rounded-full bg-gradient-to-tr ${getAvatarGradient(activeContact)} text-white flex items-center justify-center font-black text-[32px] shadow-lg mx-auto`}>
-                            {activeContact.charAt(0).toUpperCase()}
+                      {isMaiko ? (
+                        /* Maiko AI Profile Details Drawer */
+                        <div className="space-y-6 select-text">
+                          <div className="text-center space-y-3 select-none">
+                            <div className="size-24 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-600 p-0.5 shadow-lg mx-auto animate-pulse">
+                              <div className="w-full h-full bg-[#17212b] rounded-full flex items-center justify-center text-white">
+                                <Sparkles className="size-10 text-cyan-400" />
+                              </div>
+                            </div>
+                            <div>
+                              <h4 className="text-[16px] font-black text-foreground leading-tight flex items-center justify-center">
+                                Maiko AI
+                                <VerifiedTick />
+                              </h4>
+                              <p className="text-[10px] text-cyan-500 font-bold uppercase tracking-wider mt-1">System Assistant</p>
+                            </div>
                           </div>
-                        )}
-                        <div>
-                          <h4 className="text-[16px] font-black text-foreground leading-tight">{activeContact}</h4>
-                          <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-wider mt-1">E2EE Verified Node</p>
-                        </div>
-                      </div>
 
-                      <hr className="border-border/10 dark:border-[#101921]" />
+                          <hr className="border-border/10 dark:border-[#101921]" />
 
-                      {/* Peer Details Panel (DOB & Religion) */}
-                      {(dobsCache[activeContact] || religionsCache[activeContact]) && (
-                        <div className="bg-secondary/35 dark:bg-[#101921]/30 rounded-xl p-3.5 space-y-2.5 border border-border/10 text-[12.5px] font-bold">
-                          {dobsCache[activeContact] && (
+                          <div className="bg-secondary/35 dark:bg-[#101921]/30 rounded-xl p-3.5 space-y-2.5 border border-border/10 text-[12.5px] font-bold">
                             <div className="flex justify-between items-center">
-                              <span className="text-[10px] uppercase text-muted-foreground font-black flex items-center gap-1">
-                                🎂 DOB
+                              <span className="text-[10px] uppercase text-muted-foreground font-black">
+                                Status
+                              </span>
+                              <span className="text-cyan-500 flex items-center gap-1">
+                                <span className="size-1.5 rounded-full bg-cyan-500 inline-block animate-pulse" />
+                                Online & Active
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-[10px] uppercase text-muted-foreground font-black">
+                                Verified Level
                               </span>
                               <span className="text-foreground dark:text-gray-200">
-                                {new Date(dobsCache[activeContact]).toLocaleDateString([], { month: "long", day: "numeric", year: "numeric" })}
+                                Verified Account
                               </span>
                             </div>
-                          )}
-                          {religionsCache[activeContact] && (
-                            <div className="flex justify-between items-center">
-                              <span className="text-[10px] uppercase text-muted-foreground font-black flex items-center gap-1">
-                                🕊️ Religion
-                              </span>
-                              <span className="text-foreground dark:text-gray-200 truncate max-w-[150px]" title={religionsCache[activeContact]}>
-                                {religionsCache[activeContact]}
-                              </span>
+                          </div>
+
+                          <p className="text-[12px] font-medium leading-relaxed text-muted-foreground">
+                            Maiko AI is a custom artificial intelligence companion integrated directly into the SHS messenger.
+                            Your chats with Maiko AI are stored locally on your device.
+                          </p>
+
+                          <button
+                            onClick={() => {
+                              if (confirm("Are you sure you want to clear your conversation history with Maiko AI?")) {
+                                setMaikoMessages([]);
+                                localStorage.removeItem("maiko_ai_messages_" + loggedInUser);
+                                setShowInfoDrawer(false);
+                              }
+                            }}
+                            className="w-full h-9 rounded-lg border border-rose-500/25 bg-rose-500/5 hover:bg-rose-500/10 text-rose-500 text-[11px] font-black flex items-center justify-center gap-1.5 transition-colors select-none"
+                          >
+                            <Trash2 className="size-4" />
+                            Clear Conversation
+                          </button>
+                        </div>
+                      ) : (
+                        /* Standard Peer Profile (DOB & Religion & Fingerprint & Feed) */
+                        <div className="space-y-6 select-text">
+                          <div className="text-center space-y-3">
+                            {pfpsCache[activeContact] ? (
+                              <img src={pfpsCache[activeContact]} className="size-24 rounded-full object-cover border-2 border-emerald-500/20 shadow-lg mx-auto" />
+                            ) : (
+                              <div className={`size-24 rounded-full bg-gradient-to-tr ${getAvatarGradient(activeContact)} text-white flex items-center justify-center font-black text-[32px] shadow-lg mx-auto`}>
+                                {activeContact.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                            <div>
+                              <h4 className="text-[16px] font-black text-foreground leading-tight">{activeContact}</h4>
+                              <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-wider mt-1">E2EE Verified Node</p>
+                            </div>
+                          </div>
+
+                          <hr className="border-border/10 dark:border-[#101921]" />
+
+                          {/* Peer Details Panel (DOB & Religion) */}
+                          {(dobsCache[activeContact] || religionsCache[activeContact]) && (
+                            <div className="bg-secondary/35 dark:bg-[#101921]/30 rounded-xl p-3.5 space-y-2.5 border border-border/10 text-[12.5px] font-bold">
+                              {dobsCache[activeContact] && (
+                                <div className="flex justify-between items-center">
+                                  <span className="text-[10px] uppercase text-muted-foreground font-black flex items-center gap-1">
+                                    🎂 DOB
+                                  </span>
+                                  <span className="text-foreground dark:text-gray-200">
+                                    {new Date(dobsCache[activeContact]).toLocaleDateString([], { month: "long", day: "numeric", year: "numeric" })}
+                                  </span>
+                                </div>
+                              )}
+                              {religionsCache[activeContact] && (
+                                <div className="flex justify-between items-center">
+                                  <span className="text-[10px] uppercase text-muted-foreground font-black flex items-center gap-1">
+                                    🕊️ Religion
+                                  </span>
+                                  <span className="text-foreground dark:text-gray-200 truncate max-w-[150px]" title={religionsCache[activeContact]}>
+                                    {religionsCache[activeContact]}
+                                  </span>
+                                </div>
+                              )}
                             </div>
                           )}
+
+                          <hr className="border-border/10 dark:border-[#101921]" />
+
+                          {/* E2EE Fingerprint Key */}
+                          <div className="space-y-2">
+                            <h5 className="text-[11px] font-black text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                              <Key className="size-3.5 text-emerald-500" />
+                              Security Fingerprint
+                            </h5>
+                            
+                            {fingerprintCache[activeContact] ? (
+                              <div className="bg-secondary/50 dark:bg-[#0e1621] border border-border/30 dark:border-[#101921] rounded-xl p-3.5 space-y-3 select-text">
+                                <code className="text-[10.5px] font-black block text-center break-words font-mono leading-relaxed tracking-wider">
+                                  {fingerprintCache[activeContact]}
+                                </code>
+                                <button
+                                  onClick={copyPeerFingerprint}
+                                  className="w-full h-8.5 rounded-lg border border-border hover:bg-secondary dark:hover:bg-[#202b36] flex items-center justify-center gap-1.5 text-[11px] font-black transition-all select-none"
+                                >
+                                  {copiedFingerprint ? (
+                                    <>
+                                      <CheckCircle className="size-3.5 text-emerald-500" />
+                                      <span>Copied Fingerprint</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Copy className="size-3.5 text-muted-foreground" />
+                                      <span>Copy Fingerprint</span>
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="text-[11px] text-muted-foreground py-2 italic">
+                                Generating fingerprint...
+                              </div>
+                            )}
+                            
+                            <p className="text-[9.5px] text-muted-foreground leading-normal mt-1">
+                              This numeric fingerprint represents a SHA-256 hash of {activeContact}'s ECDH P-256 public key.
+                            </p>
+                          </div>
+
+                          <hr className="border-border/10 dark:border-[#101921]" />
+
+                          {/* Peer Feed Section */}
+                          <div className="space-y-3">
+                            <h5 className="text-[11px] font-black text-muted-foreground uppercase tracking-wider flex items-center gap-1 select-none">
+                              <ImageIcon className="size-3.5 text-emerald-500" />
+                              @{activeContact}'s Feed & Posts
+                            </h5>
+
+                            {feedLoading ? (
+                              <div className="flex justify-center py-6 select-none">
+                                <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                              </div>
+                            ) : peerFeedPosts.length === 0 ? (
+                              <p className="text-[11px] text-muted-foreground italic text-center py-4 select-none">
+                                No posts shared on profile yet.
+                              </p>
+                            ) : (
+                              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
+                                {peerFeedPosts.map(post => renderFeedPostItem(post, false))}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
-
-                      <hr className="border-border/10 dark:border-[#101921]" />
-
-                      {/* E2EE Fingerprint Key */}
-                      <div className="space-y-2">
-                        <h5 className="text-[11px] font-black text-muted-foreground uppercase tracking-wider flex items-center gap-1">
-                          <Key className="size-3.5 text-emerald-500" />
-                          Security Fingerprint
-                        </h5>
-                        
-                        {fingerprintCache[activeContact] ? (
-                          <div className="bg-secondary/50 dark:bg-[#0e1621] border border-border/30 dark:border-[#101921] rounded-xl p-3.5 space-y-3 select-text">
-                            <code className="text-[10.5px] font-black block text-center break-words font-mono leading-relaxed tracking-wider">
-                              {fingerprintCache[activeContact]}
-                            </code>
-                            <button
-                              onClick={copyPeerFingerprint}
-                              className="w-full h-8.5 rounded-lg border border-border hover:bg-secondary dark:hover:bg-[#202b36] flex items-center justify-center gap-1.5 text-[11px] font-black transition-all select-none"
-                            >
-                              {copiedFingerprint ? (
-                                <>
-                                  <CheckCircle className="size-3.5 text-emerald-500" />
-                                  <span>Copied Fingerprint</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Copy className="size-3.5 text-muted-foreground" />
-                                  <span>Copy Fingerprint</span>
-                                </>
-                              )}
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="text-[11px] text-muted-foreground py-2 italic">
-                            Generating fingerprint...
-                          </div>
-                        )}
-                        
-                        <p className="text-[9.5px] text-muted-foreground leading-normal mt-1">
-                          This numeric fingerprint represents a SHA-256 hash of {activeContact}'s ECDH P-256 public key.
-                        </p>
-                      </div>
-
-                      <hr className="border-border/10 dark:border-[#101921]" />
-
-                      {/* Peer Feed Section */}
-                      <div className="space-y-3">
-                        <h5 className="text-[11px] font-black text-muted-foreground uppercase tracking-wider flex items-center gap-1 select-none">
-                          <ImageIcon className="size-3.5 text-emerald-500" />
-                          @{activeContact}'s Feed & Posts
-                        </h5>
-
-                        {feedLoading ? (
-                          <div className="flex justify-center py-6 select-none">
-                            <Loader2 className="size-5 animate-spin text-muted-foreground" />
-                          </div>
-                        ) : peerFeedPosts.length === 0 ? (
-                          <p className="text-[11px] text-muted-foreground italic text-center py-4 select-none">
-                            No posts shared on profile yet.
-                          </p>
-                        ) : (
-                          <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
-                            {peerFeedPosts.map(post => renderFeedPostItem(post, false))}
-                          </div>
-                        )}
-                      </div>
 
                     </div>
                   </div>
