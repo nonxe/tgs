@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Accept, Origin",
   "Access-Control-Max-Age": "86400",
 };
@@ -68,11 +68,94 @@ export const Route = createFileRoute("/api/public/upload")({
   server: {
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: CORS }),
+      GET: async ({ request }) => {
+        try {
+          const url = new URL(request.url);
+          const action = url.searchParams.get("action");
+
+          if (action === "getSignedUrl") {
+            const filename = url.searchParams.get("filename") || "upload";
+            const ext = filename.split(".").pop() || "bin";
+            // Create unique slug
+            const randomId = Math.random().toString(36).substring(2, 15);
+            const slug = `${randomId}.${ext}`;
+
+            const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+            const { data, error } = await supabaseAdmin.storage
+              .from("file-uploads")
+              .createSignedUploadUrl(slug);
+
+            if (error || !data) {
+              return Response.json(
+                { success: false, error: error?.message || "Failed to create signed URL" },
+                { status: 500, headers: CORS }
+              );
+            }
+
+            return Response.json(
+              {
+                success: true,
+                signedUrl: data.signedUrl,
+                slug,
+              },
+              { headers: CORS }
+            );
+          }
+
+          return Response.json({ success: false, error: "Invalid action" }, { status: 400, headers: CORS });
+        } catch (err) {
+          return Response.json(
+            { success: false, error: (err as Error).message },
+            { status: 500, headers: CORS }
+          );
+        }
+      },
       POST: async ({ request }) => {
         try {
+          const url = new URL(request.url);
+          const supabaseUrl = url.searchParams.get("supabaseUrl");
+          const slug = url.searchParams.get("slug");
+          const retention = url.searchParams.get("retention") || "permanent";
+
+          if (supabaseUrl && slug) {
+            // 1. Download file from Supabase Storage
+            const fileRes = await fetch(supabaseUrl);
+            if (!fileRes.ok) {
+              return Response.json(
+                { success: false, error: `Failed to download file from temporary storage (${fileRes.status})` },
+                { status: 502, headers: CORS }
+              );
+            }
+
+            const blob = await fileRes.blob();
+
+            // 2. Upload to Catbox permanently
+            const filename = await uploadToBackend(blob, retention);
+            const maskedUrl = `${getOrigin(request)}/${filename}`;
+
+            // 3. Delete temporary file from Supabase Storage in the background
+            try {
+              const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+              await supabaseAdmin.storage.from("file-uploads").remove([slug]);
+            } catch (delErr) {
+              console.error("Failed to delete temp file from Supabase storage:", delErr);
+            }
+
+            return Response.json(
+              {
+                success: true,
+                url: maskedUrl,
+                filename,
+                size: blob.size,
+                type: blob.type,
+              },
+              { headers: CORS }
+            );
+          }
+
+          // Otherwise, regular multipart formData upload
           const incoming = await request.formData();
           const file = incoming.get("file");
-          const retention = incoming.get("retention")?.toString() || "permanent";
 
           if (!file || typeof (file as any).arrayBuffer !== "function") {
             return Response.json(

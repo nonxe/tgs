@@ -188,28 +188,45 @@ function CloudifyMusicPage() {
     }
   };
 
-  // Helper to upload files to Catbox uploader proxy
+  // Helper to upload files using Supabase-Catbox relay uploader (bypasses Vercel 4.5MB limits)
   const uploadToCatbox = async (file: File): Promise<string> => {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const res = await fetch("/api/public/upload", {
-      method: "POST",
-      body: formData,
-    });
-
-    let data;
-    try {
-      data = await res.json();
-    } catch (e) {
-      if (res.status === 413) {
-        throw new Error(`File "${file.name}" is too large. Please select a smaller file.`);
-      }
-      throw new Error(`Upload failed (${res.status}). Server returned non-JSON response.`);
+    // 1. Get signed upload URL from our API
+    const sigRes = await fetch(`/api/public/upload?action=getSignedUrl&filename=${encodeURIComponent(file.name)}`);
+    const sigData = await sigRes.json();
+    if (!sigRes.ok || !sigData.success) {
+      throw new Error(sigData.error || "Failed to generate upload session.");
     }
 
-    if (!res.ok || !data.success) throw new Error(data.error || "Upload failed");
-    return data.url;
+    const { signedUrl, slug } = sigData;
+
+    // 2. Upload file directly to Supabase storage (bypasses Vercel payload limit!)
+    const uploadRes = await fetch(signedUrl, {
+      method: "PUT",
+      body: file,
+      headers: {
+        "Content-Type": file.type || "application/octet-stream",
+      },
+    });
+
+    if (!uploadRes.ok) {
+      throw new Error(`Direct upload failed (${uploadRes.status})`);
+    }
+
+    // 3. Construct public URL of the uploaded object
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://tdvxawjaxnymlducozxd.supabase.co";
+    const publicUrl = `${supabaseUrl}/storage/v1/object/public/file-uploads/${slug}`;
+
+    // 4. Request the backend server to transfer the file to Catbox permanently and clean up Supabase
+    const transRes = await fetch(`/api/public/upload?supabaseUrl=${encodeURIComponent(publicUrl)}&slug=${encodeURIComponent(slug)}&retention=permanent`, {
+      method: "POST",
+    });
+
+    const transData = await transRes.json();
+    if (!transRes.ok || !transData.success) {
+      throw new Error(transData.error || "Failed to finalize permanent upload.");
+    }
+
+    return transData.url;
   };
 
   const handleUploadSong = async (e: React.FormEvent) => {
