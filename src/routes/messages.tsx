@@ -993,80 +993,33 @@ function E2eeMessengerPage() {
     setMediaCaptionInput("");
   };
 
-  const uploadDirectLitterboxClient = (fileToUpload: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open("POST", "https://litterbox.catbox.moe/resources/internals/api.php");
-
-      xhr.onload = () => {
-        const text = (xhr.responseText || "").trim();
-        if (xhr.status >= 200 && xhr.status < 300 && text.startsWith("http")) {
-          resolve(text);
-        } else {
-          reject(new Error(text || `Litterbox upload failed (${xhr.status})`));
-        }
-      };
-
-      xhr.onerror = () => reject(new Error("Litterbox network error"));
-
-      const fd = new FormData();
-      fd.append("reqtype", "fileupload");
-      fd.append("time", "72h");
-      fd.append("fileToUpload", fileToUpload, fileToUpload.name || "upload");
-
-      xhr.send(fd);
-    });
-  };
-
   // Triggered on clicking Send inside the Caption E2EE modal
   const confirmMediaUploadAndSend = async () => {
     if (!pendingMediaFile || !activeContact) return;
 
     setMediaUploading(true);
     try {
-      let fileUrl = "";
-      
-      // If file is > 4.5MB, upload directly to Litterbox client-side to bypass Vercel body limits
-      if (pendingMediaFile.size > 4.5 * 1024 * 1024) {
-        try {
-          fileUrl = await uploadDirectLitterboxClient(pendingMediaFile);
-        } catch (litterboxErr: any) {
-          throw new Error(`Large file upload failed: ${litterboxErr.message || litterboxErr}`);
-        }
-      } else {
-        try {
-          const formData = new FormData();
-          formData.append("file", pendingMediaFile);
+      const formData = new FormData();
+      formData.append("file", pendingMediaFile);
 
-          const res = await fetch("/api/public/upload", {
-            method: "POST",
-            body: formData,
-          });
+      // Upload media permanently to Catbox
+      const res = await fetch("/api/public/upload", {
+        method: "POST",
+        body: formData,
+      });
 
-          let data;
-          try {
-            data = await res.json();
-          } catch (e) {
-            if (res.status === 413) {
-              throw new Error("413");
-            }
-            throw new Error(`Upload failed (${res.status}). Server returned non-JSON response.`);
-          }
-          if (!res.ok || !data.success) throw new Error(data.error || "Upload failed");
-          fileUrl = data.url;
-        } catch (err: any) {
-          // If server returned 413, fallback to direct Litterbox upload
-          if (err.message === "413" || err.message.includes("413")) {
-            try {
-              fileUrl = await uploadDirectLitterboxClient(pendingMediaFile);
-            } catch (litterboxErr: any) {
-              throw new Error(`Server rejected file size and Litterbox fallback failed: ${litterboxErr.message || litterboxErr}`);
-            }
-          } else {
-            throw err;
-          }
+      let data;
+      try {
+        data = await res.json();
+      } catch (e) {
+        if (res.status === 413) {
+          throw new Error("Media file is too large. Please select a smaller file.");
         }
+        throw new Error(`Upload failed (${res.status}). Server returned non-JSON response.`);
       }
+      if (!res.ok || !data.success) throw new Error(data.error || "Upload failed");
+
+      const fileUrl = data.url;
 
       const fileType = pendingMediaFile.type;
       const fileName = pendingMediaFile.name;
@@ -1157,51 +1110,26 @@ function E2eeMessengerPage() {
 
     setPostUploading(true);
     try {
-      let fileUrl = "";
+      const formData = new FormData();
+      formData.append("file", file);
 
-      // If file is > 4.5MB, upload directly to Litterbox client-side to bypass Vercel body limits
-      if (file.size > 4.5 * 1024 * 1024) {
-        try {
-          fileUrl = await uploadDirectLitterboxClient(file);
-        } catch (litterboxErr: any) {
-          throw new Error(`Large file upload failed: ${litterboxErr.message || litterboxErr}`);
+      const res = await fetch("/api/public/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      let data;
+      try {
+        data = await res.json();
+      } catch (e) {
+        if (res.status === 413) {
+          throw new Error("Feed media is too large. Please select a smaller file.");
         }
-      } else {
-        try {
-          const formData = new FormData();
-          formData.append("file", file);
-
-          const res = await fetch("/api/public/upload", {
-            method: "POST",
-            body: formData,
-          });
-
-          let data;
-          try {
-            data = await res.json();
-          } catch (e) {
-            if (res.status === 413) {
-              throw new Error("413");
-            }
-            throw new Error(`Upload failed (${res.status}). Server returned non-JSON response.`);
-          }
-          if (!res.ok || !data.success) throw new Error(data.error || "Upload failed");
-          fileUrl = data.url;
-        } catch (err: any) {
-          // If server returned 413, fallback to direct Litterbox upload
-          if (err.message === "413" || err.message.includes("413")) {
-            try {
-              fileUrl = await uploadDirectLitterboxClient(file);
-            } catch (litterboxErr: any) {
-              throw new Error(`Server rejected file size and Litterbox fallback failed: ${litterboxErr.message || litterboxErr}`);
-            }
-          } else {
-            throw err;
-          }
-        }
+        throw new Error(`Upload failed (${res.status}). Server returned non-JSON response.`);
       }
+      if (!res.ok || !data.success) throw new Error(data.error || "Upload failed");
 
-      setNewPostMediaUrl(fileUrl);
+      setNewPostMediaUrl(data.url);
     } catch (err: any) {
       alert(err.message || "Failed to upload feed media.");
     } finally {

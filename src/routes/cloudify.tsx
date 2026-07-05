@@ -188,74 +188,28 @@ function CloudifyMusicPage() {
     }
   };
 
-  // Helper to upload files to Catbox uploader proxy with client-side Litterbox fallback for large files
+  // Helper to upload files to Catbox uploader proxy
   const uploadToCatbox = async (file: File): Promise<string> => {
-    const uploadDirectLitterboxClient = (fileToUpload: File): Promise<string> => {
-      return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", "https://litterbox.catbox.moe/resources/internals/api.php");
+    const formData = new FormData();
+    formData.append("file", file);
 
-        xhr.onload = () => {
-          const text = (xhr.responseText || "").trim();
-          if (xhr.status >= 200 && xhr.status < 300 && text.startsWith("http")) {
-            resolve(text);
-          } else {
-            reject(new Error(text || `Litterbox upload failed (${xhr.status})`));
-          }
-        };
+    const res = await fetch("/api/public/upload", {
+      method: "POST",
+      body: formData,
+    });
 
-        xhr.onerror = () => reject(new Error("Litterbox network error"));
-
-        const fd = new FormData();
-        fd.append("reqtype", "fileupload");
-        fd.append("time", "72h");
-        fd.append("fileToUpload", fileToUpload, fileToUpload.name || "upload");
-
-        xhr.send(fd);
-      });
-    };
-
-    // If file is > 4.5MB, upload directly to Litterbox client-side to bypass Vercel body limits
-    if (file.size > 4.5 * 1024 * 1024) {
-      try {
-        return await uploadDirectLitterboxClient(file);
-      } catch (litterboxErr: any) {
-        throw new Error(`Large file upload failed: ${litterboxErr.message || litterboxErr}`);
-      }
-    }
-
+    let data;
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const res = await fetch("/api/public/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      let data;
-      try {
-        data = await res.json();
-      } catch (e) {
-        if (res.status === 413) {
-          throw new Error("413");
-        }
-        throw new Error(`Upload failed (${res.status}). Server returned non-JSON response.`);
+      data = await res.json();
+    } catch (e) {
+      if (res.status === 413) {
+        throw new Error(`File "${file.name}" is too large. Please select a smaller file.`);
       }
-
-      if (!res.ok || !data.success) throw new Error(data.error || "Upload failed");
-      return data.url;
-    } catch (err: any) {
-      if (err.message === "413" || err.message.includes("413")) {
-        try {
-          return await uploadDirectLitterboxClient(file);
-        } catch (litterboxErr: any) {
-          throw new Error(`Server rejected file size and Litterbox fallback failed: ${litterboxErr.message || litterboxErr}`);
-        }
-      } else {
-        throw err;
-      }
+      throw new Error(`Upload failed (${res.status}). Server returned non-JSON response.`);
     }
+
+    if (!res.ok || !data.success) throw new Error(data.error || "Upload failed");
+    return data.url;
   };
 
   const handleUploadSong = async (e: React.FormEvent) => {

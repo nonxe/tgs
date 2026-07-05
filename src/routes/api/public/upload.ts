@@ -14,21 +14,16 @@ function getOrigin(request: Request) {
   return new URL(request.url).origin;
 }
 
-// Convert File/Blob to standard Blob to ensure correct multipart boundary serialization
+// Forward File directly to upstream provider to avoid loading whole buffers into server memory
 async function uploadToBackend(file: any, retention: string): Promise<string> {
   const filename = file.name || "upload";
-  const fileType = file.type || "application/octet-stream";
-  
-  // Read file data into ArrayBuffer and wrap in a clean Blob
-  const arrayBuffer = await file.arrayBuffer();
-  const blob = new Blob([arrayBuffer], { type: fileType });
 
   // If retention is permanent (or fallback), try Catbox first.
   if (retention !== "72h") {
     try {
       const fd = new FormData();
       fd.append("reqtype", "fileupload");
-      fd.append("fileToUpload", blob, filename);
+      fd.append("fileToUpload", file, filename);
       
       const res = await fetch("https://catbox.moe/user/api.php", {
         method: "POST",
@@ -51,7 +46,7 @@ async function uploadToBackend(file: any, retention: string): Promise<string> {
   const fd = new FormData();
   fd.append("reqtype", "fileupload");
   fd.append("time", "72h");
-  fd.append("fileToUpload", blob, filename);
+  fd.append("fileToUpload", file, filename);
   
   const res = await fetch("https://litterbox.catbox.moe/resources/internals/api.php", {
     method: "POST",

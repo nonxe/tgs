@@ -17,9 +17,9 @@ import { Route as NoteRouteImport } from './routes/note'
 import { Route as MoreRouteImport } from './routes/more'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as MainRouteImport } from './routes/main'
-import { Route as InstagramRouteImport } from './routes/instagram'
 import { Route as DbConsoleRouteImport } from './routes/db-console'
 import { Route as ConvertRouteImport } from './routes/convert'
+import { Route as CloudifyRouteImport } from './routes/cloudify'
 import { Route as FilenameRouteImport } from './routes/$filename'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as NoteIndexRouteImport } from './routes/note.index'
@@ -32,6 +32,7 @@ import { Route as ApiXUserRouteImport } from './routes/api/x/user'
 import { Route as ApiXTweetsRouteImport } from './routes/api/x/tweets'
 import { Route as ApiXDownloadRouteImport } from './routes/api/x/download'
 import { Route as ApiPublicUploadRouteImport } from './routes/api/public/upload'
+import { Route as ApiMessagesUpdateprofileRouteImport } from './routes/api/messages/updateprofile'
 import { Route as ApiMessagesUpdatepfpRouteImport } from './routes/api/messages/updatepfp'
 import { Route as ApiMessagesSendRouteImport } from './routes/api/messages/send'
 import { Route as ApiMessagesRegisterRouteImport } from './routes/api/messages/register'
@@ -39,7 +40,10 @@ import { Route as ApiMessagesPublickeyRouteImport } from './routes/api/messages/
 import { Route as ApiMessagesPostRouteImport } from './routes/api/messages/post'
 import { Route as ApiMessagesListRouteImport } from './routes/api/messages/list'
 import { Route as ApiMessagesFeedRouteImport } from './routes/api/messages/feed'
-import { Route as ApiIgUserRouteImport } from './routes/api/ig/user'
+import { Route as ApiCloudifyUpdateRouteImport } from './routes/api/cloudify/update'
+import { Route as ApiCloudifySongsRouteImport } from './routes/api/cloudify/songs'
+import { Route as ApiCloudifyDeleteRouteImport } from './routes/api/cloudify/delete'
+import { Route as ApiCloudifyCreateRouteImport } from './routes/api/cloudify/create'
 import { Route as ApiMessagesFeedLikeRouteImport } from './routes/api/messages/feed/like'
 import { Route as ApiMessagesFeedCommentRouteImport } from './routes/api/messages/feed/comment'
 
@@ -83,11 +87,6 @@ const MainRoute = MainRouteImport.update({
   path: '/main',
   getParentRoute: () => rootRouteImport,
 } as any)
-const InstagramRoute = InstagramRouteImport.update({
-  id: '/instagram',
-  path: '/instagram',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DbConsoleRoute = DbConsoleRouteImport.update({
   id: '/db-console',
   path: '/db-console',
@@ -96,6 +95,11 @@ const DbConsoleRoute = DbConsoleRouteImport.update({
 const ConvertRoute = ConvertRouteImport.update({
   id: '/convert',
   path: '/convert',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CloudifyRoute = CloudifyRouteImport.update({
+  id: '/cloudify',
+  path: '/cloudify',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FilenameRoute = FilenameRouteImport.update({
@@ -158,6 +162,12 @@ const ApiPublicUploadRoute = ApiPublicUploadRouteImport.update({
   path: '/api/public/upload',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMessagesUpdateprofileRoute =
+  ApiMessagesUpdateprofileRouteImport.update({
+    id: '/api/messages/updateprofile',
+    path: '/api/messages/updateprofile',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiMessagesUpdatepfpRoute = ApiMessagesUpdatepfpRouteImport.update({
   id: '/api/messages/updatepfp',
   path: '/api/messages/updatepfp',
@@ -193,9 +203,24 @@ const ApiMessagesFeedRoute = ApiMessagesFeedRouteImport.update({
   path: '/api/messages/feed',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiIgUserRoute = ApiIgUserRouteImport.update({
-  id: '/api/ig/user',
-  path: '/api/ig/user',
+const ApiCloudifyUpdateRoute = ApiCloudifyUpdateRouteImport.update({
+  id: '/api/cloudify/update',
+  path: '/api/cloudify/update',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCloudifySongsRoute = ApiCloudifySongsRouteImport.update({
+  id: '/api/cloudify/songs',
+  path: '/api/cloudify/songs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCloudifyDeleteRoute = ApiCloudifyDeleteRouteImport.update({
+  id: '/api/cloudify/delete',
+  path: '/api/cloudify/delete',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCloudifyCreateRoute = ApiCloudifyCreateRouteImport.update({
+  id: '/api/cloudify/create',
+  path: '/api/cloudify/create',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiMessagesFeedLikeRoute = ApiMessagesFeedLikeRouteImport.update({
@@ -212,9 +237,9 @@ const ApiMessagesFeedCommentRoute = ApiMessagesFeedCommentRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$filename': typeof FilenameRoute
+  '/cloudify': typeof CloudifyRoute
   '/convert': typeof ConvertRoute
   '/db-console': typeof DbConsoleRoute
-  '/instagram': typeof InstagramRoute
   '/main': typeof MainRoute
   '/messages': typeof MessagesRoute
   '/more': typeof MoreRoute
@@ -229,7 +254,10 @@ export interface FileRoutesByFullPath {
   '/shsdb/$id': typeof ShsdbIdRoute
   '/shsdb/create': typeof ShsdbCreateRoute
   '/note/': typeof NoteIndexRoute
-  '/api/ig/user': typeof ApiIgUserRoute
+  '/api/cloudify/create': typeof ApiCloudifyCreateRoute
+  '/api/cloudify/delete': typeof ApiCloudifyDeleteRoute
+  '/api/cloudify/songs': typeof ApiCloudifySongsRoute
+  '/api/cloudify/update': typeof ApiCloudifyUpdateRoute
   '/api/messages/feed': typeof ApiMessagesFeedRouteWithChildren
   '/api/messages/list': typeof ApiMessagesListRoute
   '/api/messages/post': typeof ApiMessagesPostRoute
@@ -237,6 +265,7 @@ export interface FileRoutesByFullPath {
   '/api/messages/register': typeof ApiMessagesRegisterRoute
   '/api/messages/send': typeof ApiMessagesSendRoute
   '/api/messages/updatepfp': typeof ApiMessagesUpdatepfpRoute
+  '/api/messages/updateprofile': typeof ApiMessagesUpdateprofileRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
   '/api/x/download': typeof ApiXDownloadRoute
   '/api/x/tweets': typeof ApiXTweetsRoute
@@ -247,9 +276,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$filename': typeof FilenameRoute
+  '/cloudify': typeof CloudifyRoute
   '/convert': typeof ConvertRoute
   '/db-console': typeof DbConsoleRoute
-  '/instagram': typeof InstagramRoute
   '/main': typeof MainRoute
   '/messages': typeof MessagesRoute
   '/more': typeof MoreRoute
@@ -263,7 +292,10 @@ export interface FileRoutesByTo {
   '/shsdb/$id': typeof ShsdbIdRoute
   '/shsdb/create': typeof ShsdbCreateRoute
   '/note': typeof NoteIndexRoute
-  '/api/ig/user': typeof ApiIgUserRoute
+  '/api/cloudify/create': typeof ApiCloudifyCreateRoute
+  '/api/cloudify/delete': typeof ApiCloudifyDeleteRoute
+  '/api/cloudify/songs': typeof ApiCloudifySongsRoute
+  '/api/cloudify/update': typeof ApiCloudifyUpdateRoute
   '/api/messages/feed': typeof ApiMessagesFeedRouteWithChildren
   '/api/messages/list': typeof ApiMessagesListRoute
   '/api/messages/post': typeof ApiMessagesPostRoute
@@ -271,6 +303,7 @@ export interface FileRoutesByTo {
   '/api/messages/register': typeof ApiMessagesRegisterRoute
   '/api/messages/send': typeof ApiMessagesSendRoute
   '/api/messages/updatepfp': typeof ApiMessagesUpdatepfpRoute
+  '/api/messages/updateprofile': typeof ApiMessagesUpdateprofileRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
   '/api/x/download': typeof ApiXDownloadRoute
   '/api/x/tweets': typeof ApiXTweetsRoute
@@ -282,9 +315,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$filename': typeof FilenameRoute
+  '/cloudify': typeof CloudifyRoute
   '/convert': typeof ConvertRoute
   '/db-console': typeof DbConsoleRoute
-  '/instagram': typeof InstagramRoute
   '/main': typeof MainRoute
   '/messages': typeof MessagesRoute
   '/more': typeof MoreRoute
@@ -299,7 +332,10 @@ export interface FileRoutesById {
   '/shsdb/$id': typeof ShsdbIdRoute
   '/shsdb/create': typeof ShsdbCreateRoute
   '/note/': typeof NoteIndexRoute
-  '/api/ig/user': typeof ApiIgUserRoute
+  '/api/cloudify/create': typeof ApiCloudifyCreateRoute
+  '/api/cloudify/delete': typeof ApiCloudifyDeleteRoute
+  '/api/cloudify/songs': typeof ApiCloudifySongsRoute
+  '/api/cloudify/update': typeof ApiCloudifyUpdateRoute
   '/api/messages/feed': typeof ApiMessagesFeedRouteWithChildren
   '/api/messages/list': typeof ApiMessagesListRoute
   '/api/messages/post': typeof ApiMessagesPostRoute
@@ -307,6 +343,7 @@ export interface FileRoutesById {
   '/api/messages/register': typeof ApiMessagesRegisterRoute
   '/api/messages/send': typeof ApiMessagesSendRoute
   '/api/messages/updatepfp': typeof ApiMessagesUpdatepfpRoute
+  '/api/messages/updateprofile': typeof ApiMessagesUpdateprofileRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
   '/api/x/download': typeof ApiXDownloadRoute
   '/api/x/tweets': typeof ApiXTweetsRoute
@@ -319,9 +356,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$filename'
+    | '/cloudify'
     | '/convert'
     | '/db-console'
-    | '/instagram'
     | '/main'
     | '/messages'
     | '/more'
@@ -336,7 +373,10 @@ export interface FileRouteTypes {
     | '/shsdb/$id'
     | '/shsdb/create'
     | '/note/'
-    | '/api/ig/user'
+    | '/api/cloudify/create'
+    | '/api/cloudify/delete'
+    | '/api/cloudify/songs'
+    | '/api/cloudify/update'
     | '/api/messages/feed'
     | '/api/messages/list'
     | '/api/messages/post'
@@ -344,6 +384,7 @@ export interface FileRouteTypes {
     | '/api/messages/register'
     | '/api/messages/send'
     | '/api/messages/updatepfp'
+    | '/api/messages/updateprofile'
     | '/api/public/upload'
     | '/api/x/download'
     | '/api/x/tweets'
@@ -354,9 +395,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/$filename'
+    | '/cloudify'
     | '/convert'
     | '/db-console'
-    | '/instagram'
     | '/main'
     | '/messages'
     | '/more'
@@ -370,7 +411,10 @@ export interface FileRouteTypes {
     | '/shsdb/$id'
     | '/shsdb/create'
     | '/note'
-    | '/api/ig/user'
+    | '/api/cloudify/create'
+    | '/api/cloudify/delete'
+    | '/api/cloudify/songs'
+    | '/api/cloudify/update'
     | '/api/messages/feed'
     | '/api/messages/list'
     | '/api/messages/post'
@@ -378,6 +422,7 @@ export interface FileRouteTypes {
     | '/api/messages/register'
     | '/api/messages/send'
     | '/api/messages/updatepfp'
+    | '/api/messages/updateprofile'
     | '/api/public/upload'
     | '/api/x/download'
     | '/api/x/tweets'
@@ -388,9 +433,9 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/$filename'
+    | '/cloudify'
     | '/convert'
     | '/db-console'
-    | '/instagram'
     | '/main'
     | '/messages'
     | '/more'
@@ -405,7 +450,10 @@ export interface FileRouteTypes {
     | '/shsdb/$id'
     | '/shsdb/create'
     | '/note/'
-    | '/api/ig/user'
+    | '/api/cloudify/create'
+    | '/api/cloudify/delete'
+    | '/api/cloudify/songs'
+    | '/api/cloudify/update'
     | '/api/messages/feed'
     | '/api/messages/list'
     | '/api/messages/post'
@@ -413,6 +461,7 @@ export interface FileRouteTypes {
     | '/api/messages/register'
     | '/api/messages/send'
     | '/api/messages/updatepfp'
+    | '/api/messages/updateprofile'
     | '/api/public/upload'
     | '/api/x/download'
     | '/api/x/tweets'
@@ -424,9 +473,9 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   FilenameRoute: typeof FilenameRoute
+  CloudifyRoute: typeof CloudifyRoute
   ConvertRoute: typeof ConvertRoute
   DbConsoleRoute: typeof DbConsoleRoute
-  InstagramRoute: typeof InstagramRoute
   MainRoute: typeof MainRoute
   MessagesRoute: typeof MessagesRoute
   MoreRoute: typeof MoreRoute
@@ -439,7 +488,10 @@ export interface RootRouteChildren {
   DbCreateRoute: typeof DbCreateRoute
   ShsdbIdRoute: typeof ShsdbIdRoute
   ShsdbCreateRoute: typeof ShsdbCreateRoute
-  ApiIgUserRoute: typeof ApiIgUserRoute
+  ApiCloudifyCreateRoute: typeof ApiCloudifyCreateRoute
+  ApiCloudifyDeleteRoute: typeof ApiCloudifyDeleteRoute
+  ApiCloudifySongsRoute: typeof ApiCloudifySongsRoute
+  ApiCloudifyUpdateRoute: typeof ApiCloudifyUpdateRoute
   ApiMessagesFeedRoute: typeof ApiMessagesFeedRouteWithChildren
   ApiMessagesListRoute: typeof ApiMessagesListRoute
   ApiMessagesPostRoute: typeof ApiMessagesPostRoute
@@ -447,6 +499,7 @@ export interface RootRouteChildren {
   ApiMessagesRegisterRoute: typeof ApiMessagesRegisterRoute
   ApiMessagesSendRoute: typeof ApiMessagesSendRoute
   ApiMessagesUpdatepfpRoute: typeof ApiMessagesUpdatepfpRoute
+  ApiMessagesUpdateprofileRoute: typeof ApiMessagesUpdateprofileRoute
   ApiPublicUploadRoute: typeof ApiPublicUploadRoute
   ApiXDownloadRoute: typeof ApiXDownloadRoute
   ApiXTweetsRoute: typeof ApiXTweetsRoute
@@ -511,13 +564,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/instagram': {
-      id: '/instagram'
-      path: '/instagram'
-      fullPath: '/instagram'
-      preLoaderRoute: typeof InstagramRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/db-console': {
       id: '/db-console'
       path: '/db-console'
@@ -530,6 +576,13 @@ declare module '@tanstack/react-router' {
       path: '/convert'
       fullPath: '/convert'
       preLoaderRoute: typeof ConvertRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cloudify': {
+      id: '/cloudify'
+      path: '/cloudify'
+      fullPath: '/cloudify'
+      preLoaderRoute: typeof CloudifyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$filename': {
@@ -616,6 +669,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicUploadRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/messages/updateprofile': {
+      id: '/api/messages/updateprofile'
+      path: '/api/messages/updateprofile'
+      fullPath: '/api/messages/updateprofile'
+      preLoaderRoute: typeof ApiMessagesUpdateprofileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/messages/updatepfp': {
       id: '/api/messages/updatepfp'
       path: '/api/messages/updatepfp'
@@ -665,11 +725,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMessagesFeedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/ig/user': {
-      id: '/api/ig/user'
-      path: '/api/ig/user'
-      fullPath: '/api/ig/user'
-      preLoaderRoute: typeof ApiIgUserRouteImport
+    '/api/cloudify/update': {
+      id: '/api/cloudify/update'
+      path: '/api/cloudify/update'
+      fullPath: '/api/cloudify/update'
+      preLoaderRoute: typeof ApiCloudifyUpdateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cloudify/songs': {
+      id: '/api/cloudify/songs'
+      path: '/api/cloudify/songs'
+      fullPath: '/api/cloudify/songs'
+      preLoaderRoute: typeof ApiCloudifySongsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cloudify/delete': {
+      id: '/api/cloudify/delete'
+      path: '/api/cloudify/delete'
+      fullPath: '/api/cloudify/delete'
+      preLoaderRoute: typeof ApiCloudifyDeleteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cloudify/create': {
+      id: '/api/cloudify/create'
+      path: '/api/cloudify/create'
+      fullPath: '/api/cloudify/create'
+      preLoaderRoute: typeof ApiCloudifyCreateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/messages/feed/like': {
@@ -718,9 +799,9 @@ const ApiMessagesFeedRouteWithChildren = ApiMessagesFeedRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   FilenameRoute: FilenameRoute,
+  CloudifyRoute: CloudifyRoute,
   ConvertRoute: ConvertRoute,
   DbConsoleRoute: DbConsoleRoute,
-  InstagramRoute: InstagramRoute,
   MainRoute: MainRoute,
   MessagesRoute: MessagesRoute,
   MoreRoute: MoreRoute,
@@ -733,7 +814,10 @@ const rootRouteChildren: RootRouteChildren = {
   DbCreateRoute: DbCreateRoute,
   ShsdbIdRoute: ShsdbIdRoute,
   ShsdbCreateRoute: ShsdbCreateRoute,
-  ApiIgUserRoute: ApiIgUserRoute,
+  ApiCloudifyCreateRoute: ApiCloudifyCreateRoute,
+  ApiCloudifyDeleteRoute: ApiCloudifyDeleteRoute,
+  ApiCloudifySongsRoute: ApiCloudifySongsRoute,
+  ApiCloudifyUpdateRoute: ApiCloudifyUpdateRoute,
   ApiMessagesFeedRoute: ApiMessagesFeedRouteWithChildren,
   ApiMessagesListRoute: ApiMessagesListRoute,
   ApiMessagesPostRoute: ApiMessagesPostRoute,
@@ -741,6 +825,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMessagesRegisterRoute: ApiMessagesRegisterRoute,
   ApiMessagesSendRoute: ApiMessagesSendRoute,
   ApiMessagesUpdatepfpRoute: ApiMessagesUpdatepfpRoute,
+  ApiMessagesUpdateprofileRoute: ApiMessagesUpdateprofileRoute,
   ApiPublicUploadRoute: ApiPublicUploadRoute,
   ApiXDownloadRoute: ApiXDownloadRoute,
   ApiXTweetsRoute: ApiXTweetsRoute,
