@@ -14,7 +14,7 @@ import {
   X,
   Crown,
   Globe,
-  Instagram,
+  Music,
   Mail,
   Database,
   MessageSquare
@@ -113,11 +113,11 @@ function DashboardHome() {
       color: "text-sky-400 border-sky-500/20 bg-sky-500/5 hover:border-sky-500/40"
     },
     { 
-      id: "igview", 
-      title: "Instagram Viewer", 
-      desc: "Browse public Instagram profiles, posts, reels, and stories anonymously.", 
-      icon: Instagram, 
-      link: "/instagram",
+      id: "cloudify", 
+      title: "Cloudify Music", 
+      desc: "Premium iOS-themed music player. Stream and search custom songs uploaded by the owner.", 
+      icon: Music, 
+      link: "/cloudify",
       color: "text-pink-400 border-pink-500/20 bg-pink-500/5 hover:border-pink-500/40"
     },
     { 

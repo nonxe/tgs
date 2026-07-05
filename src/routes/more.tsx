@@ -12,7 +12,7 @@ import {
   ChevronRight,
   Info,
   Globe,
-  Instagram,
+  Music,
   Mail,
   Lock
 } from "lucide-react";
@@ -93,7 +93,7 @@ export function MorePage({ embed = false }: { embed?: boolean }) {
             { id: "chat", label: "AI Chatbot", icon: MessageSquare },
             { id: "messages", label: "SHS Chat", icon: Lock },
             { id: "tempmail", label: "Temp Mail", icon: Mail },
-            { id: "igview", label: "IG Viewer", icon: Instagram },
+            { id: "cloudify", label: "Cloudify Music", icon: Music },
             { id: "xview", label: "X Viewer", icon: Globe }
           ].map((tab) => {
             const Icon = tab.icon;
@@ -104,8 +104,8 @@ export function MorePage({ embed = false }: { embed?: boolean }) {
                 onClick={() => {
                   if (tab.id === "xview") {
                     window.open("/x", "_blank");
-                  } else if (tab.id === "igview") {
-                    window.open("/instagram", "_blank");
+                  } else if (tab.id === "cloudify") {
+                    window.open("/cloudify", "_blank");
                   } else if (tab.id === "tempmail") {
                     window.open("/tempmail", "_blank");
                   } else if (tab.id === "messages") {
