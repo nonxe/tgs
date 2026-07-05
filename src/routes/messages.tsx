@@ -489,7 +489,15 @@ function E2eeMessengerPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Authentication failed.");
 
-      const { encryptedPrivateKey, salt, pfpUrl } = data;
+      let { encryptedPrivateKey, salt, pfpUrl } = data;
+
+      if (typeof encryptedPrivateKey === "string") {
+        try {
+          encryptedPrivateKey = JSON.parse(encryptedPrivateKey);
+        } catch (e) {
+          console.error("Failed to parse encryptedPrivateKey:", e);
+        }
+      }
 
       // 2. Derive KDF key from password + salt
       const saltBytes = new Uint8Array(salt.match(/.{1,2}/g).map((byte: string) => parseInt(byte, 16)));
