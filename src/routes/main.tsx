@@ -178,7 +178,12 @@ export function FileCloudPage({ embed = false }: { embed?: boolean }) {
             reject(new Error(json.error || `Upload failed (${xhr.status})`));
           }
         } catch {
-          reject(new Error(`Upload failed (${xhr.status})`));
+          const respText = xhr.responseText || "";
+          if (xhr.status === 413 || respText.includes("Too Large") || respText.includes("Request Entity Too Large")) {
+            reject(new Error("File is too large (max 4.5MB). Please compress or select a smaller file."));
+          } else {
+            reject(new Error(`Upload failed (${xhr.status})`));
+          }
         }
       };
 
