@@ -198,12 +198,11 @@ function CloudifyMusicPage() {
       body: formData,
     });
 
-    const text = await res.text();
     let data;
     try {
-      data = JSON.parse(text);
+      data = await res.json();
     } catch (e) {
-      if (res.status === 413 || text.includes("Too Large") || text.includes("Request Entity Too Large")) {
+      if (res.status === 413) {
         throw new Error(`File "${file.name}" is too large. Please select a smaller file.`);
       }
       throw new Error(`Upload failed (${res.status}). Server returned non-JSON response.`);
