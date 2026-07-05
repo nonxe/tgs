@@ -66,6 +66,10 @@ function CloudifyMusicPage() {
   const [newArtist, setNewArtist] = useState("");
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [coverSource, setCoverSource] = useState<"file" | "url">("file");
+  const [coverUrlInput, setCoverUrlInput] = useState("");
+  const [audioSource, setAudioSource] = useState<"file" | "url">("file");
+  const [audioUrlInput, setAudioUrlInput] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -214,8 +218,27 @@ function CloudifyMusicPage() {
 
   const handleUploadSong = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTitle.trim() || !newArtist.trim() || !coverFile || !audioFile) {
-      setUploadError("Please fill all fields and select files.");
+    
+    if (!newTitle.trim() || !newArtist.trim()) {
+      setUploadError("Please fill Title and Artist name.");
+      return;
+    }
+
+    if (coverSource === "file" && !coverFile) {
+      setUploadError("Please select a Cover Image file.");
+      return;
+    }
+    if (coverSource === "url" && !coverUrlInput.trim()) {
+      setUploadError("Please enter a Cover Image URL.");
+      return;
+    }
+
+    if (audioSource === "file" && !audioFile) {
+      setUploadError("Please select an Audio file.");
+      return;
+    }
+    if (audioSource === "url" && !audioUrlInput.trim()) {
+      setUploadError("Please enter an Audio URL.");
       return;
     }
 
@@ -224,13 +247,23 @@ function CloudifyMusicPage() {
     setUploadProgress(10); // Start indicator
 
     try {
-      // 1. Upload Cover Image to Catbox
-      setUploadProgress(30);
-      const coverUrl = await uploadToCatbox(coverFile);
+      // 1. Resolve Cover Image URL
+      let coverUrl = "";
+      if (coverSource === "file") {
+        setUploadProgress(30);
+        coverUrl = await uploadToCatbox(coverFile!);
+      } else {
+        coverUrl = coverUrlInput.trim();
+      }
 
-      // 2. Upload Audio file to Catbox
-      setUploadProgress(60);
-      const audioUrl = await uploadToCatbox(audioFile);
+      // 2. Resolve Audio file URL
+      let audioUrl = "";
+      if (audioSource === "file") {
+        setUploadProgress(60);
+        audioUrl = await uploadToCatbox(audioFile!);
+      } else {
+        audioUrl = audioUrlInput.trim();
+      }
 
       setUploadProgress(85);
 
@@ -255,6 +288,10 @@ function CloudifyMusicPage() {
       setNewArtist("");
       setCoverFile(null);
       setAudioFile(null);
+      setCoverUrlInput("");
+      setAudioUrlInput("");
+      setCoverSource("file");
+      setAudioSource("file");
       fetchSongs();
       alert("Song uploaded successfully!");
       setShowAdminPanel(false);
@@ -749,35 +786,101 @@ function CloudifyMusicPage() {
                 />
               </div>
 
-              {/* Cover File Select */}
-              <div className="space-y-1 select-none">
+              {/* Cover Source Selector */}
+              <div className="space-y-1">
                 <label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider block">Album Cover (Image)</label>
-                <div className="flex gap-2">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    required
-                    onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
-                    className="flex-1 text-[11px] text-zinc-500 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-zinc-900 file:text-white hover:file:bg-zinc-800 cursor-pointer"
-                  />
-                  {coverFile && <CheckCircle className="size-4.5 text-emerald-500 self-center" />}
+                <div className="grid grid-cols-2 bg-zinc-900/60 p-0.5 rounded-lg border border-zinc-800/40 select-none">
+                  <button
+                    type="button"
+                    onClick={() => setCoverSource("file")}
+                    className={`py-1 rounded-md text-[10px] font-black uppercase transition-all ${coverSource === "file" ? "bg-pink-600 text-white shadow-sm" : "text-zinc-400 hover:text-white"}`}
+                  >
+                    Upload File
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCoverSource("url")}
+                    className={`py-1 rounded-md text-[10px] font-black uppercase transition-all ${coverSource === "url" ? "bg-pink-600 text-white shadow-sm" : "text-zinc-400 hover:text-white"}`}
+                  >
+                    Paste URL
+                  </button>
                 </div>
               </div>
 
-              {/* Audio File Select */}
-              <div className="space-y-1 select-none">
-                <label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider block">Song Track (Audio)</label>
-                <div className="flex gap-2">
+              {/* Cover File or URL Select */}
+              {coverSource === "file" ? (
+                <div className="space-y-1 select-none">
+                  <div className="flex gap-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      required
+                      onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
+                      className="flex-1 text-[11px] text-zinc-500 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-zinc-900 file:text-white hover:file:bg-zinc-800 cursor-pointer"
+                    />
+                    {coverFile && <CheckCircle className="size-4.5 text-emerald-500 self-center" />}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-1">
                   <input
-                    type="file"
-                    accept="audio/*"
+                    type="url"
+                    placeholder="https://example.com/cover.jpg"
                     required
-                    onChange={(e) => setAudioFile(e.target.files?.[0] || null)}
-                    className="flex-1 text-[11px] text-zinc-500 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-zinc-900 file:text-white hover:file:bg-zinc-800 cursor-pointer"
+                    value={coverUrlInput}
+                    onChange={(e) => setCoverUrlInput(e.target.value)}
+                    className="w-full h-9 bg-zinc-900 border border-zinc-800/60 rounded-xl px-3 text-[12.5px] font-bold text-white outline-none focus:border-pink-500/30"
                   />
-                  {audioFile && <CheckCircle className="size-4.5 text-emerald-500 self-center" />}
+                </div>
+              )}
+
+              {/* Audio Source Selector */}
+              <div className="space-y-1">
+                <label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider block">Song Track (Audio)</label>
+                <div className="grid grid-cols-2 bg-zinc-900/60 p-0.5 rounded-lg border border-zinc-800/40 select-none">
+                  <button
+                    type="button"
+                    onClick={() => setAudioSource("file")}
+                    className={`py-1 rounded-md text-[10px] font-black uppercase transition-all ${audioSource === "file" ? "bg-pink-600 text-white shadow-sm" : "text-zinc-400 hover:text-white"}`}
+                  >
+                    Upload File
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAudioSource("url")}
+                    className={`py-1 rounded-md text-[10px] font-black uppercase transition-all ${audioSource === "url" ? "bg-pink-600 text-white shadow-sm" : "text-zinc-400 hover:text-white"}`}
+                  >
+                    Paste URL
+                  </button>
                 </div>
               </div>
+
+              {/* Audio File or URL Select */}
+              {audioSource === "file" ? (
+                <div className="space-y-1 select-none">
+                  <div className="flex gap-2">
+                    <input
+                      type="file"
+                      accept="audio/*"
+                      required
+                      onChange={(e) => setAudioFile(e.target.files?.[0] || null)}
+                      className="flex-1 text-[11px] text-zinc-500 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-zinc-900 file:text-white hover:file:bg-zinc-800 cursor-pointer"
+                    />
+                    {audioFile && <CheckCircle className="size-4.5 text-emerald-500 self-center" />}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  <input
+                    type="url"
+                    placeholder="https://example.com/song.mp3"
+                    required
+                    value={audioUrlInput}
+                    onChange={(e) => setAudioUrlInput(e.target.value)}
+                    className="w-full h-9 bg-zinc-900 border border-zinc-800/60 rounded-xl px-3 text-[12.5px] font-bold text-white outline-none focus:border-pink-500/30"
+                  />
+                </div>
+              )}
 
               {uploading && (
                 <div className="space-y-1 select-none pt-1">
