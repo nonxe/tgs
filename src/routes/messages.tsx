@@ -906,7 +906,7 @@ function E2eeMessengerPage() {
       alert(data.message);
       if (action === "delete") {
         setContacts(prev => prev.filter(c => c !== targetUser));
-        setActiveContact(null);
+        setActiveContact("");
         setShowInfoDrawer(false);
       } else {
         // Refresh contact metadata
@@ -2378,7 +2378,7 @@ function E2eeMessengerPage() {
                       <img src={pfpsCache[activeContact]} className="size-10 rounded-full object-cover shadow-sm flex-shrink-0 mr-3 hover:opacity-90 animate-fade-in" />
                     ) : (
                       <div className={`size-10 rounded-full bg-gradient-to-tr ${getAvatarGradient(activeContact)} text-white flex items-center justify-center font-black text-[14px] shadow-sm flex-shrink-0 mr-3 hover:opacity-90`}>
-                        {activeContact.charAt(0).toUpperCase()}
+                        {activeContact ? activeContact.charAt(0).toUpperCase() : ""}
                       </div>
                     )}
                     
@@ -2623,7 +2623,7 @@ function E2eeMessengerPage() {
                               <img src={pfpsCache[activeContact]} className="size-24 rounded-full object-cover border-2 border-emerald-500/20 shadow-lg mx-auto" />
                             ) : (
                               <div className={`size-24 rounded-full bg-gradient-to-tr ${getAvatarGradient(activeContact)} text-white flex items-center justify-center font-black text-[32px] shadow-lg mx-auto`}>
-                                {activeContact.charAt(0).toUpperCase()}
+                                {activeContact ? activeContact.charAt(0).toUpperCase() : ""}
                               </div>
                             )}
                             <div>
