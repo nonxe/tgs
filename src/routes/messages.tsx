@@ -2000,8 +2000,8 @@ function E2eeMessengerPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-center">
                       <span className="text-[12.5px] font-black text-foreground dark:text-gray-200 flex items-center">
-                        {isMaiko ? "Maiko AI" : c === "as" ? "AS" : c}
-                        {(isMaiko || c === "as") && <VerifiedTick />}
+                        Maiko AI
+                        <VerifiedTick />
                       </span>
                       {maikoMessages.length > 0 && (
                         <span className="text-[9px] text-muted-foreground/60 select-none">
