@@ -30,6 +30,13 @@ async function handleSendMessage(request: Request) {
       });
     }
 
+    if (senderUser.banned) {
+      return new Response(JSON.stringify({ success: false, error: "Your account is banned." }), {
+        status: 403,
+        headers: CORS_HEADERS,
+      });
+    }
+
     // Verify recipient exists
     const recipientUser = await db.collection("e2ee_users").findOne({ username: recipient.toLowerCase() });
     if (!recipientUser) {

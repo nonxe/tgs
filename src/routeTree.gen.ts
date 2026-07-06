@@ -40,6 +40,7 @@ import { Route as ApiMessagesPublickeyRouteImport } from './routes/api/messages/
 import { Route as ApiMessagesPostRouteImport } from './routes/api/messages/post'
 import { Route as ApiMessagesListRouteImport } from './routes/api/messages/list'
 import { Route as ApiMessagesFeedRouteImport } from './routes/api/messages/feed'
+import { Route as ApiMessagesActionRouteImport } from './routes/api/messages/action'
 import { Route as ApiCloudifyUpdateRouteImport } from './routes/api/cloudify/update'
 import { Route as ApiCloudifySongsRouteImport } from './routes/api/cloudify/songs'
 import { Route as ApiCloudifyDeleteRouteImport } from './routes/api/cloudify/delete'
@@ -203,6 +204,11 @@ const ApiMessagesFeedRoute = ApiMessagesFeedRouteImport.update({
   path: '/api/messages/feed',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMessagesActionRoute = ApiMessagesActionRouteImport.update({
+  id: '/api/messages/action',
+  path: '/api/messages/action',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCloudifyUpdateRoute = ApiCloudifyUpdateRouteImport.update({
   id: '/api/cloudify/update',
   path: '/api/cloudify/update',
@@ -258,6 +264,7 @@ export interface FileRoutesByFullPath {
   '/api/cloudify/delete': typeof ApiCloudifyDeleteRoute
   '/api/cloudify/songs': typeof ApiCloudifySongsRoute
   '/api/cloudify/update': typeof ApiCloudifyUpdateRoute
+  '/api/messages/action': typeof ApiMessagesActionRoute
   '/api/messages/feed': typeof ApiMessagesFeedRouteWithChildren
   '/api/messages/list': typeof ApiMessagesListRoute
   '/api/messages/post': typeof ApiMessagesPostRoute
@@ -296,6 +303,7 @@ export interface FileRoutesByTo {
   '/api/cloudify/delete': typeof ApiCloudifyDeleteRoute
   '/api/cloudify/songs': typeof ApiCloudifySongsRoute
   '/api/cloudify/update': typeof ApiCloudifyUpdateRoute
+  '/api/messages/action': typeof ApiMessagesActionRoute
   '/api/messages/feed': typeof ApiMessagesFeedRouteWithChildren
   '/api/messages/list': typeof ApiMessagesListRoute
   '/api/messages/post': typeof ApiMessagesPostRoute
@@ -336,6 +344,7 @@ export interface FileRoutesById {
   '/api/cloudify/delete': typeof ApiCloudifyDeleteRoute
   '/api/cloudify/songs': typeof ApiCloudifySongsRoute
   '/api/cloudify/update': typeof ApiCloudifyUpdateRoute
+  '/api/messages/action': typeof ApiMessagesActionRoute
   '/api/messages/feed': typeof ApiMessagesFeedRouteWithChildren
   '/api/messages/list': typeof ApiMessagesListRoute
   '/api/messages/post': typeof ApiMessagesPostRoute
@@ -377,6 +386,7 @@ export interface FileRouteTypes {
     | '/api/cloudify/delete'
     | '/api/cloudify/songs'
     | '/api/cloudify/update'
+    | '/api/messages/action'
     | '/api/messages/feed'
     | '/api/messages/list'
     | '/api/messages/post'
@@ -415,6 +425,7 @@ export interface FileRouteTypes {
     | '/api/cloudify/delete'
     | '/api/cloudify/songs'
     | '/api/cloudify/update'
+    | '/api/messages/action'
     | '/api/messages/feed'
     | '/api/messages/list'
     | '/api/messages/post'
@@ -454,6 +465,7 @@ export interface FileRouteTypes {
     | '/api/cloudify/delete'
     | '/api/cloudify/songs'
     | '/api/cloudify/update'
+    | '/api/messages/action'
     | '/api/messages/feed'
     | '/api/messages/list'
     | '/api/messages/post'
@@ -492,6 +504,7 @@ export interface RootRouteChildren {
   ApiCloudifyDeleteRoute: typeof ApiCloudifyDeleteRoute
   ApiCloudifySongsRoute: typeof ApiCloudifySongsRoute
   ApiCloudifyUpdateRoute: typeof ApiCloudifyUpdateRoute
+  ApiMessagesActionRoute: typeof ApiMessagesActionRoute
   ApiMessagesFeedRoute: typeof ApiMessagesFeedRouteWithChildren
   ApiMessagesListRoute: typeof ApiMessagesListRoute
   ApiMessagesPostRoute: typeof ApiMessagesPostRoute
@@ -725,6 +738,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMessagesFeedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/messages/action': {
+      id: '/api/messages/action'
+      path: '/api/messages/action'
+      fullPath: '/api/messages/action'
+      preLoaderRoute: typeof ApiMessagesActionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/cloudify/update': {
       id: '/api/cloudify/update'
       path: '/api/cloudify/update'
@@ -818,6 +838,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCloudifyDeleteRoute: ApiCloudifyDeleteRoute,
   ApiCloudifySongsRoute: ApiCloudifySongsRoute,
   ApiCloudifyUpdateRoute: ApiCloudifyUpdateRoute,
+  ApiMessagesActionRoute: ApiMessagesActionRoute,
   ApiMessagesFeedRoute: ApiMessagesFeedRouteWithChildren,
   ApiMessagesListRoute: ApiMessagesListRoute,
   ApiMessagesPostRoute: ApiMessagesPostRoute,

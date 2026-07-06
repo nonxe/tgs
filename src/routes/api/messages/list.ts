@@ -32,6 +32,13 @@ async function handleListMessages(request: Request) {
       });
     }
 
+    if (user.banned) {
+      return new Response(JSON.stringify({ success: false, error: "Your account has been banned by owner." }), {
+        status: 403,
+        headers: CORS_HEADERS,
+      });
+    }
+
     // Fetch messages where user is sender or recipient
     const messages = await db
       .collection("e2ee_messages")

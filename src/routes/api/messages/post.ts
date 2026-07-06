@@ -35,6 +35,13 @@ async function handleCreatePost(request: Request) {
       });
     }
 
+    if (dbUser.banned) {
+      return new Response(JSON.stringify({ success: false, error: "Your account is banned." }), {
+        status: 403,
+        headers: CORS_HEADERS,
+      });
+    }
+
     // Insert post
     await db.collection("e2ee_feeds").insertOne({
       username: cleanUser,

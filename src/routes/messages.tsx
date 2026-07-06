@@ -180,6 +180,7 @@ function E2eeMessengerPage() {
   // Cached profile details for peer contacts
   const [dobsCache, setDobsCache] = useState<Record<string, string>>({});
   const [religionsCache, setReligionsCache] = useState<Record<string, string>>({});
+  const [bannedCache, setBannedCache] = useState<Record<string, boolean>>({});
 
   // Swipeable Religion Alert Pop-up states
   const [showReligionNote, setShowReligionNote] = useState<boolean>(false);
@@ -190,6 +191,7 @@ function E2eeMessengerPage() {
 
   // Maiko AI Chat History State
   const [maikoMessages, setMaikoMessages] = useState<MaikoMessage[]>([]);
+  const [actionLoading, setActionLoading] = useState<boolean>(false);
   
   // Refs
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -708,6 +710,7 @@ function E2eeMessengerPage() {
       if (data.religion) {
         setReligionsCache(prev => ({ ...prev, [peerUsername]: data.religion }));
       }
+      setBannedCache(prev => ({ ...prev, [peerUsername]: !!data.banned }));
 
       return pubKey;
     } catch (err) {
@@ -879,48 +882,40 @@ function E2eeMessengerPage() {
     }
   };
 
-  // --- MAIKO AI CHAT HANDLER ---
 
-  const handleSendMaikoMessage = async (text: string) => {
-    if (!text.trim()) return;
+  // --- OWNER ACTION HANDLERS ---
+  const handleOwnerAction = async (action: "ban" | "unban" | "delete", targetUser: string) => {
+    if (targetUser === "as" || targetUser === "Maiko AI") return;
+    if (!confirm(`Are you sure you want to perform [${action.toUpperCase()}] on @${targetUser}?`)) return;
 
-    // 1. Add user message to local timeline
-    const userMsg: MaikoMessage = {
-      id: `user-${Date.now()}`,
-      sender: "user",
-      plaintext: text.trim(),
-      timestamp: new Date().toISOString()
-    };
-    
-    setMaikoMessages(prev => [...prev, userMsg]);
-    setMessageInput("");
-    setSendLoading(true);
-
+    setActionLoading(true);
     try {
-      // 2. Query Maiko AI endpoint
-      const res = await fetch(`https://tdoqjbentujzffjzxndo.supabase.co/functions/v1/ai?prompt=${encodeURIComponent(text.trim())}`);
-      if (!res.ok) throw new Error("AI Service temporarily unavailable.");
-      
+      const res = await fetch("/api/messages/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action,
+          targetUsername: targetUser,
+          authHash: myAuthHash
+        })
+      });
+
       const data = await res.json();
-      
-      const aiMsg: MaikoMessage = {
-        id: `maiko-${Date.now()}`,
-        sender: "maiko",
-        plaintext: data.reply || "No response received.",
-        timestamp: new Date().toISOString()
-      };
-      
-      setMaikoMessages(prev => [...prev, aiMsg]);
+      if (!res.ok || !data.success) throw new Error(data.error || "Action execution failed.");
+
+      alert(data.message);
+      if (action === "delete") {
+        setContacts(prev => prev.filter(c => c !== targetUser));
+        setActiveContact(null);
+        setShowInfoDrawer(false);
+      } else {
+        // Refresh contact metadata
+        handleContactSelect(targetUser);
+      }
     } catch (err: any) {
-      const errorMsg: MaikoMessage = {
-        id: `maiko-err-${Date.now()}`,
-        sender: "maiko",
-        plaintext: `⚠️ Maiko AI: ${err.message || "Failed to contact AI service."}`,
-        timestamp: new Date().toISOString()
-      };
-      setMaikoMessages(prev => [...prev, errorMsg]);
+      alert(err.message || "Failed to execute owner action.");
     } finally {
-      setSendLoading(false);
+      setActionLoading(false);
     }
   };
 
@@ -2005,8 +2000,8 @@ function E2eeMessengerPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-center">
                       <span className="text-[12.5px] font-black text-foreground dark:text-gray-200 flex items-center">
-                        Maiko AI
-                        <VerifiedTick />
+                        {isMaiko ? "Maiko AI" : c === "as" ? "AS" : c}
+                        {(isMaiko || c === "as") && <VerifiedTick />}
                       </span>
                       {maikoMessages.length > 0 && (
                         <span className="text-[9px] text-muted-foreground/60 select-none">
@@ -2067,8 +2062,9 @@ function E2eeMessengerPage() {
 
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-center">
-                          <span className="text-[12.5px] font-black truncate text-foreground dark:text-gray-200">
-                            {c}
+                          <span className="text-[12.5px] font-black truncate text-foreground dark:text-gray-200 flex items-center">
+                            {c === "as" ? "AS" : c}
+                            {c === "as" && <VerifiedTick />}
                           </span>
                           {lastMsg && (
                             <span className="text-[9px] text-muted-foreground/60 select-none">
@@ -2136,7 +2132,10 @@ function E2eeMessengerPage() {
                     )}
                   </div>
                   <div>
-                    <h4 className="text-[15px] font-black text-foreground leading-tight">{loggedInUser}</h4>
+                    <h4 className="text-[15px] font-black text-foreground leading-tight flex items-center justify-center">
+                      {loggedInUser === "as" ? "AS" : loggedInUser}
+                      {loggedInUser === "as" && <VerifiedTick />}
+                    </h4>
                     <p className="text-[10px] text-muted-foreground mt-0.5 select-none">Click photo to update avatar</p>
                   </div>
                 </div>
@@ -2385,14 +2384,19 @@ function E2eeMessengerPage() {
                     
                     <div className="truncate">
                       <h3 className="text-[13.5px] font-black leading-tight text-foreground dark:text-gray-100 truncate flex items-center gap-1">
-                        {isMaiko ? "Maiko AI" : activeContact}
-                        {isMaiko ? <VerifiedTick /> : <Info className="size-3.5 text-muted-foreground opacity-60" />}
+                        {isMaiko ? "Maiko AI" : activeContact === "as" ? "AS" : activeContact}
+                        {isMaiko || activeContact === "as" ? <VerifiedTick /> : <Info className="size-3.5 text-muted-foreground opacity-60" />}
                       </h3>
                       <div className="flex items-center gap-1 text-[9px] font-bold text-emerald-500 tracking-wide uppercase mt-1">
                         {isMaiko ? (
                           <>
                             <span className="size-1.5 rounded-full bg-cyan-500 inline-block animate-pulse" />
                             <span className="text-cyan-500">Verified AI Assistant</span>
+                          </>
+                        ) : activeContact === "as" ? (
+                          <>
+                            <span className="size-1.5 rounded-full bg-cyan-500 inline-block animate-pulse" />
+                            <span className="text-cyan-500">Owner / Administrator</span>
                           </>
                         ) : (
                           <>
@@ -2623,8 +2627,13 @@ function E2eeMessengerPage() {
                               </div>
                             )}
                             <div>
-                              <h4 className="text-[16px] font-black text-foreground leading-tight">{activeContact}</h4>
-                              <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-wider mt-1">E2EE Verified Node</p>
+                              <h4 className="text-[16px] font-black text-foreground leading-tight flex items-center justify-center">
+                                {activeContact === "as" ? "AS" : activeContact}
+                                {activeContact === "as" && <VerifiedTick />}
+                              </h4>
+                              <p className={`text-[10px] font-bold uppercase tracking-wider mt-1 ${bannedCache[activeContact] ? "text-rose-500" : "text-emerald-500"}`}>
+                                {bannedCache[activeContact] ? "⚠️ Account Banned" : activeContact === "as" ? "Owner / Administrator" : "E2EE Verified Node"}
+                              </p>
                             </div>
                           </div>
 
@@ -2721,6 +2730,58 @@ function E2eeMessengerPage() {
                               </div>
                             )}
                           </div>
+
+                          {/* Owner Administration controls (Banning/Deleting Users) */}
+                          {loggedInUser === "as" && activeContact !== "as" && (
+                            <>
+                              <hr className="border-border/10 dark:border-[#101921]" />
+                              
+                              <div className="space-y-3">
+                                <h5 className="text-[11px] font-black text-rose-500 uppercase tracking-wider flex items-center gap-1 select-none">
+                                  🛡️ Owner Administration
+                                </h5>
+
+                                <div className="space-y-2.5">
+                                  {bannedCache[activeContact] ? (
+                                    <button
+                                      onClick={() => {
+                                        handleOwnerAction("unban", activeContact).then(() => {
+                                          setBannedCache(prev => ({ ...prev, [activeContact]: false }));
+                                        });
+                                      }}
+                                      disabled={actionLoading}
+                                      className="w-full h-9 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white text-[11px] font-black flex items-center justify-center gap-1.5 transition-all select-none shadow-sm"
+                                    >
+                                      {actionLoading ? <Loader2 className="size-4 animate-spin" /> : <ShieldCheck className="size-4" />}
+                                      Unban Account
+                                    </button>
+                                  ) : (
+                                    <button
+                                      onClick={() => {
+                                        handleOwnerAction("ban", activeContact).then(() => {
+                                          setBannedCache(prev => ({ ...prev, [activeContact]: true }));
+                                        });
+                                      }}
+                                      disabled={actionLoading}
+                                      className="w-full h-9 rounded-lg bg-amber-600 hover:bg-amber-500 disabled:opacity-40 text-white text-[11px] font-black flex items-center justify-center gap-1.5 transition-all select-none shadow-sm"
+                                    >
+                                      {actionLoading ? <Loader2 className="size-4 animate-spin" /> : <AlertCircle className="size-4" />}
+                                      Ban User Account
+                                    </button>
+                                  )}
+
+                                  <button
+                                    onClick={() => handleOwnerAction("delete", activeContact)}
+                                    disabled={actionLoading}
+                                    className="w-full h-9 rounded-lg bg-rose-600 hover:bg-rose-500 disabled:opacity-40 text-white text-[11px] font-black flex items-center justify-center gap-1.5 transition-all select-none shadow-sm"
+                                  >
+                                    {actionLoading ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+                                    Delete User Profile & Chats
+                                  </button>
+                                </div>
+                              </div>
+                            </>
+                          )}
                         </div>
                       )}
 
