@@ -882,6 +882,51 @@ function E2eeMessengerPage() {
     }
   };
 
+  // --- MAIKO AI CHAT HANDLER ---
+
+  const handleSendMaikoMessage = async (text: string) => {
+    if (!text.trim()) return;
+
+    // 1. Add user message to local timeline
+    const userMsg: MaikoMessage = {
+      id: `user-${Date.now()}`,
+      sender: "user",
+      plaintext: text.trim(),
+      timestamp: new Date().toISOString()
+    };
+    
+    setMaikoMessages(prev => [...prev, userMsg]);
+    setMessageInput("");
+    setSendLoading(true);
+
+    try {
+      // 2. Query Maiko AI endpoint
+      const res = await fetch(`https://tdoqjbentujzffjzxndo.supabase.co/functions/v1/ai?prompt=${encodeURIComponent(text.trim())}`);
+      if (!res.ok) throw new Error("AI Service temporarily unavailable.");
+      
+      const data = await res.json();
+      
+      const aiMsg: MaikoMessage = {
+        id: `maiko-${Date.now()}`,
+        sender: "maiko",
+        plaintext: data.reply || "No response received.",
+        timestamp: new Date().toISOString()
+      };
+      
+      setMaikoMessages(prev => [...prev, aiMsg]);
+    } catch (err: any) {
+      const errorMsg: MaikoMessage = {
+        id: `maiko-err-${Date.now()}`,
+        sender: "maiko",
+        plaintext: `⚠️ Maiko AI: ${err.message || "Failed to contact AI service."}`,
+        timestamp: new Date().toISOString()
+      };
+      setMaikoMessages(prev => [...prev, errorMsg]);
+    } finally {
+      setSendLoading(false);
+    }
+  };
+
 
   // --- OWNER ACTION HANDLERS ---
   const handleOwnerAction = async (action: "ban" | "unban" | "delete", targetUser: string) => {
