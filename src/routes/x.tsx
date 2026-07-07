@@ -83,7 +83,7 @@ function XViewerPage() {
           <div className="space-y-2">
             <h2 className="text-[20px] font-black tracking-tight uppercase">Service Under Maintenance</h2>
             <p className="text-[12.5px] text-muted-foreground leading-normal max-w-xs mx-auto font-bold">
-              Bhai, X (Twitter) service temporary down hai standard API maintenance ki wajah se. Jald hi wapas chalu ho jayegi!
+              The X (Twitter) utility is temporarily offline due to API updates and standard system maintenance. We will be back online shortly.
             </p>
           </div>
 
