@@ -1,103 +1,33 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
-  Search,
   Sun,
   Moon,
   ArrowLeft,
-  Loader2,
-  Users,
-  Download,
-  Video,
-  AlertCircle,
-  MapPin,
-  Twitter,
-  Calendar,
-  ShieldCheck,
-  Zap
+  AlertCircle
 } from "lucide-react";
 
 export const Route = createFileRoute("/x")({
   head: () => ({
     meta: [
-      { title: "X Space — Anonymous X/Twitter Utilities" },
+      { title: "X Space — Service Under Maintenance" },
       {
         name: "description",
-        content:
-          "Browse public X/Twitter profiles and download videos anonymously. Fully secure, no login required.",
+        content: "X Space service is temporarily under maintenance. Please check back later.",
       },
     ],
   }),
   component: XViewerPage,
 });
 
-interface XUserProfile {
-  name: string;
-  screen_name: string;
-  avatar_url: string;
-  description: string;
-  followers: number;
-  following: number;
-  tweets: number;
-  location: string;
-}
-
-interface XVideo {
-  url: string;
-  thumbnail_url: string;
-  width: number;
-  height: number;
-  duration: number;
-}
-
-interface XDownloadResult {
-  text: string;
-  author: {
-    name: string;
-    screen_name: string;
-    avatar_url: string;
-  };
-  videos: XVideo[];
-}
-
 function XViewerPage() {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
-  const [activeTab, setActiveTab] = useState<"profile" | "downloader">("profile");
-
-  // Search queries
-  const [userQuery, setUserQuery] = useState("");
-
-  // Native Profile stats state
-  const [profileLoading, setProfileLoading] = useState(false);
-  const [profileError, setProfileError] = useState<string | null>(null);
-  const [profileData, setProfileData] = useState<XUserProfile | null>(null);
-
-  // Tweets Timeline states
-  const [iframeSrc, setIframeSrc] = useState("");
-  const [iframeLoading, setIframeLoading] = useState(false);
-  const [viewMode, setViewMode] = useState<"home" | "browsing">("home");
-
-  // Native Video Downloader states
-  const [downloadQuery, setDownloadQuery] = useState("");
-  const [downloadLoading, setDownloadLoading] = useState(false);
-  const [downloadError, setDownloadError] = useState<string | null>(null);
-  const [downloadResult, setDownloadResult] = useState<XDownloadResult | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem("theme") as "light" | "dark" | null;
     const t = saved || "dark";
     setTheme(t);
     document.documentElement.classList.toggle("dark", t === "dark");
-
-    // Support query param direct load e.g., /x?user=elonmusk
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const userParam = params.get("user");
-      if (userParam) {
-        setUserQuery(userParam);
-        loadXProfile(userParam);
-      }
-    }
   }, []);
 
   const toggleTheme = () => {
@@ -105,79 +35,6 @@ function XViewerPage() {
     setTheme(next);
     localStorage.setItem("theme", next);
     document.documentElement.classList.toggle("dark", next === "dark");
-  };
-
-  const loadXProfile = async (username: string) => {
-    const clean = username.trim().replace(/^@/, "").replace(/https?:\/\/(x|twitter)\.com\//i, "").split("/")[0].split("?")[0];
-    if (!clean) return;
-
-    setProfileLoading(true);
-    setIframeLoading(true);
-    setProfileError(null);
-    setProfileData(null);
-    setViewMode("browsing");
-
-    // 1. Fetch user metadata from our backend API
-    try {
-      const res = await fetch(`/api/x/user?username=${encodeURIComponent(clean)}`);
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setProfileData(data.user);
-      } else {
-        setProfileError(data.error || "User profile not found. Make sure the username is correct.");
-      }
-    } catch {
-      setProfileError("Failed to fetch profile metadata.");
-    } finally {
-      setProfileLoading(false);
-    }
-
-    // 2. Load direct stream viewer with top header cropping and bottom footer shielding
-    // This loads infinite pages reliably without rate limits or bot blocks!
-    setIframeSrc(`https://twitterwebviewer.com/?user=${encodeURIComponent(clean)}`);
-  };
-
-  const handleUserSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    loadXProfile(userQuery);
-  };
-
-  const handleDownloadSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleanUrl = downloadQuery.trim();
-    if (!cleanUrl) return;
-
-    setDownloadLoading(true);
-    setDownloadError(null);
-    setDownloadResult(null);
-
-    try {
-      const res = await fetch(`/api/x/download?url=${encodeURIComponent(cleanUrl)}`);
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        setDownloadResult(data);
-      } else {
-        setDownloadError(data.error || "Failed to process video link. Make sure the tweet contains a video.");
-      }
-    } catch {
-      setDownloadError("Connection to video processor failed.");
-    } finally {
-      setDownloadLoading(false);
-    }
-  };
-
-  const goHome = () => {
-    setViewMode("home");
-    setIframeSrc("");
-    setProfileData(null);
-    setUserQuery("");
-  };
-
-  const formatNumber = (num: number) => {
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + "M";
-    if (num >= 1000) return (num / 1000).toFixed(1) + "K";
-    return num.toString();
   };
 
   return (
@@ -206,43 +63,7 @@ function XViewerPage() {
           </div>
         </div>
 
-        {/* Tab switcher inside header when browsing */}
-        {viewMode === "browsing" && (
-          <div className="flex bg-secondary/50 p-0.5 rounded-[12px] border border-border/20 select-none text-[12px] font-bold">
-            <button
-              onClick={() => {
-                setActiveTab("profile");
-                if (userQuery) loadXProfile(userQuery);
-              }}
-              className={`px-3 py-1.5 rounded-[10px] transition-all ${
-                activeTab === "profile" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
-              }`}
-            >
-              Profile
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab("downloader");
-                setViewMode("home");
-              }}
-              className={`px-3 py-1.5 rounded-[10px] transition-all ${
-                activeTab === "downloader" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
-              }`}
-            >
-              Downloader
-            </button>
-          </div>
-        )}
-
         <div className="flex items-center gap-2">
-          {viewMode === "browsing" && activeTab === "profile" && (
-            <button
-              onClick={goHome}
-              className="h-9 px-4 rounded-full border border-border hover:bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-all active:scale-95 text-[12px] font-bold"
-            >
-              Back
-            </button>
-          )}
           <button
             onClick={toggleTheme}
             className="size-9 rounded-full border border-border flex items-center justify-center hover:bg-secondary transition-all active:scale-90"
@@ -252,319 +73,30 @@ function XViewerPage() {
         </div>
       </header>
 
-      {/* ── Content Workspace ── */}
-      <div className="flex-1 flex flex-col min-h-0 bg-secondary/5 relative">
-        {viewMode === "home" ? (
-          /* ===== HOME PORTAL VIEW ===== */
-          <div className="max-w-2xl mx-auto px-5 py-12 w-full space-y-6 animate-slide-up flex-1 flex flex-col justify-center overflow-y-auto">
-            {/* iOS style Tabs */}
-            <div className="grid grid-cols-2 gap-1 bg-secondary/40 p-1 rounded-[18px] border border-border/25 select-none">
-              <button
-                onClick={() => setActiveTab("profile")}
-                className={`py-3 rounded-[14px] text-[13px] font-black transition-all flex items-center justify-center gap-2 ${
-                  activeTab === "profile" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Users className="size-4" />
-                Profile Viewer
-              </button>
-              <button
-                onClick={() => setActiveTab("downloader")}
-                className={`py-3 rounded-[14px] text-[13px] font-black transition-all flex items-center justify-center gap-2 ${
-                  activeTab === "downloader" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Download className="size-4" />
-                Video Downloader
-              </button>
-            </div>
-
-            {/* Profile Lookup Input */}
-            {activeTab === "profile" && (
-              <div className="space-y-6">
-                <div className="text-center space-y-2">
-                  <h2 className="text-[24px] font-black tracking-tight">Browse Profiles</h2>
-                  <p className="text-[12px] text-muted-foreground max-w-sm mx-auto">
-                    View public timelines, tweets, replies, and photos anonymously.
-                  </p>
-                </div>
-
-                <form onSubmit={handleUserSearch} className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-4.5 text-muted-foreground pointer-events-none" />
-                  <input
-                    type="text"
-                    placeholder="Enter @username or profile URL..."
-                    value={userQuery}
-                    onChange={(e) => setUserQuery(e.target.value)}
-                    className="w-full h-[52px] bg-background border border-border/40 rounded-[20px] pl-11 pr-24 outline-none focus:border-sky-500/50 transition-all font-bold text-[14px]"
-                  />
-                  <button
-                    type="submit"
-                    disabled={!userQuery.trim()}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-5 rounded-[16px] bg-sky-500 text-white font-black text-[13px] hover:bg-sky-400 active:scale-95 disabled:opacity-40 transition-all"
-                  >
-                    Search
-                  </button>
-                </form>
-
-                {/* Popular Shortcuts */}
-                <div className="space-y-2 text-center">
-                  <span className="text-[9.5px] font-black uppercase text-muted-foreground tracking-wider">Suggested Accounts</span>
-                  <div className="flex flex-wrap gap-2 justify-center">
-                    {["elonmusk", "NASA", "MKBHD", "Apple", "SpaceX", "Google"].map((username) => (
-                      <button
-                        key={username}
-                        onClick={() => {
-                          setUserQuery(username);
-                          loadXProfile(username);
-                        }}
-                        className="px-3.5 py-1.5 rounded-full bg-secondary/40 border border-border/20 hover:bg-secondary/70 transition-all text-[11.5px] font-bold text-muted-foreground hover:text-foreground"
-                      >
-                        @{username}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Native Video Downloader tab view */}
-            {activeTab === "downloader" && (
-              <div className="space-y-6">
-                <div className="text-center space-y-2">
-                  <h2 className="text-[24px] font-black tracking-tight">Video Downloader</h2>
-                  <p className="text-[12px] text-muted-foreground max-w-sm mx-auto">
-                    Download videos and GIFs from X/Twitter in high-quality MP4.
-                  </p>
-                </div>
-
-                <form onSubmit={handleDownloadSearch} className="relative">
-                  <Download className="absolute left-4 top-1/2 -translate-y-1/2 size-4.5 text-muted-foreground pointer-events-none" />
-                  <input
-                    type="text"
-                    placeholder="Paste Twitter/X Tweet Link containing video..."
-                    value={downloadQuery}
-                    onChange={(e) => setDownloadQuery(e.target.value)}
-                    className="w-full h-[52px] bg-background border border-border/40 rounded-[20px] pl-11 pr-24 outline-none focus:border-sky-500/50 transition-all font-bold text-[14px]"
-                  />
-                  <button
-                    type="submit"
-                    disabled={downloadLoading || !downloadQuery.trim()}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-5 rounded-[16px] bg-sky-500 text-white font-black text-[13px] hover:bg-sky-400 active:scale-95 disabled:opacity-40 transition-all"
-                  >
-                    {downloadLoading ? <Loader2 className="size-4 animate-spin" /> : <span>Fetch</span>}
-                  </button>
-                </form>
-
-                {downloadError && (
-                  <div className="rounded-[20px] border border-destructive/20 bg-destructive/5 p-5 flex items-start gap-3">
-                    <AlertCircle className="size-5 text-destructive flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-[13px] font-bold text-destructive">Extraction Failed</p>
-                      <p className="text-[12px] text-destructive/80 mt-0.5 leading-relaxed">{downloadError}</p>
-                    </div>
-                  </div>
-                )}
-
-                {downloadLoading && (
-                  <div className="rounded-[24px] border border-border bg-secondary/5 p-12 flex flex-col items-center justify-center animate-pulse">
-                    <Loader2 className="size-8 text-sky-500 animate-spin mb-3" />
-                    <p className="text-[14.5px] font-bold">Extracting media streams...</p>
-                  </div>
-                )}
-
-                {downloadResult && (
-                  <div className="rounded-[24px] border border-border overflow-hidden ios-glass ios-shadow p-5 space-y-4">
-                    {/* Author Info */}
-                    <div className="flex items-center gap-3 border-b border-border/20 pb-3">
-                      <div className="size-11 rounded-full overflow-hidden bg-secondary border border-border/10">
-                        <img src={downloadResult.author.avatar_url} alt="" className="w-full h-full object-cover" />
-                      </div>
-                      <div>
-                        <h4 className="text-[13.5px] font-black leading-tight">{downloadResult.author.name}</h4>
-                        <p className="text-[11.5px] text-muted-foreground font-bold">@{downloadResult.author.screen_name}</p>
-                      </div>
-                    </div>
-
-                    {/* Tweet text */}
-                    <p className="text-[13px] leading-relaxed text-foreground/90 font-medium">
-                      {downloadResult.text}
-                    </p>
-
-                    {/* Resolutions list */}
-                    <div className="space-y-2">
-                      <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">Download Streams</span>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {downloadResult.videos.map((vid, idx) => (
-                          <a
-                            key={idx}
-                            href={vid.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            download={`x-video-${vid.width}x${vid.height}.mp4`}
-                            className="h-11 rounded-[14px] bg-secondary/40 border border-border/30 hover:bg-sky-500/10 hover:border-sky-500/30 text-[12.5px] font-bold transition-all active:scale-[0.98] flex items-center justify-between px-4"
-                          >
-                            <div className="flex items-center gap-2">
-                              <Video className="size-4 text-sky-500" />
-                              <span>{vid.width} x {vid.height}</span>
-                            </div>
-                            <span className="text-[10px] text-sky-500 font-black uppercase">Download</span>
-                          </a>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {!downloadResult && !downloadLoading && !downloadError && (
-                  <div className="rounded-[20px] border border-border/20 bg-secondary/10 p-5 space-y-4">
-                    <h3 className="text-[13.5px] font-black tracking-tight uppercase text-muted-foreground">Twitter Video Downloader</h3>
-                    <p className="text-[12.5px] leading-relaxed text-muted-foreground">
-                      Paste the link of any tweet containing a video or GIF. Our cloud parser will fetch the media files in high quality (MP4) for offline downloads.
-                    </p>
-                    <div className="space-y-1 text-[11.5px] text-muted-foreground leading-normal">
-                      <p className="font-bold text-foreground/80">How to get a tweet link:</p>
-                      <p>1. Open Twitter/X app or website.</p>
-                      <p>2. Click the share button underneath the tweet containing the video.</p>
-                      <p>3. Choose "Copy link" and paste it here.</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+      {/* ── Under Maintenance Body ── */}
+      <div className="flex-1 flex items-center justify-center p-5 bg-secondary/5 overflow-y-auto">
+        <div className="w-full max-w-md rounded-[24px] border border-border bg-card p-8 shadow-2xl relative overflow-hidden ios-glass ios-shadow animate-spring-scale text-center space-y-6">
+          <div className="size-16 rounded-[20px] bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 mx-auto shadow-sm animate-pulse">
+            <AlertCircle className="size-8" />
           </div>
-        ) : (
-          /* ===== BROWSING WORKSPACE (NATIVE iOS PROFILE + OFFICIAL X TIMELINE EMBED) ===== */
-          <div className="flex-1 w-full h-full flex flex-col min-h-0 relative bg-background">
-            
-            {/* 1. Custom, Native iOS-Themed Profile Card */}
-            <div className="w-full flex-shrink-0 bg-background border-b border-border/40 z-10">
-              {profileLoading ? (
-                <div className="p-8 flex flex-col items-center justify-center animate-pulse">
-                  <Loader2 className="size-6 text-sky-500 animate-spin mb-2" />
-                  <span className="text-[12px] font-bold text-muted-foreground">Loading profile header...</span>
-                </div>
-              ) : profileError ? (
-                <div className="p-6 text-center space-y-2">
-                  <AlertCircle className="size-7 text-destructive mx-auto" />
-                  <p className="text-[13px] font-bold text-destructive">{profileError}</p>
-                </div>
-              ) : profileData ? (
-                <div className="relative animate-slide-up">
-                  {/* Premium Mesh Gradient Banner */}
-                  <div className="h-[120px] w-full bg-gradient-to-r from-sky-500/20 via-indigo-500/20 to-purple-500/20 relative overflow-hidden">
-                    <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.4),rgba(255,255,255,0))]" />
-                  </div>
-
-                  {/* Profile details container */}
-                  <div className="px-5 pb-5 relative select-none">
-                    {/* Avatar overlap */}
-                    <div className="absolute -top-[45px] left-5 size-22 rounded-full overflow-hidden border-4 border-background bg-secondary shadow-md">
-                      <img src={profileData.avatar_url} alt="" className="w-full h-full object-cover" />
-                    </div>
-
-                    {/* Meta/stats alignment wrapper */}
-                    <div className="pt-16 space-y-3">
-                      <div>
-                        <h2 className="text-[19px] font-black tracking-tight leading-tight flex items-center gap-1.5">
-                          {profileData.name}
-                          <div className="size-4.5 rounded-full bg-sky-500/10 border border-sky-500/20 flex items-center justify-center">
-                            <Twitter className="size-2.5 text-sky-500 fill-current" />
-                          </div>
-                        </h2>
-                        <p className="text-[13px] text-muted-foreground font-bold">@{profileData.screen_name}</p>
-                      </div>
-
-                      {profileData.description && (
-                        <p className="text-[13px] leading-relaxed text-foreground/90 font-medium">
-                          {profileData.description}
-                        </p>
-                      )}
-
-                      {/* Location and metadata info */}
-                      <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-[11.5px] text-muted-foreground font-bold">
-                        {profileData.location && (
-                          <div className="flex items-center gap-1">
-                            <MapPin className="size-3.5" />
-                            <span>{profileData.location}</span>
-                          </div>
-                        )}
-                        <div className="flex items-center gap-1">
-                          <Calendar className="size-3.5" />
-                          <span>Joined Twitter</span>
-                        </div>
-                      </div>
-
-                      {/* Stats Row */}
-                      <div className="flex gap-4 pt-1.5 text-[13px] font-bold border-t border-border/20">
-                        <div className="flex gap-1">
-                          <span className="text-foreground">{formatNumber(profileData.following)}</span>
-                          <span className="text-muted-foreground font-medium">Following</span>
-                        </div>
-                        <div className="flex gap-1">
-                          <span className="text-foreground">{formatNumber(profileData.followers)}</span>
-                          <span className="text-muted-foreground font-medium">Followers</span>
-                        </div>
-                        <div className="flex gap-1">
-                          <span className="text-foreground">{formatNumber(profileData.tweets)}</span>
-                          <span className="text-muted-foreground font-medium">Posts</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-            </div>
-
-            {/* 2. Direct Stream Timeline (No third-party branding, loads infinite posts reliably!) */}
-            <div className="flex-1 w-full relative overflow-hidden bg-background">
-              {iframeLoading && (
-                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/95">
-                  <Loader2 className="size-7 text-sky-500 animate-spin mb-2" />
-                  <span className="text-[12.5px] font-bold text-muted-foreground">Connecting to live feed...</span>
-                </div>
-              )}
-
-              {/* Crop top -425px (header, search, bio) and shield bottom 75px (footer site logo) leaving Load More interactive */}
-              <div className="absolute inset-0 overflow-hidden" style={{ bottom: "75px" }}>
-                <iframe
-                  src={iframeSrc}
-                  className="absolute w-full border-0 bg-white dark:bg-[#15202b]"
-                  style={{
-                    top: "-425px", // Crop banner, avatar, bio and outer menus completely
-                    left: "0",
-                    height: "calc(100% + 425px)", // Compensate cropped area
-                    width: "100%",
-                    pointerEvents: "auto", // Ensure Load More and video clicks work smoothly!
-                  }}
-                  loading="lazy"
-                  onLoad={() => setIframeLoading(false)}
-                  onError={() => setIframeLoading(false)}
-                />
-              </div>
-
-              {/* 3. Branded Bottom Overlay Shield Bar (Completely conceals external footer branding) */}
-              <div className="absolute bottom-0 left-0 right-0 h-[75px] bg-background border-t border-border/40 z-30 flex items-center justify-between px-6 select-none shadow-lg">
-                <div className="flex items-center gap-2.5">
-                  <div className="size-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
-                    <ShieldCheck className="size-4 text-emerald-500" />
-                  </div>
-                  <div>
-                    <p className="text-[12.5px] font-black leading-tight tracking-tight">X SPACE DIRECT STREAM</p>
-                    <p className="text-[10.5px] text-muted-foreground font-bold">End-to-End SSL Feed • Zero Limits</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-black text-sky-500 bg-sky-500/10 border border-sky-500/20 px-3.5 py-1.5 rounded-full flex items-center gap-1.5">
-                    <Zap className="size-3.5 animate-pulse" />
-                    <span>Scroll or Click Load More Above</span>
-                  </span>
-                </div>
-              </div>
-            </div>
-
+          
+          <div className="space-y-2">
+            <h2 className="text-[20px] font-black tracking-tight uppercase">Service Under Maintenance</h2>
+            <p className="text-[12.5px] text-muted-foreground leading-normal max-w-xs mx-auto font-bold">
+              Bhai, X (Twitter) service temporary down hai standard API maintenance ki wajah se. Jald hi wapas chalu ho jayegi!
+            </p>
           </div>
-        )}
+
+          <div className="pt-2">
+            <Link
+              to="/"
+              className="inline-flex h-11 px-6 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-black text-[13px] items-center justify-center gap-2 transition-all select-none shadow-md"
+            >
+              <ArrowLeft className="size-4" />
+              Back to Home
+            </Link>
+          </div>
+        </div>
       </div>
     </main>
   );
