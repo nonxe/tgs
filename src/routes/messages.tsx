@@ -279,7 +279,7 @@ function E2eeMessengerPage() {
   useEffect(() => {
     if (loggedInUser && myAuthHash) {
       fetchMessages();
-      pollingIntervalRef.current = setInterval(fetchMessages, 4000);
+      pollingIntervalRef.current = setInterval(fetchMessages, 2000);
     } else {
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
@@ -1430,8 +1430,8 @@ function E2eeMessengerPage() {
     if (maikoMessages.length === 0) {
       return (
         <div className="h-full flex flex-col items-center justify-center text-center p-8 select-none animate-fade-in">
-          <div className="size-16 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-600 p-0.5 shadow-lg animate-pulse mb-4">
-            <div className="w-full h-full bg-[#17212b] rounded-full flex items-center justify-center text-white">
+          <div className="size-16 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-600 p-0.5 shadow-lg mb-4">
+            <div className="w-full h-full bg-[#0a0a0a] rounded-full flex items-center justify-center text-white">
               <Sparkles className="size-7 text-cyan-400" />
             </div>
           </div>
@@ -1456,16 +1456,16 @@ function E2eeMessengerPage() {
             {/* AI Avatar prefix on the left for AI messages */}
             {!isMe && (
               <div className="size-7 rounded-full bg-gradient-to-tr from-cyan-400 to-purple-600 p-0.5 mr-2 flex-shrink-0 shadow select-none self-end mb-0.5">
-                <div className="w-full h-full bg-[#17212b] rounded-full flex items-center justify-center text-white">
+                <div className="w-full h-full bg-[#0a0a0a] rounded-full flex items-center justify-center text-white">
                   <Sparkles className="size-3 text-cyan-400" />
                 </div>
               </div>
             )}
 
-            <div className={`max-w-[78%] relative shadow-sm rounded-[15px] select-text border transition-all hover:scale-[1.01] ${
+            <div className={`max-w-[78%] relative shadow-sm rounded-[18px] select-text border msg-bubble ${
               isMe
-                ? "bg-[#3390ec] dark:bg-[#2b5278] border-[#3390ec]/20 dark:border-[#2b5278]/30 text-white rounded-br-[3px]"
-                : "bg-white dark:bg-[#182533] border-cyan-500/20 dark:border-cyan-500/10 shadow-[0_0_12px_rgba(34,211,238,0.03)] text-foreground dark:text-gray-100 rounded-bl-[3px]"
+                ? "bg-[#3390ec] border-[#3390ec]/20 text-white rounded-br-[3px]"
+                : "bg-[#1c1c1e] border-white/[0.04] shadow-[0_0_12px_rgba(34,211,238,0.03)] text-foreground dark:text-gray-100 rounded-bl-[3px]"
             }`}>
               <div className="pl-3.5 pr-13 pt-2 pb-2.5 min-w-[80px]">
                 <p className="text-[13px] font-medium leading-relaxed break-words whitespace-pre-wrap select-text">
@@ -1480,7 +1480,7 @@ function E2eeMessengerPage() {
             </div>
 
             {/* Quick Bubble Action overlay */}
-            <div className={`absolute top-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex items-center gap-1.5 bg-white dark:bg-[#1e2c3a] border border-border/40 dark:border-transparent px-2.5 py-1 rounded-full shadow-lg z-10 select-none ${
+            <div className={`absolute top-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex items-center gap-1.5 bg-[#111111] border border-white/[0.06] px-2.5 py-1 rounded-full shadow-lg z-10 select-none ${
               isMe ? "right-[80%] mr-2" : "left-[80%] ml-2"
             }`}>
               <button
@@ -1624,10 +1624,10 @@ function E2eeMessengerPage() {
       }
 
       return (
-        <div key={msg.id} className="space-y-2 animate-fade-in">
+        <div key={msg.id} className="space-y-2 animate-bubble-in">
           {showHeader && (
             <div className="flex justify-center my-3 select-none">
-              <span className="bg-black/15 dark:bg-black/45 text-white/90 dark:text-gray-300 text-[10.5px] font-bold px-3 py-1 rounded-full backdrop-blur-md shadow-sm">
+              <span className="bg-black/70 text-gray-300 text-[10.5px] font-bold px-3 py-1 rounded-full backdrop-blur-md shadow-sm">
                 {dateStr}
               </span>
             </div>
@@ -1635,12 +1635,12 @@ function E2eeMessengerPage() {
           
           <div className={`flex ${isMe ? "justify-end" : "justify-start"} group relative`}>
             {/* Telegram-style message bubbles */}
-            <div className={`max-w-[78%] relative shadow-sm rounded-[15px] select-text border transition-all hover:scale-[1.01] ${
+            <div className={`max-w-[78%] relative shadow-sm rounded-[18px] select-text border msg-bubble ${
               isMe
-                ? "bg-[#3390ec] dark:bg-[#2b5278] border-[#3390ec]/20 dark:border-[#2b5278]/30 text-white rounded-br-[3px]"
+                ? "bg-[#3390ec] border-[#3390ec]/20 text-white rounded-br-[3px]"
                 : msg.decryptionFailed
-                  ? "bg-rose-500/10 dark:bg-rose-500/5 border-rose-500/25 text-rose-500 rounded-bl-[3px]"
-                  : "bg-white dark:bg-[#182533] border-border/20 dark:border-transparent text-foreground dark:text-gray-100 rounded-bl-[3px]"
+                  ? "bg-rose-500/10 border-rose-500/25 text-rose-500 rounded-bl-[3px]"
+                  : "bg-[#1c1c1e] border-white/[0.04] text-foreground rounded-bl-[3px]"
             }`}>
               <div className="pl-3.5 pr-13 pt-2 pb-2.5 min-w-[80px]">
                 {messageContent}
@@ -1655,7 +1655,7 @@ function E2eeMessengerPage() {
             </div>
 
             {/* Quick Bubble Action overlay on Hover */}
-            <div className={`absolute top-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex items-center gap-1.5 bg-white dark:bg-[#1e2c3a] border border-border/40 dark:border-transparent px-2.5 py-1 rounded-full shadow-lg z-10 select-none ${
+            <div className={`absolute top-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex items-center gap-1.5 bg-[#111111] border border-white/[0.06] px-2.5 py-1 rounded-full shadow-lg z-10 select-none ${
               isMe ? "right-[80%] mr-2" : "left-[80%] ml-2"
             }`}>
               <button
@@ -1692,9 +1692,9 @@ function E2eeMessengerPage() {
     const isCommentsOpen = !!commentsOpen[post.id];
 
     return (
-      <div key={post.id} className="bg-background border border-border/30 dark:border-[#101921] rounded-xl p-3 space-y-3 relative shadow-sm hover:scale-[1.01] transition-transform select-text">
+      <div key={post.id} className="bg-[#0d0d0d] border border-white/[0.04] rounded-2xl p-3.5 space-y-3 relative shadow-sm select-text">
         {/* Post timestamp */}
-        <span className="absolute top-2 right-3 text-[9px] text-muted-foreground select-none">
+        <span className="absolute top-2.5 right-3 text-[9px] text-muted-foreground select-none">
           {new Date(post.timestamp).toLocaleDateString([], { month: "short", day: "numeric" })}
         </span>
         
@@ -1702,7 +1702,7 @@ function E2eeMessengerPage() {
         
         {/* Fully show media ratio: no crop, object-contain, flexible height */}
         {post.mediaUrl && (
-          <div className="rounded-lg overflow-hidden max-h-[350px] bg-black/5 dark:bg-black/45 border border-border/15 flex items-center justify-center select-none">
+          <div className="rounded-lg overflow-hidden max-h-[350px] bg-black/45 border border-white/[0.04] flex items-center justify-center select-none">
             {post.mediaUrl.match(/\.(mp4|webm|ogg)$/i) || post.mediaUrl.includes("video") ? (
               <video src={post.mediaUrl} controls className="w-full h-auto max-h-[350px] object-contain" />
             ) : (
@@ -1716,7 +1716,7 @@ function E2eeMessengerPage() {
         )}
 
         {/* Action Panel: Like and Comments trigger */}
-        <div className="flex items-center gap-4 pt-1 border-t border-border/10 dark:border-[#101921]/50 text-muted-foreground select-none text-[11px] font-bold">
+        <div className="flex items-center gap-4 pt-1 border-t border-white/[0.04] text-muted-foreground select-none text-[11px] font-bold">
           {/* Like button */}
           <button
             onClick={() => handleLikeClick(post.id, isMyFeed)}
@@ -1742,12 +1742,12 @@ function E2eeMessengerPage() {
 
         {/* Collapsible Comments Section */}
         {isCommentsOpen && (
-          <div className="pt-2.5 border-t border-border/10 dark:border-[#101921]/40 space-y-3 animate-slide-in">
+          <div className="pt-2.5 border-t border-white/[0.04] space-y-3 animate-slide-in">
             {/* Comments List */}
             {commentsList.length > 0 && (
               <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
                 {commentsList.map(comment => (
-                  <div key={comment.id} className="flex gap-2.5 items-start text-[11px] bg-secondary/20 dark:bg-[#0e1621]/40 p-2 rounded-lg">
+                  <div key={comment.id} className="flex gap-2.5 items-start text-[11px] bg-[#111111] border border-white/[0.02] p-2.5 rounded-xl">
                     {/* Small initials circle */}
                     <div className={`size-5 rounded-full bg-gradient-to-tr ${getAvatarGradient(comment.username)} text-white flex items-center justify-center font-black text-[8px] flex-shrink-0 mt-0.5`}>
                       {comment.username.charAt(0).toUpperCase()}
@@ -1773,12 +1773,12 @@ function E2eeMessengerPage() {
                 placeholder="Write a comment..."
                 value={commentInputs[post.id] || ""}
                 onChange={(e) => handleCommentChange(post.id, e.target.value)}
-                className="flex-1 h-8 bg-secondary/50 dark:bg-[#0e1621] border border-border/30 dark:border-transparent rounded-lg px-2.5 text-[11px] font-bold outline-none focus:border-emerald-500/40"
+                className="flex-1 h-8 bg-[#111111] border border-white/[0.06] rounded-xl px-2.5 text-[11px] font-bold outline-none focus:border-emerald-500/40 msg-input-bar"
               />
               <button
                 type="submit"
                 disabled={!commentInputs[post.id]?.trim()}
-                className="h-8 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white text-[10px] font-black transition-all flex items-center justify-center"
+                className="h-8 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white text-[10px] font-black transition-all flex items-center justify-center"
               >
                 Reply
               </button>
@@ -1792,7 +1792,7 @@ function E2eeMessengerPage() {
   const isMaiko = activeContact === "Maiko AI";
 
   return (
-    <main className="min-h-screen bg-background text-foreground font-sans transition-colors duration-300 flex flex-col h-screen overflow-hidden relative select-none">
+    <main className="min-h-screen bg-black text-foreground font-sans flex flex-col overflow-hidden h-screen relative" style={{ WebkitFontSmoothing: 'antialiased' }}>
       
       {/* Hidden File Inputs */}
       <input
@@ -1817,7 +1817,7 @@ function E2eeMessengerPage() {
       />
 
       {/* Header */}
-      <header className="px-4 py-3.5 flex items-center justify-between border-b border-border/40 backdrop-blur-md sticky top-0 z-40 bg-background/80 flex-shrink-0">
+      <header className="px-4 py-3.5 flex items-center justify-between border-b border-white/[0.04] backdrop-blur-xl sticky top-0 z-40 bg-black/90 flex-shrink-0">
         <div className="flex items-center gap-3">
           <Link
             to="/"
@@ -1861,8 +1861,8 @@ function E2eeMessengerPage() {
       {/* Main UI Area */}
       {!loggedInUser ? (
         // Login & Register Form Container
-        <div className="flex-1 flex items-center justify-center p-5 bg-secondary/5 overflow-y-auto select-text">
-          <div className="w-full max-w-sm rounded-[24px] border border-border bg-card p-6 shadow-2xl relative overflow-hidden ios-glass ios-shadow animate-spring-scale">
+        <div className="flex-1 flex items-center justify-center p-5 bg-black overflow-y-auto select-text">
+          <div className="w-full max-w-sm rounded-[24px] border border-white/[0.06] bg-[#0a0a0a] p-6 shadow-2xl relative overflow-hidden ios-glass ios-shadow animate-spring-scale">
             
             {/* Header branding */}
             <div className="text-center space-y-2 mb-6 select-none">
@@ -1946,14 +1946,14 @@ function E2eeMessengerPage() {
         <div className="flex-1 flex min-h-0 select-text relative">
           
           {/* ───────────────── LEFT PANEL: CONTACTS SIDEBAR ───────────────── */}
-          <div className={`w-full md:w-[350px] border-r border-border/10 dark:border-[#101921] flex flex-col min-h-0 flex-shrink-0 bg-white dark:bg-[#17212b] select-none ${
+          <div className={`w-full md:w-[350px] border-r border-white/[0.04] flex flex-col min-h-0 flex-shrink-0 bg-[#0a0a0a] select-none ${
             mobileView === "chat" ? "hidden md:flex" : "flex"
           }`}>
             
             {/* Logged in User Bar (Clickable to open profile settings/feed drawer) */}
             <div 
               onClick={() => setShowMyFeedDrawer(true)}
-              className="px-4 py-3 bg-secondary/15 dark:bg-[#101921]/40 border-b border-border/5 dark:border-[#101921] flex items-center justify-between cursor-pointer hover:bg-secondary/20 dark:hover:bg-[#202b36] transition-colors"
+              className="px-4 py-3 bg-[#0d0d0d] border-b border-white/[0.04] flex items-center justify-between cursor-pointer hover:bg-[#141414] transition-colors duration-150"
             >
               <div className="flex items-center gap-2.5">
                 {myPfpUrl ? (
@@ -1981,14 +1981,14 @@ function E2eeMessengerPage() {
             </div>
 
             {/* Contact Discovery Form */}
-            <div className="p-3.5 border-b border-border/5 dark:border-[#101921] space-y-2">
+            <div className="p-3.5 border-b border-white/[0.04] space-y-2">
               <form onSubmit={handleAddContact} className="relative">
                 <input
                   type="text"
                   placeholder="Enter username to start E2EE chat..."
                   value={newContactInput}
                   onChange={(e) => setNewContactInput(e.target.value)}
-                  className="w-full h-9 bg-secondary/50 dark:bg-[#0e1621] border border-border/40 dark:border-transparent rounded-full pl-3.5 pr-10 text-[12px] font-bold outline-none focus:border-emerald-500/40 dark:focus:border-emerald-500/40 transition-all lowercase"
+                  className="w-full h-9 bg-[#111111] border border-white/[0.06] rounded-full pl-3.5 pr-10 text-[12px] font-bold outline-none focus:border-emerald-500/40 transition-all duration-200 lowercase msg-input-bar"
                 />
                 <button
                   type="submit"
@@ -2011,13 +2011,13 @@ function E2eeMessengerPage() {
                   placeholder="Filter chat list..."
                   value={searchFilter}
                   onChange={(e) => setSearchFilter(e.target.value)}
-                  className="w-full h-8.5 bg-secondary/30 dark:bg-[#0e1621]/60 border border-transparent rounded-full pl-9 pr-4 text-[11px] font-bold outline-none focus:border-border/30 dark:focus:border-[#24303f] transition-all"
+                  className="w-full h-8.5 bg-[#111111] border border-transparent rounded-full pl-9 pr-4 text-[11px] font-bold outline-none focus:border-white/[0.08] transition-all duration-200"
                 />
               </div>
             </div>
 
             {/* Contacts list scroll */}
-            <div className="flex-1 overflow-y-auto min-h-0 p-2 space-y-1 bg-secondary/5 dark:bg-[#17212b]">
+            <div className="flex-1 overflow-y-auto min-h-0 p-2 space-y-0.5 bg-[#0a0a0a]">
               <div className="text-[9.5px] font-bold text-muted-foreground/60 uppercase tracking-wider px-3 py-1.5 flex items-center justify-between">
                 <span>Direct Encrypted Channels</span>
                 <span className="text-[8px] bg-[#3390ec]/20 text-[#3390ec] dark:text-[#82b1ff] px-1.5 py-0.5 rounded-full font-black">
@@ -2029,14 +2029,14 @@ function E2eeMessengerPage() {
               {(!searchFilter || "maiko ai".includes(searchFilter.trim().toLowerCase())) && (
                 <div
                   onClick={() => handleContactSelect("Maiko AI")}
-                  className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border ${
+                  className={`flex items-center gap-3 p-3 rounded-2xl cursor-pointer border msg-contact-item ${
                     activeContact === "Maiko AI"
-                      ? "bg-[#3390ec]/10 dark:bg-[#2b5278]/20 border-[#3390ec]/30 dark:border-[#2b5278]/40 text-foreground shadow-sm"
-                      : "border-transparent hover:bg-secondary/40 dark:hover:bg-[#202b36] text-muted-foreground hover:text-foreground"
+                      ? "bg-[#1a1a2e] border-[#2b5278]/40 text-foreground shadow-sm"
+                      : "border-transparent hover:bg-[#111111] text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {/* Glowing neon AI ring avatar */}
-                  <div className="size-10 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-600 p-0.5 flex-shrink-0 shadow-md animate-pulse">
+                  <div className="size-10 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-600 p-0.5 mr-3 flex-shrink-0 shadow-md">
                     <div className="w-full h-full bg-[#17212b] rounded-full flex items-center justify-center text-white">
                       <Sparkles className="size-5 text-cyan-400" />
                     </div>
@@ -2090,10 +2090,10 @@ function E2eeMessengerPage() {
                     <div
                       key={c}
                       onClick={() => handleContactSelect(c)}
-                      className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border ${
+                      className={`flex items-center gap-3 p-3 rounded-2xl cursor-pointer border msg-contact-item ${
                         isActive
-                          ? "bg-[#3390ec]/10 dark:bg-[#2b5278]/20 border-[#3390ec]/30 dark:border-[#2b5278]/40 text-foreground shadow-sm"
-                          : "border-transparent hover:bg-secondary/40 dark:hover:bg-[#202b36] text-muted-foreground hover:text-foreground"
+                          ? "bg-[#1a1a2e] border-[#2b5278]/40 text-foreground shadow-sm"
+                          : "border-transparent hover:bg-[#111111] text-muted-foreground hover:text-foreground"
                       }`}
                     >
                       {/* Avatar with deterministic gradient or permanent PFP */}
@@ -2143,9 +2143,9 @@ function E2eeMessengerPage() {
 
           {/* ───────────────── LEFT PANEL OVERLAY: MY PROFILE & FEED DRAWER ───────────────── */}
           {showMyFeedDrawer && (
-            <div className="absolute inset-y-0 left-0 w-full md:w-[350px] bg-white dark:bg-[#17212b] border-r border-border/10 dark:border-[#101921] z-50 flex flex-col min-h-0 animate-slide-in select-none">
+            <div className="absolute inset-y-0 left-0 w-full md:w-[350px] bg-[#0a0a0a] border-r border-white/[0.04] z-50 flex flex-col min-h-0 animate-slide-in-left select-none">
               {/* Header */}
-              <div className="px-4 py-4 border-b border-border/10 dark:border-[#101921] flex items-center justify-between bg-secondary/10">
+              <div className="px-4 py-4 border-b border-white/[0.04] flex items-center justify-between bg-[#0d0d0d]">
                 <div className="flex items-center gap-2">
                   <User className="size-4 text-emerald-500" />
                   <span className="text-[13px] font-black text-foreground uppercase tracking-wider">My Profile & Feed</span>
@@ -2389,18 +2389,18 @@ function E2eeMessengerPage() {
           )}
 
           {/* ───────────────── RIGHT PANEL: CHAT TIMELINE ───────────────── */}
-          <div className={`flex-1 flex flex-col min-h-0 bg-[#e7ebf0] dark:bg-[#0e1621] relative ${
+          <div className={`flex-1 flex flex-col min-h-0 bg-[#050505] relative ${
             mobileView === "list" ? "hidden md:flex" : "flex"
           }`}
           style={{
-            backgroundImage: "radial-gradient(rgba(128, 128, 128, 0.08) 1.2px, transparent 1.2px)",
-            backgroundSize: "20px 20px"
+            backgroundImage: "radial-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px)",
+            backgroundSize: "22px 22px"
           }}>
             {activeContact ? (
               <div className="flex-1 flex flex-col min-h-0 relative">
                 
                 {/* Chat window Header */}
-                <div className="px-4 py-3.5 border-b border-border/10 dark:border-[#101921] flex items-center justify-between bg-white/95 dark:bg-[#17212b]/95 backdrop-blur-md flex-shrink-0 select-none shadow-sm relative z-20">
+                <div className="px-4 py-3.5 border-b border-white/[0.04] flex items-center justify-between bg-[#0a0a0a]/95 backdrop-blur-xl flex-shrink-0 select-none shadow-sm relative z-20">
                   <div className="flex items-center min-w-0 cursor-pointer" onClick={() => setShowInfoDrawer(!showInfoDrawer)}>
                     {/* Back Button for mobile view layout */}
                     <button
@@ -2481,7 +2481,7 @@ function E2eeMessengerPage() {
 
                 {/* Inline Message Search Bar */}
                 {showMsgSearch && !isMaiko && (
-                  <div className="px-4 py-2 bg-white/90 dark:bg-[#17212b]/95 border-b border-border/10 dark:border-[#101921] flex items-center gap-2 select-none relative z-10 animate-slide-in">
+                  <div className="px-4 py-2 bg-[#0a0a0a]/95 border-b border-white/[0.04] flex items-center gap-2 select-none relative z-10 animate-slide-in">
                     <Search className="size-4 text-muted-foreground" />
                     <input
                       type="text"
@@ -2507,7 +2507,7 @@ function E2eeMessengerPage() {
 
                 {/* Floating Emoji Picker Popover overlay */}
                 {showEmojiPicker && (
-                  <div className="mx-4 p-3 bg-white dark:bg-[#17212b] border border-border/30 dark:border-[#101921] rounded-2xl shadow-xl flex flex-wrap gap-2 select-none z-30 relative animate-slide-in">
+                  <div className="mx-4 p-3 bg-[#0a0a0a] border border-white/[0.06] rounded-2xl shadow-xl flex flex-wrap gap-2 select-none z-30 relative animate-spring-scale">
                     <div className="w-full flex justify-between items-center text-[10px] font-bold text-muted-foreground px-1 pb-1">
                       <span>Quick Emojis</span>
                       <button onClick={() => setShowEmojiPicker(false)}>
@@ -2518,7 +2518,7 @@ function E2eeMessengerPage() {
                       <button
                         key={emoji}
                         onClick={() => handleEmojiSelect(emoji)}
-                        className="text-lg hover:scale-125 hover:bg-secondary dark:hover:bg-[#202b36] p-1 rounded transition-transform"
+                        className="text-lg hover:scale-125 hover:bg-[#1a1a1a] p-1.5 rounded-lg transition-transform duration-150"
                       >
                         {emoji}
                       </button>
@@ -2527,7 +2527,7 @@ function E2eeMessengerPage() {
                 )}
 
                 {/* Telegram-Style Floating message input bar */}
-                <div className="p-3 sm:p-4 bg-white/70 dark:bg-[#17212b]/80 border-t border-border/10 dark:border-[#101921] backdrop-blur-sm flex-shrink-0 relative z-10">
+                <div className="p-3 sm:p-4 bg-[#0a0a0a]/90 border-t border-white/[0.04] backdrop-blur-xl flex-shrink-0 relative z-10">
                   <div className="max-w-4xl mx-auto flex items-center gap-2 relative">
                     
                     {/* Attach media button (Hidden for Maiko AI) */}
@@ -2560,7 +2560,7 @@ function E2eeMessengerPage() {
                     </button>
 
                     <form onSubmit={handleSendMessage} className="flex-1 flex items-center gap-2">
-                      <div className="flex-1 bg-white dark:bg-[#0e1621] border border-border/30 dark:border-[#101921] rounded-[22px] flex items-center shadow-inner py-1 pl-4 pr-1.5">
+                      <div className="flex-1 bg-[#111111] border border-white/[0.06] rounded-[22px] flex items-center py-1 pl-4 pr-1.5 msg-input-bar">
                         <input
                           type="text"
                           placeholder={isMaiko ? "Ask Maiko AI..." : "Write encrypted message..."}
@@ -2587,9 +2587,9 @@ function E2eeMessengerPage() {
 
                 {/* ───────────────── RIGHT PANEL: CONTACT INFORMATION DRAWER ───────────────── */}
                 {showInfoDrawer && (
-                  <div className="w-80 border-l border-border/10 dark:border-[#101921] bg-white dark:bg-[#17212b] flex flex-col h-full z-30 select-none absolute right-0 top-0 shadow-2xl animate-slide-in">
+                  <div className="w-80 border-l border-white/[0.04] bg-[#0a0a0a] flex flex-col h-full z-30 select-none absolute right-0 top-0 shadow-2xl animate-slide-in">
                     {/* Drawer Header */}
-                    <div className="px-4 py-4 border-b border-border/10 dark:border-[#101921] flex items-center justify-between">
+                    <div className="px-4 py-4 border-b border-white/[0.04] flex items-center justify-between">
                       <span className="text-[13px] font-black text-foreground uppercase tracking-wider">
                         {isMaiko ? "AI Profile" : "Contact Info"}
                       </span>
@@ -2606,7 +2606,7 @@ function E2eeMessengerPage() {
                         <div className="space-y-6 select-text">
                           <div className="text-center space-y-3 select-none">
                             <div className="size-24 rounded-full bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-600 p-0.5 shadow-lg mx-auto animate-pulse">
-                              <div className="w-full h-full bg-[#17212b] rounded-full flex items-center justify-center text-white">
+                              <div className="w-full h-full bg-[#0a0a0a] rounded-full flex items-center justify-center text-white">
                                 <Sparkles className="size-10 text-cyan-400" />
                               </div>
                             </div>
@@ -2838,7 +2838,7 @@ function E2eeMessengerPage() {
             ) : (
               // Desktop empty state
               <div className="flex-1 flex flex-col items-center justify-center text-center p-8 select-none space-y-3">
-                <div className="size-16 rounded-2xl bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/10 dark:border-emerald-500/20 flex items-center justify-center shadow-sm">
+                <div className="size-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center shadow-sm">
                   <MessageSquare className="size-7.5 text-emerald-500/40 animate-pulse" />
                 </div>
                 <div>
@@ -2910,7 +2910,7 @@ function E2eeMessengerPage() {
       {/* Pending Media Caption Modal */}
       {pendingMediaFile && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 select-none">
-          <div className="w-full max-w-sm bg-white dark:bg-[#17212b] border border-border/30 dark:border-[#101921] rounded-[24px] p-5 shadow-2xl flex flex-col space-y-4 animate-spring-scale select-text">
+          <div className="w-full max-w-sm bg-[#0a0a0a] border border-white/[0.06] rounded-[24px] p-5 shadow-2xl flex flex-col space-y-4 animate-spring-scale select-text">
             <div className="flex justify-between items-center select-none">
               <span className="text-[13px] font-black uppercase text-muted-foreground tracking-wider">Send Media Attachment</span>
               <button onClick={() => { setPendingMediaFile(null); setMediaCaptionInput(""); }} className="text-muted-foreground hover:text-foreground">
@@ -2971,7 +2971,7 @@ function E2eeMessengerPage() {
       )}
 
       {/* Security End Banner */}
-      <div className="h-10 bg-background border-t border-border/40 dark:border-[#101921] flex-shrink-0 flex items-center justify-between px-4 select-none z-10">
+      <div className="h-10 bg-[#050505] border-t border-white/[0.04] flex-shrink-0 flex items-center justify-between px-4 select-none z-10">
         <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-bold text-muted-foreground truncate mr-2">
           <ShieldCheck className="size-3.5 text-emerald-500 flex-shrink-0" />
           <span className="truncate">ECDH P-256 Key Exchange • AES-GCM 256 Payload Encryption</span>
