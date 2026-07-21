@@ -43,6 +43,7 @@ import { Route as ApiMessagesFeedRouteImport } from './routes/api/messages/feed'
 import { Route as ApiMessagesActionRouteImport } from './routes/api/messages/action'
 import { Route as ApiCloudifyUpdateRouteImport } from './routes/api/cloudify/update'
 import { Route as ApiCloudifySongsRouteImport } from './routes/api/cloudify/songs'
+import { Route as ApiCloudifySearchRouteImport } from './routes/api/cloudify/search'
 import { Route as ApiCloudifyDeleteRouteImport } from './routes/api/cloudify/delete'
 import { Route as ApiCloudifyCreateRouteImport } from './routes/api/cloudify/create'
 import { Route as ApiMessagesFeedLikeRouteImport } from './routes/api/messages/feed/like'
@@ -219,6 +220,11 @@ const ApiCloudifySongsRoute = ApiCloudifySongsRouteImport.update({
   path: '/api/cloudify/songs',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCloudifySearchRoute = ApiCloudifySearchRouteImport.update({
+  id: '/api/cloudify/search',
+  path: '/api/cloudify/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCloudifyDeleteRoute = ApiCloudifyDeleteRouteImport.update({
   id: '/api/cloudify/delete',
   path: '/api/cloudify/delete',
@@ -262,6 +268,7 @@ export interface FileRoutesByFullPath {
   '/note/': typeof NoteIndexRoute
   '/api/cloudify/create': typeof ApiCloudifyCreateRoute
   '/api/cloudify/delete': typeof ApiCloudifyDeleteRoute
+  '/api/cloudify/search': typeof ApiCloudifySearchRoute
   '/api/cloudify/songs': typeof ApiCloudifySongsRoute
   '/api/cloudify/update': typeof ApiCloudifyUpdateRoute
   '/api/messages/action': typeof ApiMessagesActionRoute
@@ -301,6 +308,7 @@ export interface FileRoutesByTo {
   '/note': typeof NoteIndexRoute
   '/api/cloudify/create': typeof ApiCloudifyCreateRoute
   '/api/cloudify/delete': typeof ApiCloudifyDeleteRoute
+  '/api/cloudify/search': typeof ApiCloudifySearchRoute
   '/api/cloudify/songs': typeof ApiCloudifySongsRoute
   '/api/cloudify/update': typeof ApiCloudifyUpdateRoute
   '/api/messages/action': typeof ApiMessagesActionRoute
@@ -342,6 +350,7 @@ export interface FileRoutesById {
   '/note/': typeof NoteIndexRoute
   '/api/cloudify/create': typeof ApiCloudifyCreateRoute
   '/api/cloudify/delete': typeof ApiCloudifyDeleteRoute
+  '/api/cloudify/search': typeof ApiCloudifySearchRoute
   '/api/cloudify/songs': typeof ApiCloudifySongsRoute
   '/api/cloudify/update': typeof ApiCloudifyUpdateRoute
   '/api/messages/action': typeof ApiMessagesActionRoute
@@ -384,6 +393,7 @@ export interface FileRouteTypes {
     | '/note/'
     | '/api/cloudify/create'
     | '/api/cloudify/delete'
+    | '/api/cloudify/search'
     | '/api/cloudify/songs'
     | '/api/cloudify/update'
     | '/api/messages/action'
@@ -423,6 +433,7 @@ export interface FileRouteTypes {
     | '/note'
     | '/api/cloudify/create'
     | '/api/cloudify/delete'
+    | '/api/cloudify/search'
     | '/api/cloudify/songs'
     | '/api/cloudify/update'
     | '/api/messages/action'
@@ -463,6 +474,7 @@ export interface FileRouteTypes {
     | '/note/'
     | '/api/cloudify/create'
     | '/api/cloudify/delete'
+    | '/api/cloudify/search'
     | '/api/cloudify/songs'
     | '/api/cloudify/update'
     | '/api/messages/action'
@@ -502,6 +514,7 @@ export interface RootRouteChildren {
   ShsdbCreateRoute: typeof ShsdbCreateRoute
   ApiCloudifyCreateRoute: typeof ApiCloudifyCreateRoute
   ApiCloudifyDeleteRoute: typeof ApiCloudifyDeleteRoute
+  ApiCloudifySearchRoute: typeof ApiCloudifySearchRoute
   ApiCloudifySongsRoute: typeof ApiCloudifySongsRoute
   ApiCloudifyUpdateRoute: typeof ApiCloudifyUpdateRoute
   ApiMessagesActionRoute: typeof ApiMessagesActionRoute
@@ -759,6 +772,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCloudifySongsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/cloudify/search': {
+      id: '/api/cloudify/search'
+      path: '/api/cloudify/search'
+      fullPath: '/api/cloudify/search'
+      preLoaderRoute: typeof ApiCloudifySearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/cloudify/delete': {
       id: '/api/cloudify/delete'
       path: '/api/cloudify/delete'
@@ -836,6 +856,7 @@ const rootRouteChildren: RootRouteChildren = {
   ShsdbCreateRoute: ShsdbCreateRoute,
   ApiCloudifyCreateRoute: ApiCloudifyCreateRoute,
   ApiCloudifyDeleteRoute: ApiCloudifyDeleteRoute,
+  ApiCloudifySearchRoute: ApiCloudifySearchRoute,
   ApiCloudifySongsRoute: ApiCloudifySongsRoute,
   ApiCloudifyUpdateRoute: ApiCloudifyUpdateRoute,
   ApiMessagesActionRoute: ApiMessagesActionRoute,

@@ -20,7 +20,8 @@ import {
   CheckCircle,
   AlertCircle,
   X,
-  Sparkles
+  Sparkles,
+  Download
 } from "lucide-react";
 
 export const Route = createFileRoute("/cloudify")({
@@ -55,6 +56,11 @@ function CloudifyMusicPage() {
   const [songs, setSongs] = useState<Song[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+
+  // Online Search States
+  const [onlineResult, setOnlineResult] = useState<any>(null);
+  const [onlineLoading, setOnlineLoading] = useState(false);
+  const [onlineError, setOnlineError] = useState<string | null>(null);
 
   // Admin Mode States
   const [isAdmin, setIsAdmin] = useState(false);
@@ -106,6 +112,68 @@ function CloudifyMusicPage() {
       if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
     };
   }, []);
+
+  // Clear online search when input is empty
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setOnlineResult(null);
+      setOnlineError(null);
+    }
+  }, [searchQuery]);
+
+  const playOnlineSong = () => {
+    if (!onlineResult) return;
+    
+    const tempSong: Song = {
+      id: `online_${Date.now()}`,
+      title: onlineResult.title,
+      artist: "YouTube Music",
+      coverUrl: onlineResult.thumbnail,
+      audioUrl: onlineResult.download_url,
+      createdAt: new Date().toISOString()
+    };
+    
+    setCurrentSong(tempSong);
+    setIsPlaying(true);
+  };
+
+  const addOnlineSongToLibrary = async () => {
+    if (!onlineResult || !isAdmin) return;
+    
+    const titleArtist = onlineResult.title.split(" - ");
+    const artist = titleArtist[0] || "Unknown";
+    const title = titleArtist[1] || onlineResult.title;
+
+    try {
+      const res = await fetch("/api/cloudify/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: title.trim(),
+          artist: artist.trim(),
+          coverUrl: onlineResult.thumbnail,
+          audioUrl: onlineResult.download_url,
+          auth: adminToken,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "Failed to add song to database.");
+
+      alert("Song added to library successfully!");
+      fetchSongs();
+    } catch (err: any) {
+      alert(err.message || "Failed to add song to library.");
+    }
+  };
+
+  const formatViews = (num: number) => {
+    if (!num) return "0";
+    if (num >= 1e9) return `${(num / 1e9).toFixed(1)}B`;
+    if (num >= 1e6) return `${(num / 1e6).toFixed(1)}M`;
+    if (num >= 1e3) return `${(num / 1e3).toFixed(1)}K`;
+    return num.toLocaleString();
+  };
 
   // Update audio controls
   useEffect(() => {
@@ -180,15 +248,40 @@ function CloudifyMusicPage() {
     }
   };
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
+  const handleSearchSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim() === "as@vercel") {
+    const query = searchQuery.trim();
+    if (!query) return;
+
+    if (query === "as@vercel") {
       setIsAdmin(true);
       setAdminToken("as@vercel");
       localStorage.setItem("cloudify_admin_token", "as@vercel");
       setShowAdminPanel(true);
       setSearchQuery("");
       alert("Admin Panel Unlocked!");
+      return;
+    }
+
+    // Perform online API lookup
+    setOnlineLoading(true);
+    setOnlineError(null);
+    setOnlineResult(null);
+
+    try {
+      const res = await fetch(`/api/cloudify/search?query=${encodeURIComponent(query)}`);
+      if (!res.ok) throw new Error("Search service failed. Please check network/query.");
+      
+      const data = await res.json();
+      if (data.status && data.result) {
+        setOnlineResult(data.result);
+      } else {
+        setOnlineError("No matching track found online. Try adjusting query.");
+      }
+    } catch (err: any) {
+      setOnlineError(err.message || "Failed to query track online.");
+    } finally {
+      setOnlineLoading(false);
     }
   };
 
@@ -461,16 +554,137 @@ function CloudifyMusicPage() {
       <div className="flex-1 max-w-4xl mx-auto w-full px-5 py-6 space-y-6 overflow-y-auto">
         
         {/* iOS Search Bar */}
-        <form onSubmit={handleSearchSubmit} className="relative select-none max-w-lg mx-auto">
-          <Search className="absolute left-3.5 top-2.5 size-4 text-zinc-500" />
-          <input
-            type="text"
-            placeholder="Search songs, artists, or type keys..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-9 bg-zinc-900 border border-zinc-800/60 rounded-xl pl-10 pr-4 text-[12.5px] font-bold text-white placeholder-zinc-500 outline-none focus:border-pink-500/30 transition-all"
-          />
+        <form onSubmit={handleSearchSubmit} className="relative select-none max-w-lg mx-auto flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3.5 top-2.5 size-4 text-zinc-500" />
+            <input
+              type="text"
+              placeholder="Search songs, artists, or type keys..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-9 bg-zinc-900 border border-zinc-800/60 rounded-xl pl-10 pr-4 text-[12.5px] font-bold text-white placeholder-zinc-500 outline-none focus:border-pink-500/30 transition-all"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={onlineLoading || !searchQuery.trim()}
+            className="px-4.5 h-9 rounded-xl bg-pink-600 hover:bg-pink-500 disabled:opacity-40 text-[11.5px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-md flex-shrink-0"
+          >
+            {onlineLoading ? <Loader2 className="size-3.5 animate-spin" /> : "Search"}
+          </button>
         </form>
+
+        {/* Online Search Results Display */}
+        {onlineLoading && (
+          <div className="flex flex-col items-center justify-center py-8 select-none">
+            <Loader2 className="size-6 animate-spin text-pink-500" />
+            <p className="text-[11.5px] text-zinc-500 font-bold mt-1.5 animate-pulse">Searching YouTube Music...</p>
+          </div>
+        )}
+
+        {onlineError && (
+          <div className="rounded-xl border border-rose-500/25 bg-rose-500/5 text-rose-500 text-[12px] font-bold p-3.5 flex items-start gap-2 max-w-lg mx-auto select-text">
+            <AlertCircle className="size-4 flex-shrink-0 mt-0.5" />
+            <span>{onlineError}</span>
+          </div>
+        )}
+
+        {onlineResult && (
+          <div className="bg-gradient-to-br from-zinc-950/95 to-zinc-900/85 border border-pink-500/15 rounded-2xl p-4.5 max-w-lg mx-auto shadow-2xl relative overflow-hidden animate-spring-scale select-text">
+            {/* Background reflection */}
+            <div className="absolute -top-12 -right-12 size-24 bg-pink-500/10 rounded-full blur-xl pointer-events-none" />
+            
+            <div className="flex items-center gap-1.5 text-[9px] font-black uppercase text-pink-500 tracking-widest mb-3.5 select-none">
+              <Sparkles className="size-3.5 text-pink-500" />
+              <span>YouTube Search Match</span>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Thumbnail with overlay Play button */}
+              <div className="relative rounded-xl overflow-hidden aspect-video sm:w-[150px] bg-zinc-900 shadow-inner flex-shrink-0 select-none group">
+                <img src={onlineResult.thumbnail} className="w-full h-full object-cover" alt="Song Thumbnail" />
+                <div className="absolute inset-0 bg-black/45 flex items-center justify-center cursor-pointer" onClick={playOnlineSong}>
+                  <div className="size-10 rounded-full bg-white/95 text-black flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95">
+                    {currentSong?.audioUrl === onlineResult.download_url && isPlaying ? (
+                      <Pause className="size-4.5 fill-black" />
+                    ) : (
+                      <Play className="size-4.5 fill-black ml-0.5" />
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Meta details */}
+              <div className="flex-1 min-w-0 space-y-2.5">
+                <div>
+                  <h3 className="text-[13px] font-black text-white leading-snug break-words">
+                    {onlineResult.title}
+                  </h3>
+                  <div className="flex flex-wrap gap-x-2 gap-y-0.5 text-[10px] font-bold text-zinc-500 mt-1 select-none">
+                    <span>{onlineResult.duration}</span>
+                    <span>•</span>
+                    <span>{formatViews(onlineResult.views)} views</span>
+                    <span>•</span>
+                    <span>{onlineResult.published}</span>
+                  </div>
+                </div>
+
+                {/* YouTube Link */}
+                <div className="text-[10.5px] select-none">
+                  <a
+                    href={onlineResult.video_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-zinc-500 hover:text-pink-500 font-bold underline transition-colors"
+                  >
+                    View YouTube video ↗
+                  </a>
+                </div>
+
+                {/* Actions */}
+                <div className="flex flex-wrap gap-2 select-none pt-0.5">
+                  <button
+                    onClick={playOnlineSong}
+                    className="px-4 py-2 rounded-xl bg-pink-600 hover:bg-pink-500 text-white text-[11px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 active:scale-95 shadow-md"
+                  >
+                    {currentSong?.audioUrl === onlineResult.download_url && isPlaying ? (
+                      <>
+                        <Pause className="size-3.5 fill-white" />
+                        <span>Pause</span>
+                      </>
+                    ) : (
+                      <>
+                        <Play className="size-3.5 fill-white ml-0.5" />
+                        <span>Play Stream</span>
+                      </>
+                    )}
+                  </button>
+
+                  <a
+                    href={onlineResult.download_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download
+                    className="px-4.5 py-2 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-200 hover:text-white text-[11px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 active:scale-95"
+                  >
+                    <Download className="size-3.5" />
+                    <span>Download</span>
+                  </a>
+
+                  {isAdmin && (
+                    <button
+                      onClick={addOnlineSongToLibrary}
+                      className="px-3.5 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 text-emerald-500 text-[11px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1 active:scale-95"
+                    >
+                      <Plus className="size-3.5" />
+                      <span>Add to DB</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Featured Songs Grid (if no search active) */}
         {!searchQuery && songs.length > 0 && (
