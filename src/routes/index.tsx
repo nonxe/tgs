@@ -17,7 +17,8 @@ import {
   Music,
   Mail,
   Database,
-  MessageSquare
+  MessageSquare,
+  Youtube
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -119,6 +120,14 @@ function DashboardHome() {
       icon: Music, 
       link: "/cloudify",
       color: "text-pink-400 border-pink-500/20 bg-pink-500/5 hover:border-pink-500/40"
+    },
+    { 
+      id: "ytdl", 
+      title: "YT Downloader", 
+      desc: "Download high definition YouTube videos directly in MP4 format.", 
+      icon: Youtube, 
+      link: "/ytdl",
+      color: "text-red-400 border-red-500/20 bg-red-500/5 hover:border-red-500/40"
     },
     { 
       id: "tempmail", 

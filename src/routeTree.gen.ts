@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as YtdlRouteImport } from './routes/ytdl'
 import { Route as XRouteImport } from './routes/x'
 import { Route as TempmailRouteImport } from './routes/tempmail'
 import { Route as ShsdbConsoleRouteImport } from './routes/shsdb-console'
@@ -28,6 +29,7 @@ import { Route as ShsdbIdRouteImport } from './routes/shsdb.$id'
 import { Route as NoteNoteIdRouteImport } from './routes/note.$noteId'
 import { Route as DbCreateRouteImport } from './routes/db.create'
 import { Route as DbIdRouteImport } from './routes/db.$id'
+import { Route as ApiYtdlDownloadRouteImport } from './routes/api/ytdl/download'
 import { Route as ApiXUserRouteImport } from './routes/api/x/user'
 import { Route as ApiXTweetsRouteImport } from './routes/api/x/tweets'
 import { Route as ApiXDownloadRouteImport } from './routes/api/x/download'
@@ -49,6 +51,11 @@ import { Route as ApiCloudifyCreateRouteImport } from './routes/api/cloudify/cre
 import { Route as ApiMessagesFeedLikeRouteImport } from './routes/api/messages/feed/like'
 import { Route as ApiMessagesFeedCommentRouteImport } from './routes/api/messages/feed/comment'
 
+const YtdlRoute = YtdlRouteImport.update({
+  id: '/ytdl',
+  path: '/ytdl',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const XRoute = XRouteImport.update({
   id: '/x',
   path: '/x',
@@ -142,6 +149,11 @@ const DbCreateRoute = DbCreateRouteImport.update({
 const DbIdRoute = DbIdRouteImport.update({
   id: '/db/$id',
   path: '/db/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiYtdlDownloadRoute = ApiYtdlDownloadRouteImport.update({
+  id: '/api/ytdl/download',
+  path: '/api/ytdl/download',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiXUserRoute = ApiXUserRouteImport.update({
@@ -260,6 +272,7 @@ export interface FileRoutesByFullPath {
   '/shsdb-console': typeof ShsdbConsoleRoute
   '/tempmail': typeof TempmailRoute
   '/x': typeof XRoute
+  '/ytdl': typeof YtdlRoute
   '/db/$id': typeof DbIdRoute
   '/db/create': typeof DbCreateRoute
   '/note/$noteId': typeof NoteNoteIdRoute
@@ -284,6 +297,7 @@ export interface FileRoutesByFullPath {
   '/api/x/download': typeof ApiXDownloadRoute
   '/api/x/tweets': typeof ApiXTweetsRoute
   '/api/x/user': typeof ApiXUserRoute
+  '/api/ytdl/download': typeof ApiYtdlDownloadRoute
   '/api/messages/feed/comment': typeof ApiMessagesFeedCommentRoute
   '/api/messages/feed/like': typeof ApiMessagesFeedLikeRoute
 }
@@ -300,6 +314,7 @@ export interface FileRoutesByTo {
   '/shsdb-console': typeof ShsdbConsoleRoute
   '/tempmail': typeof TempmailRoute
   '/x': typeof XRoute
+  '/ytdl': typeof YtdlRoute
   '/db/$id': typeof DbIdRoute
   '/db/create': typeof DbCreateRoute
   '/note/$noteId': typeof NoteNoteIdRoute
@@ -324,6 +339,7 @@ export interface FileRoutesByTo {
   '/api/x/download': typeof ApiXDownloadRoute
   '/api/x/tweets': typeof ApiXTweetsRoute
   '/api/x/user': typeof ApiXUserRoute
+  '/api/ytdl/download': typeof ApiYtdlDownloadRoute
   '/api/messages/feed/comment': typeof ApiMessagesFeedCommentRoute
   '/api/messages/feed/like': typeof ApiMessagesFeedLikeRoute
 }
@@ -342,6 +358,7 @@ export interface FileRoutesById {
   '/shsdb-console': typeof ShsdbConsoleRoute
   '/tempmail': typeof TempmailRoute
   '/x': typeof XRoute
+  '/ytdl': typeof YtdlRoute
   '/db/$id': typeof DbIdRoute
   '/db/create': typeof DbCreateRoute
   '/note/$noteId': typeof NoteNoteIdRoute
@@ -366,6 +383,7 @@ export interface FileRoutesById {
   '/api/x/download': typeof ApiXDownloadRoute
   '/api/x/tweets': typeof ApiXTweetsRoute
   '/api/x/user': typeof ApiXUserRoute
+  '/api/ytdl/download': typeof ApiYtdlDownloadRoute
   '/api/messages/feed/comment': typeof ApiMessagesFeedCommentRoute
   '/api/messages/feed/like': typeof ApiMessagesFeedLikeRoute
 }
@@ -385,6 +403,7 @@ export interface FileRouteTypes {
     | '/shsdb-console'
     | '/tempmail'
     | '/x'
+    | '/ytdl'
     | '/db/$id'
     | '/db/create'
     | '/note/$noteId'
@@ -409,6 +428,7 @@ export interface FileRouteTypes {
     | '/api/x/download'
     | '/api/x/tweets'
     | '/api/x/user'
+    | '/api/ytdl/download'
     | '/api/messages/feed/comment'
     | '/api/messages/feed/like'
   fileRoutesByTo: FileRoutesByTo
@@ -425,6 +445,7 @@ export interface FileRouteTypes {
     | '/shsdb-console'
     | '/tempmail'
     | '/x'
+    | '/ytdl'
     | '/db/$id'
     | '/db/create'
     | '/note/$noteId'
@@ -449,6 +470,7 @@ export interface FileRouteTypes {
     | '/api/x/download'
     | '/api/x/tweets'
     | '/api/x/user'
+    | '/api/ytdl/download'
     | '/api/messages/feed/comment'
     | '/api/messages/feed/like'
   id:
@@ -466,6 +488,7 @@ export interface FileRouteTypes {
     | '/shsdb-console'
     | '/tempmail'
     | '/x'
+    | '/ytdl'
     | '/db/$id'
     | '/db/create'
     | '/note/$noteId'
@@ -490,6 +513,7 @@ export interface FileRouteTypes {
     | '/api/x/download'
     | '/api/x/tweets'
     | '/api/x/user'
+    | '/api/ytdl/download'
     | '/api/messages/feed/comment'
     | '/api/messages/feed/like'
   fileRoutesById: FileRoutesById
@@ -508,6 +532,7 @@ export interface RootRouteChildren {
   ShsdbConsoleRoute: typeof ShsdbConsoleRoute
   TempmailRoute: typeof TempmailRoute
   XRoute: typeof XRoute
+  YtdlRoute: typeof YtdlRoute
   DbIdRoute: typeof DbIdRoute
   DbCreateRoute: typeof DbCreateRoute
   ShsdbIdRoute: typeof ShsdbIdRoute
@@ -530,10 +555,18 @@ export interface RootRouteChildren {
   ApiXDownloadRoute: typeof ApiXDownloadRoute
   ApiXTweetsRoute: typeof ApiXTweetsRoute
   ApiXUserRoute: typeof ApiXUserRoute
+  ApiYtdlDownloadRoute: typeof ApiYtdlDownloadRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/ytdl': {
+      id: '/ytdl'
+      path: '/ytdl'
+      fullPath: '/ytdl'
+      preLoaderRoute: typeof YtdlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/x': {
       id: '/x'
       path: '/x'
@@ -665,6 +698,13 @@ declare module '@tanstack/react-router' {
       path: '/db/$id'
       fullPath: '/db/$id'
       preLoaderRoute: typeof DbIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ytdl/download': {
+      id: '/api/ytdl/download'
+      path: '/api/ytdl/download'
+      fullPath: '/api/ytdl/download'
+      preLoaderRoute: typeof ApiYtdlDownloadRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/x/user': {
@@ -850,6 +890,7 @@ const rootRouteChildren: RootRouteChildren = {
   ShsdbConsoleRoute: ShsdbConsoleRoute,
   TempmailRoute: TempmailRoute,
   XRoute: XRoute,
+  YtdlRoute: YtdlRoute,
   DbIdRoute: DbIdRoute,
   DbCreateRoute: DbCreateRoute,
   ShsdbIdRoute: ShsdbIdRoute,
@@ -872,6 +913,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiXDownloadRoute: ApiXDownloadRoute,
   ApiXTweetsRoute: ApiXTweetsRoute,
   ApiXUserRoute: ApiXUserRoute,
+  ApiYtdlDownloadRoute: ApiYtdlDownloadRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
