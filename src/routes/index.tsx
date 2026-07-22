@@ -115,7 +115,7 @@ function DashboardHome() {
     { 
       id: "cloudify", 
       title: "Cloudify Music", 
-      desc: "Premium iOS-themed music player. Stream and search custom songs uploaded by the owner.", 
+      desc: "Premium cloud music player. Stream, search, and manage custom playlists.", 
       icon: Music, 
       link: "/cloudify",
       color: "text-pink-400 border-pink-500/20 bg-pink-500/5 hover:border-pink-500/40"
