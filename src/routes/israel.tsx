@@ -47,90 +47,162 @@ const songLyrics: LyricLine[] = [
   {
     id: 0,
     start: 0,
-    end: 8,
-    hebrew: "🎵 [מנגינת פתיחה] 🎵",
-    transliteration: "🎵 [Intro Instrumental] 🎵",
-    translation: "Symphonic prelude of hope and unity"
+    end: 12,
+    hebrew: "🎵 [פתיחה מוזיקלית עוצמתית] 🎵",
+    transliteration: "🎵 [Opening Instrumental] 🎵",
+    translation: "Symphonic prelude of hope, resilience, and unity"
   },
   {
     id: 1,
-    start: 8,
-    end: 17,
+    start: 12,
+    end: 20,
     hebrew: "ארץ ואיש, אש ודמעות",
     transliteration: "Eretz v'eesh, esh v'dmaot",
-    translation: "Land and people, fire and tears"
+    translation: "Land and man, fire and tears"
   },
   {
     id: 2,
-    start: 17,
-    end: 26,
+    start: 20,
+    end: 28,
     hebrew: "מתוך העפר, קם עם של גבורות",
     transliteration: "Mitoch he'afar, kam am shel gvurot",
     translation: "Out of the ashes rises a nation of heroes"
   },
   {
     id: 3,
-    start: 26,
-    end: 35,
+    start: 28,
+    end: 36,
     hebrew: "קול דמי אחינו צועקים מן האדמה",
     transliteration: "Kol dmei acheinu tzo'akim min ha'adama",
     translation: "The voices of our brethren cry out from the earth"
   },
   {
     id: 4,
-    start: 35,
-    end: 45,
+    start: 36,
+    end: 44,
     hebrew: "אבל הרוח לא תישבר לעולם",
     transliteration: "Avel haruach lo tishever le'olam",
     translation: "Yet our spirit shall never be broken"
   },
   {
     id: 5,
-    start: 45,
-    end: 58,
+    start: 44,
+    end: 52,
     hebrew: "עם ישראל חי! עם ישראל חי!",
     transliteration: "Am Yisrael Chai! Am Yisrael Chai!",
     translation: "The People of Israel Live! The People of Israel Live!"
   },
   {
     id: 6,
-    start: 58,
-    end: 70,
+    start: 52,
+    end: 60,
     hebrew: "עוד אבינו חי!",
     transliteration: "Od Avinu Chai!",
     translation: "Our Father still lives!"
   },
   {
     id: 7,
-    start: 70,
-    end: 82,
+    start: 60,
+    end: 68,
     hebrew: "מדור לדור, באור ובדממה",
     transliteration: "Midor l'dor, b'or u'bdmama",
     translation: "From generation to generation, in light and quiet strength"
   },
   {
     id: 8,
-    start: 82,
-    end: 95,
+    start: 68,
+    end: 76,
     hebrew: "יחד נעמוד, כי אין לנו ארץ אחרת",
     transliteration: "Yachad na'amod, ki ein lanu eretz acheret",
     translation: "Together we stand, for we have no other home"
   },
   {
     id: 9,
-    start: 95,
-    end: 110,
+    start: 76,
+    end: 84,
     hebrew: "עם ישראל חי! עוד אבינו חי!",
     transliteration: "Am Yisrael Chai! Od Avinu Chai!",
     translation: "The People of Israel Live! Our Father still lives!"
   },
   {
     id: 10,
-    start: 110,
-    end: 135,
+    start: 84,
+    end: 94,
+    hebrew: "🎷 [מעבר מוזיקלי נשמתי] 🎷",
+    transliteration: "🎷 [Soulful Musical Interlude] 🎷",
+    translation: "A moment of reflection and collective strength"
+  },
+  {
+    id: 11,
+    start: 94,
+    end: 104,
+    hebrew: "בתוך הסערה, שומרים על התקווה",
+    transliteration: "Btoch hasa'ara, shomrim al hatikva",
+    translation: "In the midst of the storm, we guard our eternal hope"
+  },
+  {
+    id: 12,
+    start: 104,
+    end: 114,
+    hebrew: "האור שבלב, מאיר את הלילה",
+    transliteration: "Ha'or shebalev, me'ir et halaila",
+    translation: "The light within our hearts illuminates the dark night"
+  },
+  {
+    id: 13,
+    start: 114,
+    end: 124,
+    hebrew: "תפילת האבות, שיר של לוחמים",
+    transliteration: "Tfilat ha'avot, shir shel lochamim",
+    translation: "The prayer of our ancestors, an anthem of brave guardians"
+  },
+  {
+    id: 14,
+    start: 124,
+    end: 134,
+    hebrew: "כי נצח ישראל לא ישקר",
+    transliteration: "Ki netzach Yisrael lo yeshaker",
+    translation: "For the Eternity of Israel shall never fail"
+  },
+  {
+    id: 15,
+    start: 134,
+    end: 144,
+    hebrew: "עם ישראל חי! עם ישראל חי!",
+    transliteration: "Am Yisrael Chai! Am Yisrael Chai!",
+    translation: "The People of Israel Live! The People of Israel Live!"
+  },
+  {
+    id: 16,
+    start: 144,
+    end: 154,
+    hebrew: "עוד אבינו חי! עוד אבינו חי!",
+    transliteration: "Od Avinu Chai! Od Avinu Chai!",
+    translation: "Our Father still lives! Our Father still lives!"
+  },
+  {
+    id: 17,
+    start: 154,
+    end: 166,
+    hebrew: "יחד נעמוד, כי אין לנו ארץ אחרת",
+    transliteration: "Yachad na'amod, ki ein lanu eretz acheret",
+    translation: "Together we stand, for we have no other homeland"
+  },
+  {
+    id: 18,
+    start: 166,
+    end: 180,
     hebrew: "תפילת הדורות, תקווה ללא קץ — עם ישראל חי!",
     transliteration: "Tfilat hadorot, tikva lelo ketz — Am Yisrael Chai!",
-    translation: "The prayer of generations, endless hope — The People of Israel Live!"
+    translation: "The prayer of all generations, endless hope — The People of Israel Live!"
+  },
+  {
+    id: 19,
+    start: 180,
+    end: 240,
+    hebrew: "✨ עם ישראל חי! ✨ [סיום מוזיקלי מרומם]",
+    transliteration: "✨ Am Yisrael Chai! ✨ [Exalted Finale]",
+    translation: "Eternal blessing and triumphant finale of unity"
   }
 ];
 
