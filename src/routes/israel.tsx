@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import {
   ArrowLeft,
   Volume2,
@@ -19,204 +19,27 @@ import {
   BookMarked,
   Download,
   Star,
-  ListFilter,
-  Music,
-  Mic2
+  ListFilter
 } from "lucide-react";
 
 export const Route = createFileRoute("/israel")({
   head: () => ({
     meta: [
-      { title: "Way to Israel — History, Live Lyrics & Jewish Heritage" },
-      { name: "description", content: "Comprehensive history of Israel, time-synced lyrics for Am Yisrael Chai, sacred scriptures, and culture." },
+      { title: "Way to Israel — History, Sacred Scriptures & Jewish Heritage" },
+      { name: "description", content: "Comprehensive history of Israel through Jewish experience, sacred scriptures, culture, and heritage." },
     ],
   }),
   component: WayToIsraelPage,
 });
 
-interface LyricLine {
-  id: number;
-  start: number;
-  end: number;
-  hebrew: string;
-  transliteration: string;
-  translation: string;
-}
-
-const songLyrics: LyricLine[] = [
-  {
-    id: 0,
-    start: 0,
-    end: 12,
-    hebrew: "🎵 [פתיחה מוזיקלית עוצמתית] 🎵",
-    transliteration: "🎵 [Opening Instrumental] 🎵",
-    translation: "Symphonic prelude of hope, resilience, and unity"
-  },
-  {
-    id: 1,
-    start: 12,
-    end: 20,
-    hebrew: "ארץ ואיש, אש ודמעות",
-    transliteration: "Eretz v'eesh, esh v'dmaot",
-    translation: "Land and man, fire and tears"
-  },
-  {
-    id: 2,
-    start: 20,
-    end: 28,
-    hebrew: "מתוך העפר, קם עם של גבורות",
-    transliteration: "Mitoch he'afar, kam am shel gvurot",
-    translation: "Out of the ashes rises a nation of heroes"
-  },
-  {
-    id: 3,
-    start: 28,
-    end: 36,
-    hebrew: "קול דמי אחינו צועקים מן האדמה",
-    transliteration: "Kol dmei acheinu tzo'akim min ha'adama",
-    translation: "The voices of our brethren cry out from the earth"
-  },
-  {
-    id: 4,
-    start: 36,
-    end: 44,
-    hebrew: "אבל הרוח לא תישבר לעולם",
-    transliteration: "Avel haruach lo tishever le'olam",
-    translation: "Yet our spirit shall never be broken"
-  },
-  {
-    id: 5,
-    start: 44,
-    end: 52,
-    hebrew: "עם ישראל חי! עם ישראל חי!",
-    transliteration: "Am Yisrael Chai! Am Yisrael Chai!",
-    translation: "The People of Israel Live! The People of Israel Live!"
-  },
-  {
-    id: 6,
-    start: 52,
-    end: 60,
-    hebrew: "עוד אבינו חי!",
-    transliteration: "Od Avinu Chai!",
-    translation: "Our Father still lives!"
-  },
-  {
-    id: 7,
-    start: 60,
-    end: 68,
-    hebrew: "מדור לדור, באור ובדממה",
-    transliteration: "Midor l'dor, b'or u'bdmama",
-    translation: "From generation to generation, in light and quiet strength"
-  },
-  {
-    id: 8,
-    start: 68,
-    end: 76,
-    hebrew: "יחד נעמוד, כי אין לנו ארץ אחרת",
-    transliteration: "Yachad na'amod, ki ein lanu eretz acheret",
-    translation: "Together we stand, for we have no other home"
-  },
-  {
-    id: 9,
-    start: 76,
-    end: 84,
-    hebrew: "עם ישראל חי! עוד אבינו חי!",
-    transliteration: "Am Yisrael Chai! Od Avinu Chai!",
-    translation: "The People of Israel Live! Our Father still lives!"
-  },
-  {
-    id: 10,
-    start: 84,
-    end: 94,
-    hebrew: "🎷 [מעבר מוזיקלי נשמתי] 🎷",
-    transliteration: "🎷 [Soulful Musical Interlude] 🎷",
-    translation: "A moment of reflection and collective strength"
-  },
-  {
-    id: 11,
-    start: 94,
-    end: 104,
-    hebrew: "בתוך הסערה, שומרים על התקווה",
-    transliteration: "Btoch hasa'ara, shomrim al hatikva",
-    translation: "In the midst of the storm, we guard our eternal hope"
-  },
-  {
-    id: 12,
-    start: 104,
-    end: 114,
-    hebrew: "האור שבלב, מאיר את הלילה",
-    transliteration: "Ha'or shebalev, me'ir et halaila",
-    translation: "The light within our hearts illuminates the dark night"
-  },
-  {
-    id: 13,
-    start: 114,
-    end: 124,
-    hebrew: "תפילת האבות, שיר של לוחמים",
-    transliteration: "Tfilat ha'avot, shir shel lochamim",
-    translation: "The prayer of our ancestors, an anthem of brave guardians"
-  },
-  {
-    id: 14,
-    start: 124,
-    end: 134,
-    hebrew: "כי נצח ישראל לא ישקר",
-    transliteration: "Ki netzach Yisrael lo yeshaker",
-    translation: "For the Eternity of Israel shall never fail"
-  },
-  {
-    id: 15,
-    start: 134,
-    end: 144,
-    hebrew: "עם ישראל חי! עם ישראל חי!",
-    transliteration: "Am Yisrael Chai! Am Yisrael Chai!",
-    translation: "The People of Israel Live! The People of Israel Live!"
-  },
-  {
-    id: 16,
-    start: 144,
-    end: 154,
-    hebrew: "עוד אבינו חי! עוד אבינו חי!",
-    transliteration: "Od Avinu Chai! Od Avinu Chai!",
-    translation: "Our Father still lives! Our Father still lives!"
-  },
-  {
-    id: 17,
-    start: 154,
-    end: 166,
-    hebrew: "יחד נעמוד, כי אין לנו ארץ אחרת",
-    transliteration: "Yachad na'amod, ki ein lanu eretz acheret",
-    translation: "Together we stand, for we have no other homeland"
-  },
-  {
-    id: 18,
-    start: 166,
-    end: 180,
-    hebrew: "תפילת הדורות, תקווה ללא קץ — עם ישראל חי!",
-    transliteration: "Tfilat hadorot, tikva lelo ketz — Am Yisrael Chai!",
-    translation: "The prayer of all generations, endless hope — The People of Israel Live!"
-  },
-  {
-    id: 19,
-    start: 180,
-    end: 240,
-    hebrew: "✨ עם ישראל חי! ✨ [סיום מוזיקלי מרומם]",
-    transliteration: "✨ Am Yisrael Chai! ✨ [Exalted Finale]",
-    translation: "Eternal blessing and triumphant finale of unity"
-  }
-];
-
 function WayToIsraelPage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [showLyricsPanel, setShowLyricsPanel] = useState(false);
   const [activeTab, setActiveTab] = useState<"history" | "texts" | "culture">("history");
   const [historyViewMode, setHistoryViewMode] = useState<"interactive" | "full">("interactive");
   const [selectedPart, setSelectedPart] = useState<number | null>(null);
   
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const lyricsContainerRef = useRef<HTMLDivElement | null>(null);
 
   const togglePlay = () => {
     if (videoRef.current) {
@@ -235,32 +58,6 @@ function WayToIsraelPage() {
       setIsMuted(!isMuted);
     }
   };
-
-  const seekTo = (seconds: number) => {
-    if (videoRef.current) {
-      videoRef.current.currentTime = seconds;
-      if (!isPlaying) {
-        videoRef.current.play();
-        setIsPlaying(true);
-      }
-    }
-  };
-
-  // Find active lyric index based on video currentTime
-  const currentLyricIndex = songLyrics.findIndex(
-    (line) => currentTime >= line.start && currentTime < line.end
-  );
-  const activeLyric = currentLyricIndex !== -1 ? songLyrics[currentLyricIndex] : songLyrics[0];
-
-  // Auto-scroll lyrics container to keep active line centered
-  useEffect(() => {
-    if (lyricsContainerRef.current && currentLyricIndex !== -1) {
-      const activeElement = lyricsContainerRef.current.children[currentLyricIndex] as HTMLElement;
-      if (activeElement) {
-        activeElement.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-    }
-  }, [currentLyricIndex]);
 
   const sacredTexts = [
     {
@@ -467,67 +264,35 @@ function WayToIsraelPage() {
       {/* Main Container */}
       <section className="relative max-w-5xl mx-auto w-full px-4 sm:px-6 pt-6 space-y-8">
 
-        {/* Featured Video + Animated Lyrics Section */}
+        {/* Clean Minimal Featured Video Section */}
         <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-slate-900/40 shadow-2xl backdrop-blur-xl group">
           <video
             ref={videoRef}
             src="https://files.catbox.moe/s6mzcv.mp4"
             className="w-full aspect-video object-cover"
             playsInline
-            onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
           />
 
-          {/* Video Controls Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col justify-between p-5 sm:p-6 pointer-events-none">
-            <div className="flex justify-between items-start pointer-events-auto">
-              <div className="flex items-center gap-2 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 text-white text-[11px] font-semibold">
-                <Music className="size-3.5 text-sky-400" />
-                <span>Am Yisrael Chai</span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                {/* Synchronized Lyrics Toggle Button */}
-                <button
-                  onClick={() => setShowLyricsPanel(!showLyricsPanel)}
-                  className={`px-3 py-1.5 rounded-full backdrop-blur-md border text-[11px] font-bold transition-all flex items-center gap-1.5 ${
-                    showLyricsPanel
-                      ? "bg-blue-600 border-sky-400 text-white shadow-lg shadow-blue-600/40"
-                      : "bg-slate-900/80 border-white/10 text-slate-300 hover:bg-slate-800"
-                  }`}
-                >
-                  <Mic2 className="size-3.5 text-sky-300" />
-                  <span>{showLyricsPanel ? "Hide Lyrics" : "Live Lyrics"}</span>
-                </button>
-
-                <button
-                  onClick={toggleMute}
-                  className="size-9 rounded-full bg-slate-900/80 backdrop-blur-md border border-white/10 text-white flex items-center justify-center hover:bg-slate-800 transition-all active:scale-95 shadow-md"
-                >
-                  {isMuted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
-                </button>
-              </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent flex flex-col justify-between p-6 pointer-events-none">
+            <div className="flex justify-end items-start pointer-events-auto">
+              <button
+                onClick={toggleMute}
+                className="size-9 rounded-full bg-slate-900/80 backdrop-blur-md border border-white/10 text-white flex items-center justify-center hover:bg-slate-800 transition-all active:scale-95 shadow-md"
+              >
+                {isMuted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+              </button>
             </div>
 
-            {/* Bottom Overlay: Title & Dynamic Live Lyric Subtitle */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 pointer-events-auto">
-              <div className="max-w-xl space-y-1.5">
+            <div className="flex items-end justify-between pointer-events-auto">
+              <div className="max-w-md space-y-1">
                 <h3 className="text-xl sm:text-2xl font-black text-white leading-tight drop-shadow-md">
                   עם ישראל חי — Am Yisrael Chai
                 </h3>
-
-                {/* SMOOTH ANIMATED LIVE LYRIC SUBTITLE BAR */}
-                {activeLyric && (
-                  <div className="bg-slate-950/80 backdrop-blur-xl border border-sky-400/30 px-3.5 py-2 rounded-2xl transition-all duration-500 animate-fadeIn">
-                    <p className="text-[13.5px] font-bold text-sky-300 leading-tight">
-                      {activeLyric.hebrew}
-                    </p>
-                    <p className="text-[11.5px] font-medium text-slate-200 mt-0.5">
-                      {activeLyric.transliteration} • <span className="text-slate-400 italic">{activeLyric.translation}</span>
-                    </p>
-                  </div>
-                )}
+                <p className="text-[12px] font-medium text-slate-300 drop-shadow-sm">
+                  "The People of Israel Live" — Anthem of Jewish resilience, unity, and hope.
+                </p>
               </div>
 
               <button
@@ -539,58 +304,6 @@ function WayToIsraelPage() {
             </div>
           </div>
         </div>
-
-        {/* FULL SYNCHRONIZED LIVE LYRICS DRAWER / PANEL */}
-        {showLyricsPanel && (
-          <div className="bg-slate-900/60 border border-white/10 rounded-3xl p-6 space-y-4 backdrop-blur-2xl shadow-2xl animate-spring-scale select-text">
-            <div className="flex justify-between items-center border-b border-white/10 pb-3">
-              <div className="flex items-center gap-2">
-                <Mic2 className="size-4 text-sky-400" />
-                <h4 className="text-base font-black text-white">Synchronized Live Lyrics</h4>
-              </div>
-              <span className="text-[10px] font-semibold text-slate-400 bg-slate-800 border border-white/5 px-2.5 py-1 rounded-full">
-                Click any line to jump
-              </span>
-            </div>
-
-            <div
-              ref={lyricsContainerRef}
-              className="max-h-72 overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-blue-600/40"
-            >
-              {songLyrics.map((line, idx) => {
-                const isActive = idx === currentLyricIndex;
-                return (
-                  <div
-                    key={line.id}
-                    onClick={() => seekTo(line.start)}
-                    className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-4 ${
-                      isActive
-                        ? "bg-blue-600/20 border-sky-400/60 text-white shadow-lg shadow-blue-600/10 scale-[1.01]"
-                        : "bg-slate-950/40 border-white/5 text-slate-400 hover:bg-slate-900/60 hover:text-slate-200"
-                    }`}
-                  >
-                    <div className="space-y-1">
-                      <p className={`text-[14px] font-black ${isActive ? "text-sky-300" : "text-slate-200"}`}>
-                        {line.hebrew}
-                      </p>
-                      <p className="text-[12px] font-medium">
-                        {line.transliteration} <span className="opacity-70">— {line.translation}</span>
-                      </p>
-                    </div>
-
-                    <span className={`text-[10.5px] font-semibold px-2.5 py-1 rounded-full border ${
-                      isActive
-                        ? "bg-sky-500/20 text-sky-300 border-sky-400/40"
-                        : "bg-slate-900 text-slate-500 border-white/5"
-                    }`}>
-                      {Math.floor(line.start / 60)}:{String(Math.floor(line.start % 60)).padStart(2, "0")}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
 
         {/* ISRAELI FLAG DISPLAY VIDEO CARD */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center bg-slate-900/50 border border-white/10 rounded-3xl p-6 sm:p-8 backdrop-blur-2xl shadow-2xl relative overflow-hidden">
