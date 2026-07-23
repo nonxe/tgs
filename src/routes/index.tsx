@@ -18,7 +18,8 @@ import {
   Mail,
   Database,
   MessageSquare,
-  Youtube
+  Youtube,
+  Compass
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -128,6 +129,14 @@ function DashboardHome() {
       icon: Youtube, 
       link: "/ytdl",
       color: "text-red-400 border-red-500/20 bg-red-500/5 hover:border-red-500/40"
+    },
+    { 
+      id: "israel", 
+      title: "Way to Israel", 
+      desc: "Comprehensive history of Israel, Jewish culture, heritage, and Am Yisrael Chai anthem.", 
+      icon: Compass, 
+      link: "/israel",
+      color: "text-sky-400 border-blue-500/20 bg-blue-500/5 hover:border-blue-500/40"
     },
     { 
       id: "tempmail", 

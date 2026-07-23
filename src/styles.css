@@ -360,3 +360,32 @@
   50% { transform: translate(-50px, 40px); }
 }
 
+/* Wavy Israeli Flag animation */
+@keyframes flagWave {
+  0% {
+    transform: perspective(600px) rotateY(0deg) skewY(0deg);
+    box-shadow: -10px 10px 25px rgba(0, 56, 184, 0.2);
+  }
+  25% {
+    transform: perspective(600px) rotateY(4deg) skewY(1.5deg);
+    box-shadow: -15px 15px 30px rgba(0, 56, 184, 0.35);
+  }
+  50% {
+    transform: perspective(600px) rotateY(0deg) skewY(0deg);
+    box-shadow: -10px 10px 25px rgba(0, 56, 184, 0.2);
+  }
+  75% {
+    transform: perspective(600px) rotateY(-4deg) skewY(-1.5deg);
+    box-shadow: -5px 8px 20px rgba(0, 56, 184, 0.15);
+  }
+  100% {
+    transform: perspective(600px) rotateY(0deg) skewY(0deg);
+    box-shadow: -10px 10px 25px rgba(0, 56, 184, 0.2);
+  }
+}
+
+.animate-flag-wave {
+  animation: flagWave 6s ease-in-out infinite;
+  transform-origin: left center;
+}
+

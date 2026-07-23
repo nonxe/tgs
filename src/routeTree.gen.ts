@@ -18,6 +18,7 @@ import { Route as NoteRouteImport } from './routes/note'
 import { Route as MoreRouteImport } from './routes/more'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as MainRouteImport } from './routes/main'
+import { Route as IsraelRouteImport } from './routes/israel'
 import { Route as DbConsoleRouteImport } from './routes/db-console'
 import { Route as ConvertRouteImport } from './routes/convert'
 import { Route as CloudifyRouteImport } from './routes/cloudify'
@@ -94,6 +95,11 @@ const MessagesRoute = MessagesRouteImport.update({
 const MainRoute = MainRouteImport.update({
   id: '/main',
   path: '/main',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IsraelRoute = IsraelRouteImport.update({
+  id: '/israel',
+  path: '/israel',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DbConsoleRoute = DbConsoleRouteImport.update({
@@ -264,6 +270,7 @@ export interface FileRoutesByFullPath {
   '/cloudify': typeof CloudifyRoute
   '/convert': typeof ConvertRoute
   '/db-console': typeof DbConsoleRoute
+  '/israel': typeof IsraelRoute
   '/main': typeof MainRoute
   '/messages': typeof MessagesRoute
   '/more': typeof MoreRoute
@@ -307,6 +314,7 @@ export interface FileRoutesByTo {
   '/cloudify': typeof CloudifyRoute
   '/convert': typeof ConvertRoute
   '/db-console': typeof DbConsoleRoute
+  '/israel': typeof IsraelRoute
   '/main': typeof MainRoute
   '/messages': typeof MessagesRoute
   '/more': typeof MoreRoute
@@ -350,6 +358,7 @@ export interface FileRoutesById {
   '/cloudify': typeof CloudifyRoute
   '/convert': typeof ConvertRoute
   '/db-console': typeof DbConsoleRoute
+  '/israel': typeof IsraelRoute
   '/main': typeof MainRoute
   '/messages': typeof MessagesRoute
   '/more': typeof MoreRoute
@@ -395,6 +404,7 @@ export interface FileRouteTypes {
     | '/cloudify'
     | '/convert'
     | '/db-console'
+    | '/israel'
     | '/main'
     | '/messages'
     | '/more'
@@ -438,6 +448,7 @@ export interface FileRouteTypes {
     | '/cloudify'
     | '/convert'
     | '/db-console'
+    | '/israel'
     | '/main'
     | '/messages'
     | '/more'
@@ -480,6 +491,7 @@ export interface FileRouteTypes {
     | '/cloudify'
     | '/convert'
     | '/db-console'
+    | '/israel'
     | '/main'
     | '/messages'
     | '/more'
@@ -524,6 +536,7 @@ export interface RootRouteChildren {
   CloudifyRoute: typeof CloudifyRoute
   ConvertRoute: typeof ConvertRoute
   DbConsoleRoute: typeof DbConsoleRoute
+  IsraelRoute: typeof IsraelRoute
   MainRoute: typeof MainRoute
   MessagesRoute: typeof MessagesRoute
   MoreRoute: typeof MoreRoute
@@ -621,6 +634,13 @@ declare module '@tanstack/react-router' {
       path: '/main'
       fullPath: '/main'
       preLoaderRoute: typeof MainRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/israel': {
+      id: '/israel'
+      path: '/israel'
+      fullPath: '/israel'
+      preLoaderRoute: typeof IsraelRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/db-console': {
@@ -882,6 +902,7 @@ const rootRouteChildren: RootRouteChildren = {
   CloudifyRoute: CloudifyRoute,
   ConvertRoute: ConvertRoute,
   DbConsoleRoute: DbConsoleRoute,
+  IsraelRoute: IsraelRoute,
   MainRoute: MainRoute,
   MessagesRoute: MessagesRoute,
   MoreRoute: MoreRoute,
