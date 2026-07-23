@@ -360,32 +360,55 @@
   50% { transform: translate(-50px, 40px); }
 }
 
-/* Wavy Israeli Flag animation */
+/* Realistic Wavy Israeli Flag animation */
 @keyframes flagWave {
   0% {
-    transform: perspective(600px) rotateY(0deg) skewY(0deg);
-    box-shadow: -10px 10px 25px rgba(0, 56, 184, 0.2);
+    transform: perspective(800px) rotateY(-5deg) rotateX(2deg) skewY(-2deg) scale(1);
+    box-shadow: -15px 15px 35px rgba(0, 56, 184, 0.3);
   }
   25% {
-    transform: perspective(600px) rotateY(4deg) skewY(1.5deg);
-    box-shadow: -15px 15px 30px rgba(0, 56, 184, 0.35);
+    transform: perspective(800px) rotateY(6deg) rotateX(-3deg) skewY(2.5deg) scale(1.02);
+    box-shadow: -20px 20px 45px rgba(0, 56, 184, 0.45);
   }
   50% {
-    transform: perspective(600px) rotateY(0deg) skewY(0deg);
-    box-shadow: -10px 10px 25px rgba(0, 56, 184, 0.2);
+    transform: perspective(800px) rotateY(-3deg) rotateX(4deg) skewY(-1.5deg) scale(0.99);
+    box-shadow: -12px 12px 30px rgba(0, 56, 184, 0.25);
   }
   75% {
-    transform: perspective(600px) rotateY(-4deg) skewY(-1.5deg);
-    box-shadow: -5px 8px 20px rgba(0, 56, 184, 0.15);
+    transform: perspective(800px) rotateY(4deg) rotateX(-2deg) skewY(2deg) scale(1.01);
+    box-shadow: -18px 18px 40px rgba(0, 56, 184, 0.4);
   }
   100% {
-    transform: perspective(600px) rotateY(0deg) skewY(0deg);
-    box-shadow: -10px 10px 25px rgba(0, 56, 184, 0.2);
+    transform: perspective(800px) rotateY(-5deg) rotateX(2deg) skewY(-2deg) scale(1);
+    box-shadow: -15px 15px 35px rgba(0, 56, 184, 0.3);
+  }
+}
+
+@keyframes flagRipple {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: 400px 0;
   }
 }
 
 .animate-flag-wave {
-  animation: flagWave 6s ease-in-out infinite;
+  animation: flagWave 4.5s ease-in-out infinite;
+  transform-style: preserve-3d;
   transform-origin: left center;
+}
+
+.flag-shimmer {
+  background: linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.25) 30%,
+    rgba(0, 0, 0, 0.15) 50%,
+    rgba(255, 255, 255, 0.3) 70%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 600px 100%;
+  animation: flagRipple 3.5s linear infinite;
 }
 

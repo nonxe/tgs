@@ -16,14 +16,20 @@ import {
   Crown,
   MapPin,
   Calendar,
-  Feather
+  Feather,
+  FileText,
+  ExternalLink,
+  BookMarked,
+  Download,
+  Layers,
+  Star
 } from "lucide-react";
 
 export const Route = createFileRoute("/israel")({
   head: () => ({
     meta: [
-      { title: "Way to Israel — History, Heritage & Jewish Culture" },
-      { name: "description", content: "Explore the comprehensive history of Israel, Jewish heritage, ancient traditions, and culture." },
+      { title: "Way to Israel — History, Sacred Texts & Jewish Heritage" },
+      { name: "description", content: "Comprehensive history of Israel, Jewish culture, sacred texts (Tanakh, Torah PDFs), and flag history." },
     ],
   }),
   component: WayToIsraelPage,
@@ -32,7 +38,7 @@ export const Route = createFileRoute("/israel")({
 function WayToIsraelPage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [activeTab, setActiveTab] = useState<"history" | "culture" | "symbols">("history");
+  const [activeTab, setActiveTab] = useState<"history" | "texts" | "culture" | "flag">("history");
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const togglePlay = () => {
@@ -53,36 +59,57 @@ function WayToIsraelPage() {
     }
   };
 
+  const sacredTexts = [
+    {
+      title: "The Tanakh (Hebrew Bible)",
+      subtitle: "Torah, Nevi'im (Prophets) & Ketuvim (Writings)",
+      pdfUrl: "https://ferrusca.wordpress.com/wp-content/uploads/2016/11/thetanakh.pdf",
+      desc: "The complete 24-book canon of the Hebrew Scriptures translated in English. It encompasses the foundational law, historical narratives of ancient Israel, poetic psalms, and prophetic visions.",
+      pages: "Full PDF Edition",
+      category: "Canonical Scripture",
+      badgeColor: "bg-blue-500/20 text-sky-300 border-blue-500/30"
+    },
+    {
+      title: "The Torah (Five Books of Moses)",
+      subtitle: "Genesis, Exodus, Leviticus, Numbers & Deuteronomy",
+      pdfUrl: "https://www.betemunah.org/Torah.pdf",
+      desc: "The holy centerpiece of Jewish spiritual and moral law, revealed at Mount Sinai. Contains the origin of creation, the patriarchs, the Exodus from Egypt, and the 613 Mitzvot (commandments).",
+      pages: "Study PDF Edition",
+      category: "Foundational Law",
+      badgeColor: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30"
+    }
+  ];
+
   const timelineEvents = [
     {
       period: "c. 2000 BCE",
       title: "Patriarchal Era & Covenant",
-      desc: "The origins of the Jewish nation begin with Abraham, Isaac, and Jacob in the Land of Canaan. The covenant forms the spiritual cornerstone of Jewish identity."
+      desc: "The origins of the Jewish nation begin with Abraham, Isaac, and Jacob in the Land of Canaan. The divine covenant establishes Eretz Yisrael as the spiritual cornerstone of Jewish identity."
     },
     {
       period: "c. 1250 BCE",
-      title: "The Exodus & Mt. Sinai",
-      desc: "Moses leads the Children of Israel out of slavery in Egypt. At Mount Sinai, they receive the Torah, establishing their legal, moral, and spiritual foundation."
+      title: "The Exodus & Mount Sinai",
+      desc: "Moses leads the Israelites out of bondage in Egypt. At Mount Sinai, they receive the Ten Commandments and the Torah, forming their eternal moral code."
     },
     {
-      period: "c. 1000 BCE",
-      title: "Kingdom of Israel & Davidic Era",
-      desc: "King David establishes Jerusalem as the capital of Israel. His son, King Solomon, builds the First Temple on Mount Moriah."
+      period: "c. 1000 - 930 BCE",
+      title: "United Monarchy & First Temple",
+      desc: "King David unifies the tribes and establishes Jerusalem as the eternal capital. His son, King Solomon, constructs the First Temple on Mount Moriah."
     },
     {
       period: "586 BCE - 70 CE",
-      title: "Temple Eras & Roman Siege",
-      desc: "Babylonians destroy the First Temple (586 BCE). Rebuilt 70 years later, the Second Temple stands until Roman forces destroy Jerusalem in 70 CE, beginning the Great Diaspora."
+      title: "Babylonian Exile & Second Temple",
+      desc: "Nebuchadnezzar destroys the First Temple in 586 BCE. Rebuilt decades later under Cyrus the Great, the Second Temple stands until Roman legions under Titus destroy Jerusalem in 70 CE, launching 1,900 years of Jewish exile."
     },
     {
       period: "1897 CE",
-      title: "Modern Zionist Movement",
-      desc: "The First Zionist Congress convened by Theodor Herzl in Basel, Switzerland, organizing the political movement for Jewish self-determination in their ancestral homeland."
+      title: "First Zionist Congress",
+      desc: "Theodor Herzl convenes the First Zionist Congress in Basel, Switzerland, organizing the national movement to restore Jewish independence in their historic homeland."
     },
     {
       period: "May 14, 1948",
-      title: "Declaration of Statehood",
-      desc: "David Ben-Gurion reads the Declaration of Independence in Tel Aviv, establishing the modern State of Israel as a Jewish & Democratic nation."
+      title: "Rebirth of State of Israel",
+      desc: "David Ben-Gurion reads the Declaration of Independence in Tel Aviv. Israel is re-established as a sovereign, Jewish, and democratic state."
     }
   ];
 
@@ -100,13 +127,13 @@ function WayToIsraelPage() {
       desc: "An unprecedented linguistic achievement: Eliezer Ben-Yehuda and modern pioneers revived biblical Hebrew into a spoken modern language spoken by millions today."
     },
     {
-      title: "Kibbutz & Innovation",
+      title: "Kibbutz & High-Tech Nation",
       icon: Compass,
       color: "from-amber-600/20 to-yellow-500/20 border-amber-500/30",
       desc: "From early agricultural communes to the world's leading technology 'Start-Up Nation', Israel combines ancient pioneer spirit with high-tech innovation."
     },
     {
-      title: "Jewish Festivals",
+      title: "Festivals of Remembrance",
       icon: Calendar,
       color: "from-indigo-600/20 to-blue-500/20 border-indigo-500/30",
       desc: "High Holy Days (Rosh Hashanah, Yom Kippur), Passover (Pesach), Hanukkah (Festival of Lights), and Sukkot connect modern Israelis to thousands of years of heritage."
@@ -137,7 +164,7 @@ function WayToIsraelPage() {
               <h1 className="text-[17.5px] font-black tracking-tight leading-none text-transparent bg-clip-text bg-gradient-to-r from-white via-sky-100 to-blue-300">
                 WAY TO ISRAEL
               </h1>
-              <p className="text-[9px] text-sky-400 font-black tracking-widest uppercase mt-0.5">Am Yisrael Chai • History & Culture</p>
+              <p className="text-[9px] text-sky-400 font-black tracking-widest uppercase mt-0.5">Am Yisrael Chai • Heritage & Texts</p>
             </div>
           </div>
         </div>
@@ -165,9 +192,9 @@ function WayToIsraelPage() {
           />
 
           {/* Video Control Overlay Bar */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-between p-5 pointer-events-none">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent flex flex-col justify-between p-5 pointer-events-none">
             <div className="flex justify-between items-start pointer-events-auto">
-              <span className="px-3 py-1 rounded-full bg-blue-600/90 backdrop-blur-md text-[10px] font-black uppercase text-white tracking-widest flex items-center gap-1.5 shadow-lg">
+              <span className="px-3 py-1 rounded-full bg-blue-600/90 backdrop-blur-md text-[10px] font-black uppercase text-white tracking-widest flex items-center gap-1.5 shadow-lg border border-sky-400/30">
                 <Sparkles className="size-3 text-sky-200" />
                 Featured Song: Am Yisrael Chai
               </span>
@@ -200,52 +227,55 @@ function WayToIsraelPage() {
           </div>
         </div>
 
-        {/* Waving Flag & Introduction Section */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center bg-gradient-to-br from-blue-950/60 via-slate-950/80 to-blue-950/60 border border-blue-500/25 rounded-3xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
+        {/* Real Wavy Flag Banner */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center bg-gradient-to-br from-blue-950/70 via-slate-950/80 to-blue-950/70 border border-blue-500/30 rounded-3xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/5 rounded-full blur-3xl pointer-events-none" />
 
-          {/* Waving Israeli Flag Display */}
+          {/* Corrected Real Wavy Flag Component */}
           <div className="md:col-span-5 flex justify-center py-4">
-            <div className="relative w-64 sm:w-72 aspect-[3/2] rounded-xl overflow-hidden animate-flag-wave bg-white shadow-2xl border border-blue-400/40 flex flex-col justify-between p-3 select-none">
-              {/* Top Blue Stripe */}
-              <div className="h-4.5 bg-[#0038b8] rounded-xs" />
+            <div className="relative w-64 sm:w-72 aspect-[3/2] rounded-2xl overflow-hidden animate-flag-wave bg-white shadow-[0_20px_50px_rgba(0,56,184,0.4)] border border-blue-300/40 flex flex-col justify-between p-3 select-none relative">
+              {/* Flag Light Shimmer Overlay */}
+              <div className="absolute inset-0 flag-shimmer pointer-events-none z-10" />
 
-              {/* Center Star of David */}
-              <div className="flex items-center justify-center my-auto">
-                <svg className="w-20 h-20 text-[#0038b8]" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="7.5">
-                  <polygon points="50,10 90,80 10,80" />
-                  <polygon points="50,90 90,20 10,20" />
+              {/* Top Blue Stripe */}
+              <div className="h-5 bg-[#0038b8] rounded-xs shadow-inner" />
+
+              {/* Center Star of David (Shield of David) */}
+              <div className="flex items-center justify-center my-auto relative z-0 py-2">
+                <svg className="w-22 h-22 text-[#0038b8] drop-shadow-md" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="7">
+                  <polygon points="50,8 92,80 8,80" />
+                  <polygon points="50,92 92,20 8,20" />
                 </svg>
               </div>
 
               {/* Bottom Blue Stripe */}
-              <div className="h-4.5 bg-[#0038b8] rounded-xs" />
+              <div className="h-5 bg-[#0038b8] rounded-xs shadow-inner" />
             </div>
           </div>
 
-          {/* Intro Description */}
+          {/* Flag Description & Meaning */}
           <div className="md:col-span-7 space-y-4">
             <div className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-sky-400 bg-sky-500/10 border border-sky-500/20 px-3 py-1 rounded-full">
-              <Heart className="size-3.5 text-blue-400 fill-blue-400" />
-              <span>Way to Israel • Zion Heritage</span>
+              <Star className="size-3 text-sky-400 fill-sky-400" />
+              <span>Flag of Israel • Symbolism</span>
             </div>
 
             <h2 className="text-2xl sm:text-3xl font-black text-white leading-tight">
-              A 4,000-Year Journey of Faith, Resilience & Rebirth
+              The Flag of Israel: Banner of Hope
             </h2>
 
             <p className="text-[13px] font-bold text-slate-300 leading-relaxed">
-              The Land of Israel (Eretz Yisrael) represents one of humanity's most historic cultural and spiritual epicenters. From ancient kingdom roots in Jerusalem to modern scientific breakthroughs, Jewish culture is rooted in education, tradition, family values, and unwavering hope.
+              Designed in 1891 and officially adopted in 1948, the Israeli flag features two horizontal blue stripes on a white field inspired by the traditional <strong>Tallit</strong> (Jewish prayer shawl). At its heart rests the <strong>Magen David</strong> (Star of David), representing divine protection and national identity.
             </p>
 
-            <div className="flex flex-wrap gap-3 pt-2">
-              <div className="flex items-center gap-2 bg-blue-900/30 border border-blue-700/40 px-3.5 py-1.5 rounded-xl text-[11.5px] font-bold text-sky-200">
-                <MapPin className="size-3.5 text-sky-400" />
-                <span>Capital: Jerusalem</span>
+            <div className="flex flex-wrap gap-2.5 pt-1">
+              <div className="flex items-center gap-2 bg-blue-900/30 border border-blue-700/40 px-3 py-1 rounded-xl text-[11px] font-bold text-sky-200">
+                <Scroll className="size-3.5 text-sky-400" />
+                <span>Tallit Prayer Shawl Stripes</span>
               </div>
-              <div className="flex items-center gap-2 bg-blue-900/30 border border-blue-700/40 px-3.5 py-1.5 rounded-xl text-[11.5px] font-bold text-sky-200">
-                <Crown className="size-3.5 text-amber-400" />
-                <span>Heritage: 40+ Centuries</span>
+              <div className="flex items-center gap-2 bg-blue-900/30 border border-blue-700/40 px-3 py-1 rounded-xl text-[11px] font-bold text-sky-200">
+                <Star className="size-3.5 text-amber-400" />
+                <span>Magen David (Shield of David)</span>
               </div>
             </div>
           </div>
@@ -253,10 +283,10 @@ function WayToIsraelPage() {
 
         {/* Tab Navigation */}
         <div className="flex justify-center border-b border-blue-900/60 pb-1 pt-4">
-          <div className="flex gap-2 bg-blue-950/80 p-1.5 rounded-2xl border border-blue-800/60 max-w-md w-full">
+          <div className="grid grid-cols-3 gap-2 bg-blue-950/80 p-1.5 rounded-2xl border border-blue-800/60 max-w-xl w-full">
             <button
               onClick={() => setActiveTab("history")}
-              className={`flex-1 py-2.5 rounded-xl text-[12px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
+              className={`py-2.5 rounded-xl text-[11.5px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
                 activeTab === "history"
                   ? "bg-gradient-to-r from-blue-600 to-sky-600 text-white shadow-lg shadow-blue-500/25"
                   : "text-slate-400 hover:text-white"
@@ -267,8 +297,20 @@ function WayToIsraelPage() {
             </button>
 
             <button
+              onClick={() => setActiveTab("texts")}
+              className={`py-2.5 rounded-xl text-[11.5px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
+                activeTab === "texts"
+                  ? "bg-gradient-to-r from-blue-600 to-sky-600 text-white shadow-lg shadow-blue-500/25"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              <BookMarked className="size-3.5" />
+              <span>Sacred Texts (PDF)</span>
+            </button>
+
+            <button
               onClick={() => setActiveTab("culture")}
-              className={`flex-1 py-2.5 rounded-xl text-[12px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
+              className={`py-2.5 rounded-xl text-[11.5px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
                 activeTab === "culture"
                   ? "bg-gradient-to-r from-blue-600 to-sky-600 text-white shadow-lg shadow-blue-500/25"
                   : "text-slate-400 hover:text-white"
@@ -282,10 +324,10 @@ function WayToIsraelPage() {
 
         {/* TAB 1: Detailed History Timeline */}
         {activeTab === "history" && (
-          <div className="space-y-6 animate-spring-scale">
+          <div className="space-y-6 animate-spring-scale select-text">
             <div className="text-center space-y-1">
               <h3 className="text-xl font-black text-white tracking-tight">Chronological History of Israel</h3>
-              <p className="text-[12px] font-bold text-slate-400">Key epochs from antiquity to modern statehood</p>
+              <p className="text-[12px] font-bold text-slate-400">4,000 years of unbroken Jewish connection to Jerusalem & Eretz Yisrael</p>
             </div>
 
             <div className="relative border-l-2 border-blue-500/40 ml-4 sm:ml-8 space-y-8 pl-6 sm:pl-8 py-2">
@@ -307,9 +349,70 @@ function WayToIsraelPage() {
           </div>
         )}
 
-        {/* TAB 2: Jewish Culture & Traditions */}
+        {/* TAB 2: Sacred Texts (Tanakh & Torah PDFs) */}
+        {activeTab === "texts" && (
+          <div className="space-y-6 animate-spring-scale select-text">
+            <div className="text-center space-y-1">
+              <h3 className="text-xl font-black text-white tracking-tight">Sacred Jewish Scriptures & Texts</h3>
+              <p className="text-[12px] font-bold text-slate-400">Read and download official PDF editions of Tanakh & Torah</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {sacredTexts.map((doc, idx) => (
+                <div
+                  key={idx}
+                  className="bg-gradient-to-br from-blue-950/80 via-slate-950 to-blue-950/80 border border-blue-500/30 rounded-3xl p-6 space-y-4 shadow-2xl flex flex-col justify-between hover:border-blue-400/60 transition-all relative overflow-hidden"
+                >
+                  <div className="space-y-2.5">
+                    <div className="flex justify-between items-center">
+                      <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border ${doc.badgeColor}`}>
+                        {doc.category}
+                      </span>
+                      <span className="text-[10.5px] font-bold text-slate-400 flex items-center gap-1">
+                        <FileText className="size-3.5 text-sky-400" />
+                        {doc.pages}
+                      </span>
+                    </div>
+
+                    <h4 className="text-xl font-black text-white">{doc.title}</h4>
+                    <p className="text-[11.5px] font-bold text-sky-300">{doc.subtitle}</p>
+                    <p className="text-[12.5px] font-bold text-slate-300 leading-relaxed pt-1">
+                      {doc.desc}
+                    </p>
+                  </div>
+
+                  <div className="pt-4 border-t border-blue-900/60 flex flex-wrap gap-2.5">
+                    <a
+                      href={doc.pdfUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 h-11 rounded-xl bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white text-[12px] font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-600/25 active:scale-95"
+                    >
+                      <ExternalLink className="size-4" />
+                      <span>Read PDF Document</span>
+                    </a>
+
+                    <a
+                      href={doc.pdfUrl}
+                      download
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="h-11 px-4 rounded-xl bg-blue-950 border border-blue-800 hover:bg-blue-900 text-sky-300 text-[12px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                      title="Download PDF"
+                    >
+                      <Download className="size-4" />
+                      <span className="hidden sm:inline">Save</span>
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: Jewish Culture & Traditions */}
         {activeTab === "culture" && (
-          <div className="space-y-6 animate-spring-scale">
+          <div className="space-y-6 animate-spring-scale select-text">
             <div className="text-center space-y-1">
               <h3 className="text-xl font-black text-white tracking-tight">Pillars of Jewish Culture & Values</h3>
               <p className="text-[12px] font-bold text-slate-400">Timeless traditions that define identity and community</p>
