@@ -316,43 +316,26 @@ function WayToIsraelPage() {
           </div>
         </div>
 
-        {/* ULTRA SMOOTH & REALISTIC ISRAELI FLAG DISPLAY */}
+        {/* ULTRA SMOOTH & REALISTIC ISRAELI FLAG DISPLAY VIDEO */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center bg-gradient-to-br from-blue-950/70 via-slate-950/90 to-blue-950/70 border border-blue-500/30 rounded-3xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/5 rounded-full blur-3xl pointer-events-none" />
 
-          {/* Flagpole + Flag Group */}
+          {/* Real High Quality Wavy Flag Video Container */}
           <div className="md:col-span-5 flex justify-center py-2">
-            <div className="flex items-center">
-
-              {/* Metallic Flag Pole */}
-              <div className="relative w-2.5 h-48 sm:h-52 bg-gradient-to-b from-amber-300 via-slate-200 to-slate-600 rounded-full shadow-2xl flex flex-col justify-between items-center z-20 flex-shrink-0">
-                {/* Golden Finial Orb Top */}
-                <div className="size-4.5 rounded-full bg-gradient-to-tr from-amber-500 via-yellow-300 to-amber-100 shadow-md border border-amber-200 -mt-2" />
-                {/* Ring mounts */}
-                <div className="size-3 rounded-sm bg-slate-400 border border-slate-200 my-4 shadow-sm" />
-                <div className="size-3 rounded-sm bg-slate-400 border border-slate-200 my-4 shadow-sm" />
+            <div className="relative w-full max-w-xs sm:max-w-sm aspect-[4/3] rounded-2xl overflow-hidden shadow-[0_15px_40px_rgba(0,56,184,0.4)] border border-blue-400/40 bg-black group">
+              <video
+                src="https://d34w7g4gy10iej.cloudfront.net/video/2410/DOD_110644143/DOD_110644143.mp4"
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover rounded-2xl scale-105 group-hover:scale-110 transition-transform duration-700"
+              />
+              <div className="absolute inset-0 ring-1 ring-inset ring-white/20 rounded-2xl pointer-events-none" />
+              <div className="absolute bottom-2.5 left-2.5 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full text-[9.5px] font-black uppercase text-sky-300 tracking-wider border border-sky-400/30 flex items-center gap-1.5">
+                <Sparkles className="size-3 text-sky-400" />
+                <span>Live HD Waving Flag</span>
               </div>
-
-              {/* Smooth Wavy Flag Cloth */}
-              <div className="relative w-64 sm:w-72 aspect-[3/2] rounded-r-2xl overflow-hidden animate-flag-wave bg-white shadow-[0_15px_40px_rgba(0,56,184,0.35)] border-y border-r border-blue-200/40 flex flex-col justify-between p-3.5 select-none -ml-1 z-10">
-                {/* Flag Light Shimmer Overlay */}
-                <div className="absolute inset-0 flag-shimmer pointer-events-none z-10" />
-
-                {/* Top Blue Stripe */}
-                <div className="h-5 bg-[#0038b8] rounded-xs shadow-inner" />
-
-                {/* Center Star of David (Shield of David) */}
-                <div className="flex items-center justify-center my-auto relative z-0 py-1">
-                  <svg className="w-20 h-20 text-[#0038b8] drop-shadow-md" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="7.5">
-                    <polygon points="50,8 92,80 8,80" />
-                    <polygon points="50,92 92,20 8,20" />
-                  </svg>
-                </div>
-
-                {/* Bottom Blue Stripe */}
-                <div className="h-5 bg-[#0038b8] rounded-xs shadow-inner" />
-              </div>
-
             </div>
           </div>
 
