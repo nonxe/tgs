@@ -21,15 +21,17 @@ import {
   ExternalLink,
   BookMarked,
   Download,
-  Layers,
-  Star
+  Star,
+  Globe,
+  Sun,
+  Flame
 } from "lucide-react";
 
 export const Route = createFileRoute("/israel")({
   head: () => ({
     meta: [
       { title: "Way to Israel — History, Sacred Texts & Jewish Heritage" },
-      { name: "description", content: "Comprehensive history of Israel, Jewish culture, sacred texts (Tanakh, Torah PDFs), and flag history." },
+      { name: "description", content: "Comprehensive history of Israel from Biblical foundations to modern statehood, Jewish culture, Tanakh & Torah PDFs." },
     ],
   }),
   component: WayToIsraelPage,
@@ -38,7 +40,8 @@ export const Route = createFileRoute("/israel")({
 function WayToIsraelPage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [activeTab, setActiveTab] = useState<"history" | "texts" | "culture" | "flag">("history");
+  const [activeTab, setActiveTab] = useState<"history" | "texts" | "culture">("history");
+  const [selectedPart, setSelectedPart] = useState<number | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const togglePlay = () => {
@@ -64,7 +67,7 @@ function WayToIsraelPage() {
       title: "The Tanakh (Hebrew Bible)",
       subtitle: "Torah, Nevi'im (Prophets) & Ketuvim (Writings)",
       pdfUrl: "https://ferrusca.wordpress.com/wp-content/uploads/2016/11/thetanakh.pdf",
-      desc: "The complete 24-book canon of the Hebrew Scriptures translated in English. It encompasses the foundational law, historical narratives of ancient Israel, poetic psalms, and prophetic visions.",
+      desc: "The complete 24-book canon of the Hebrew Scriptures translated into English. Encompasses the foundational law, historical chronicles of Israel, poetic psalms, and prophetic visions.",
       pages: "Full PDF Edition",
       category: "Canonical Scripture",
       badgeColor: "bg-blue-500/20 text-sky-300 border-blue-500/30"
@@ -73,43 +76,117 @@ function WayToIsraelPage() {
       title: "The Torah (Five Books of Moses)",
       subtitle: "Genesis, Exodus, Leviticus, Numbers & Deuteronomy",
       pdfUrl: "https://www.betemunah.org/Torah.pdf",
-      desc: "The holy centerpiece of Jewish spiritual and moral law, revealed at Mount Sinai. Contains the origin of creation, the patriarchs, the Exodus from Egypt, and the 613 Mitzvot (commandments).",
+      desc: "The holy centerpiece of Jewish spiritual and moral law, revealed at Mount Sinai. Contains the origin of creation, the patriarchs, the Exodus from Egypt, and the 613 Mitzvot.",
       pages: "Study PDF Edition",
       category: "Foundational Law",
       badgeColor: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30"
     }
   ];
 
-  const timelineEvents = [
+  const historyParts = [
     {
-      period: "c. 2000 BCE",
-      title: "Patriarchal Era & Covenant",
-      desc: "The origins of the Jewish nation begin with Abraham, Isaac, and Jacob in the Land of Canaan. The divine covenant establishes Eretz Yisrael as the spiritual cornerstone of Jewish identity."
+      part: "Part I",
+      period: "c. 2000 BCE – 586 BCE",
+      title: "The Biblical Foundations",
+      summary: "From Abraham's covenant and the Exodus out of Egypt to King David's Kingdom in Jerusalem and the Babylonian Exile.",
+      sections: [
+        {
+          heading: "The Patriarchal Age",
+          content: "History begins approximately 4,000 years ago with Abraham, Isaac, and Jacob. Abraham was summoned from Ur of the Chaldeans to Canaan to establish a monotheistic people bound by the divine Brit (Covenant). Jacob was renamed Israel ('he who strives with God') and fathered the Twelve Tribes of Israel."
+        },
+        {
+          heading: "Exodus & Mount Sinai",
+          content: "Moses led the Israelites out of 400 years of Egyptian slavery. During 40 years in the Sinai desert, the nation received the Torah and Ten Commandments at Mount Sinai—an event commemorated annually during Passover (Pesach)."
+        },
+        {
+          heading: "United Monarchy & First Temple",
+          content: "King Saul unified the tribes, followed by King David (c. 1004 BCE) who established Jerusalem as Israel's eternal capital. King Solomon built the First Temple on Mount Moriah, creating the spiritual heart of the nation."
+        },
+        {
+          heading: "Prophetic Era & Babylonian Exile",
+          content: "After Solomon, the kingdom split into Israel (North) and Judah (South). Prophets like Isaiah and Jeremiah urged spiritual fidelity. In 586 BCE, Nebuchadnezzar destroyed the First Temple and exiled the Jews to Babylon, forging synagogue prayer and resilient Jewish identity."
+        }
+      ]
     },
     {
-      period: "c. 1250 BCE",
-      title: "The Exodus & Mount Sinai",
-      desc: "Moses leads the Israelites out of bondage in Egypt. At Mount Sinai, they receive the Ten Commandments and the Torah, forming their eternal moral code."
+      part: "Part II",
+      period: "c. 538 BCE – 70 CE",
+      title: "The Second Temple Period",
+      summary: "Return to Zion under Cyrus the Great, the Maccabean Revolt (Hanukkah), Roman siege, and the Second Temple destruction.",
+      sections: [
+        {
+          heading: "Return to Zion & Hasmonean Revolt",
+          content: "Cyrus the Great allowed exiled Jews to rebuild the Second Temple in Jerusalem. In 165 BCE, Judah the Maccabee led the Maccabean Revolt against Greek Hellenization, recapturing the Temple and establishing the Hasmonean Kingdom—celebrated on Hanukkah."
+        },
+        {
+          heading: "Roman Rule & Great Revolt",
+          content: "Rome seized Judea in 66 BCE. Escalating oppression sparked the First Jewish-Roman War (66–70 CE). In 70 CE, Roman legions under Titus burned the Second Temple to the ground."
+        },
+        {
+          heading: "Bar Kokhba Revolt & Great Dispersion",
+          content: "Simon Bar Kokhba led a second uprising (132–135 CE). Upon crushing it, Rome renamed the province 'Syria Palaestina' and banned Jews from Jerusalem, sparking 1,900 years of international Diaspora."
+        }
+      ]
     },
     {
-      period: "c. 1000 - 930 BCE",
-      title: "United Monarchy & First Temple",
-      desc: "King David unifies the tribes and establishes Jerusalem as the eternal capital. His son, King Solomon, constructs the First Temple on Mount Moriah."
+      part: "Part III",
+      period: "70 CE – 19th Century",
+      title: "The Long Exile & The Diaspora",
+      summary: "Transformation into Rabbinic Judaism, Mishnah & Talmud compilation, Ashkenaz & Sepharad traditions, and the birth of modern Zionism.",
+      sections: [
+        {
+          heading: "Talmudic & Rabbinic Era",
+          content: "With the Temple lost, Judaism transformed around synagogues, Torah study, and the Talmud (Mishnah + Gemara), creating a portable spiritual homeland that preserved Jewish continuity everywhere."
+        },
+        {
+          heading: "Ashkenazim & Sephardim Centers",
+          content: "Jews formed vibrant cultural branches: Ashkenazim in Central/Eastern Europe (developing Yiddish), and Sephardim in Spain & Portugal (experiencing a Golden Age of poetry and philosophy under Islamic Spain)."
+        },
+        {
+          heading: "Persecutions & Rise of Zionism",
+          content: "Despite expulsions (Spain 1492) and Russian pogroms, Jewish yearning for Zion remained constant. In 1897, Theodor Herzl convened the First Zionist Congress in Basel, establishing modern political Zionism as the national liberation movement for Jewish self-determination."
+        }
+      ]
     },
     {
-      period: "586 BCE - 70 CE",
-      title: "Babylonian Exile & Second Temple",
-      desc: "Nebuchadnezzar destroys the First Temple in 586 BCE. Rebuilt decades later under Cyrus the Great, the Second Temple stands until Roman legions under Titus destroy Jerusalem in 70 CE, launching 1,900 years of Jewish exile."
+      part: "Part IV",
+      period: "19th Century – 1948",
+      title: "The Road to Statehood",
+      summary: "Immigration waves (Aliyah), Hebrew language revival, Balfour Declaration, Holocaust trauma, and 1948 Declaration of Independence.",
+      sections: [
+        {
+          heading: "Early Pioneers & Balfour Declaration",
+          content: "Pioneers (Halutzim) returned in waves of Aliyah to drain swamps, build Kibbutzim, and revive Hebrew. In 1917, Britain issued the Balfour Declaration supporting a Jewish national home."
+        },
+        {
+          heading: "The Holocaust & Existential Need",
+          content: "The murder of six million Jews during WWII by Nazi Germany demonstrated with tragic finality the absolute necessity of a sovereign Jewish homeland where Jews control their destiny."
+        },
+        {
+          heading: "May 14, 1948: Independence",
+          content: "On May 14, 1948, David Ben-Gurion declared the establishment of the State of Israel in Tel Aviv, fulfilling 2,000 years of hope and prayer."
+        }
+      ]
     },
     {
-      period: "1897 CE",
-      title: "First Zionist Congress",
-      desc: "Theodor Herzl convenes the First Zionist Congress in Basel, Switzerland, organizing the national movement to restore Jewish independence in their historic homeland."
-    },
-    {
-      period: "May 14, 1948",
-      title: "Rebirth of State of Israel",
-      desc: "David Ben-Gurion reads the Declaration of Independence in Tel Aviv. Israel is re-established as a sovereign, Jewish, and democratic state."
+      part: "Part V",
+      period: "1948 – Present",
+      title: "The Modern State of Israel",
+      summary: "Ingathering of global exiles, defense of sovereignty, high-tech innovation, peace treaties, and vibrant cultural life.",
+      sections: [
+        {
+          heading: "Ingathering of the Exiles",
+          content: "Between 1948 and 1951, Israel's population doubled as Holocaust survivors and over 850,000 Mizrahi and Sephardi Jewish refugees from Arab nations returned to their homeland."
+        },
+        {
+          heading: "Six-Day War & Reunification of Jerusalem",
+          content: "In June 1967, Israel defeated massing Arab armies in the Six-Day War, reunifying Jerusalem and restoring Jewish access to the Kotel (Western Wall)."
+        },
+        {
+          heading: "Start-Up Nation & Modern Heritage",
+          content: "Today Israel is a global high-tech and medical superpower, preserving ancient Hebrew tradition while fostering cutting-edge innovation and art."
+        }
+      ]
     }
   ];
 
@@ -164,7 +241,7 @@ function WayToIsraelPage() {
               <h1 className="text-[17.5px] font-black tracking-tight leading-none text-transparent bg-clip-text bg-gradient-to-r from-white via-sky-100 to-blue-300">
                 WAY TO ISRAEL
               </h1>
-              <p className="text-[9px] text-sky-400 font-black tracking-widest uppercase mt-0.5">Am Yisrael Chai • Heritage & Texts</p>
+              <p className="text-[9px] text-sky-400 font-black tracking-widest uppercase mt-0.5">Am Yisrael Chai • Full History & Texts</p>
             </div>
           </div>
         </div>
@@ -227,7 +304,7 @@ function WayToIsraelPage() {
           </div>
         </div>
 
-        {/* Real Wavy Flag Banner */}
+        {/* Corrected Wavy Israeli Flag Banner */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center bg-gradient-to-br from-blue-950/70 via-slate-950/80 to-blue-950/70 border border-blue-500/30 rounded-3xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/5 rounded-full blur-3xl pointer-events-none" />
 
@@ -293,7 +370,7 @@ function WayToIsraelPage() {
               }`}
             >
               <History className="size-3.5" />
-              <span>History Timeline</span>
+              <span>5-Part History</span>
             </button>
 
             <button
@@ -322,29 +399,78 @@ function WayToIsraelPage() {
           </div>
         </div>
 
-        {/* TAB 1: Detailed History Timeline */}
+        {/* TAB 1: Complete 5-Part History of Israel */}
         {activeTab === "history" && (
           <div className="space-y-6 animate-spring-scale select-text">
             <div className="text-center space-y-1">
-              <h3 className="text-xl font-black text-white tracking-tight">Chronological History of Israel</h3>
-              <p className="text-[12px] font-bold text-slate-400">4,000 years of unbroken Jewish connection to Jerusalem & Eretz Yisrael</p>
+              <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                A Complete History of Israel (Jewish Experience)
+              </h3>
+              <p className="text-[12.5px] font-bold text-slate-400 max-w-2xl mx-auto">
+                A vast tapestry woven over millennia—from the dawn of monotheism and covenant to exile, dispersion, and the miraculous rebirth of a sovereign state.
+              </p>
             </div>
 
-            <div className="relative border-l-2 border-blue-500/40 ml-4 sm:ml-8 space-y-8 pl-6 sm:pl-8 py-2">
-              {timelineEvents.map((evt, idx) => (
-                <div key={idx} className="relative group">
-                  {/* Timeline Dot */}
-                  <div className="absolute -left-[31px] sm:-left-[39px] top-1 size-5 rounded-full bg-blue-600 border-4 border-[#030614] group-hover:scale-125 transition-transform shadow-md shadow-blue-500/50" />
-
-                  <div className="bg-gradient-to-br from-blue-950/70 to-slate-950/70 border border-blue-500/20 hover:border-blue-400/50 rounded-2xl p-5 space-y-2 transition-all shadow-xl">
-                    <span className="inline-block text-[10px] font-black uppercase tracking-widest text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2.5 py-0.5 rounded-md">
-                      {evt.period}
-                    </span>
-                    <h4 className="text-base sm:text-lg font-black text-white">{evt.title}</h4>
-                    <p className="text-[12.5px] font-bold text-slate-300 leading-relaxed">{evt.desc}</p>
-                  </div>
-                </div>
+            {/* Part Selection Buttons */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+              {historyParts.map((p, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setSelectedPart(selectedPart === idx ? null : idx)}
+                  className={`p-3 rounded-2xl border text-left transition-all flex flex-col justify-between ${
+                    selectedPart === idx
+                      ? "bg-blue-600 text-white border-sky-300 shadow-lg shadow-blue-500/30 scale-[1.02]"
+                      : "bg-blue-950/60 border-blue-900/60 hover:bg-blue-900/40 text-slate-300"
+                  }`}
+                >
+                  <span className="text-[10px] font-black uppercase tracking-widest text-sky-300 opacity-90">{p.part}</span>
+                  <span className="text-[12px] font-black leading-tight line-clamp-1 mt-1">{p.title}</span>
+                  <span className="text-[9px] font-bold text-slate-400 mt-1 block">{p.period}</span>
+                </button>
               ))}
+            </div>
+
+            {/* Complete Detailed Parts Breakdown */}
+            <div className="space-y-6 pt-2">
+              {historyParts.map((p, idx) => {
+                if (selectedPart !== null && selectedPart !== idx) return null;
+                return (
+                  <div
+                    key={idx}
+                    className="bg-gradient-to-br from-blue-950/80 via-slate-950 to-blue-950/80 border border-blue-500/30 rounded-3xl p-6 sm:p-8 space-y-5 shadow-2xl relative overflow-hidden"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-blue-900/60 pb-3">
+                      <div className="flex items-center gap-2.5">
+                        <span className="px-3 py-1 rounded-full bg-blue-600/30 border border-sky-400/40 text-sky-300 text-[10.5px] font-black uppercase tracking-widest">
+                          {p.part}
+                        </span>
+                        <h4 className="text-xl font-black text-white">{p.title}</h4>
+                      </div>
+                      <span className="text-[11px] font-black text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full">
+                        {p.period}
+                      </span>
+                    </div>
+
+                    <p className="text-[13px] font-bold text-sky-200/90 italic leading-relaxed">
+                      "{p.summary}"
+                    </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                      {p.sections.map((sec, sIdx) => (
+                        <div key={sIdx} className="bg-blue-950/40 border border-blue-900/50 rounded-2xl p-4 space-y-2">
+                          <h5 className="text-[14px] font-black text-sky-300 flex items-center gap-1.5">
+                            <Sparkles className="size-3.5 text-blue-400" />
+                            {sec.heading}
+                          </h5>
+                          <p className="text-[12px] font-bold text-slate-300 leading-relaxed">
+                            {sec.content}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
