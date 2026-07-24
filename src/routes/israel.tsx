@@ -19,18 +19,40 @@ import {
   BookMarked,
   Download,
   Star,
-  ListFilter
+  ListFilter,
+  Crown,
+  MapPin,
+  Flame,
+  Globe,
+  Sun
 } from "lucide-react";
 
 export const Route = createFileRoute("/israel")({
   head: () => ({
     meta: [
-      { title: "Way to Israel — History, Sacred Scriptures & Jewish Heritage" },
-      { name: "description", content: "Comprehensive history of Israel through Jewish experience, sacred scriptures, culture, and heritage." },
+      { title: "Way to Israel — Complete History, Sacred Scriptures & Jewish Heritage" },
+      { name: "description", content: "Exhaustive history of Israel through Jewish experience, sacred Tanakh & Torah PDFs, culture, and heritage." },
     ],
   }),
   component: WayToIsraelPage,
 });
+
+function StarOfDavidIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 100 100"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="9"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <polygon points="50,8 92,80 8,80" />
+      <polygon points="50,92 92,20 8,20" />
+    </svg>
+  );
+}
 
 function WayToIsraelPage() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -82,116 +104,128 @@ function WayToIsraelPage() {
     {
       part: "Part I",
       period: "c. 2000 BCE – 586 BCE",
-      title: "The Biblical Foundations",
-      summary: "The covenant with Abraham, enslavement and Exodus from Egypt, Sinai revelation, King David's kingdom in Jerusalem, King Solomon's First Temple, and the Babylonian Exile.",
+      title: "The Biblical Foundations & First Temple Era",
+      summary: "The patriarchal covenant with Abraham, enslavement in Egypt, the Exodus, Mount Sinai revelation, King David's kingdom in Jerusalem, King Solomon's First Temple, and the Babylonian Exile.",
       sections: [
         {
-          heading: "The Patriarchal Age",
-          content: "Jewish history begins 4,000 years ago with Abraham, Isaac, and Jacob. Summonsed from Ur of the Chaldeans to Canaan, Abraham established a monotheistic people bound by the Brit (Covenant). Jacob was renamed Israel ('he who strives with God') and fathered the Twelve Tribes of Israel."
+          heading: "The Patriarchal Age & The Divine Covenant (Brit)",
+          content: "Jewish history begins nearly 4,000 years ago in the Fertile Crescent with Abraham, his son Isaac, and grandson Jacob. Summoned by God from Ur of the Chaldeans to Canaan, Abraham established ethical monotheism bound by an eternal Brit (covenant). Jacob was renamed Israel ('he who strives with God') and fathered twelve sons who became the Twelve Tribes of Israel."
         },
         {
-          heading: "From Slavery to Nationhood: Exodus & Torah",
-          content: "Multiplied and enslaved in Egypt for 400 years, the Children of Israel were liberated under Moses in the Exodus. During 40 years in the Sinai desert, they received the Torah and Ten Commandments at Mount Sinai—an event commemorated annually on Passover (Pesach)."
+          heading: "Slavery in Egypt, Exodus & Mount Sinai",
+          content: "Seeking relief from famine, Jacob's family settled in Egypt. Over centuries, they grew into a nation and were enslaved by Pharaoh. Under Moses, God liberated the Children of Israel in the miraculous Exodus (Pesach). At Mount Sinai, the nation experienced divine revelation, receiving the Ten Commandments and the Torah—establishing their moral code."
         },
         {
-          heading: "Conquest, Judges & The United Monarchy",
-          content: "After settling Canaan under Joshua and the Judges, the tribes united under King Saul (c. 1020 BCE), King David (c. 1004 BCE) who established Jerusalem as the capital, and King Solomon (c. 965 BCE) who constructed the First Temple on Mount Moriah."
+          heading: "Conquest of Canaan, Joshua & Era of Judges",
+          content: "Following 40 years of wilderness wandering, Joshua led the Israelites across the Jordan River to reclaim Canaan. For two centuries, the tribes governed under decentralized spiritual and military leaders known as Judges (Shofetim)—including Deborah, Gideon, and Samson."
         },
         {
-          heading: "The Divided Kingdoms & Babylonian Exile",
-          content: "The kingdom split into Israel (North) and Judah (South). Prophets like Isaiah and Jeremiah called for moral righteousness. In 586 BCE, Babylonians under Nebuchadnezzar destroyed the First Temple and exiled the Jews to Babylon for 70 years, giving birth to synagogue worship."
+          heading: "The United Monarchy: Saul, David & Solomon",
+          content: "Facing Philistine threats, the tribes united under King Saul (c. 1020 BCE). King David (c. 1004 BCE) unified the tribes, captured Zion, and established Jerusalem as the eternal capital. His son, King Solomon (c. 965 BCE), constructed the First Temple on Mount Moriah, creating the spiritual heart of the Jewish people."
+        },
+        {
+          heading: "Divided Kingdoms & Babylonian Exile (586 BCE)",
+          content: "After Solomon's death, the kingdom divided into Israel (North) and Judah (South). Prophets like Elijah, Isaiah, and Jeremiah called for ethical purity. In 722 BCE, Assyria conquered the Northern Kingdom. In 586 BCE, Babylonian King Nebuchadnezzar destroyed Jerusalem and the First Temple, exiling the Jews to Babylon where synagogue worship and Talmudic study were born."
         }
       ]
     },
     {
       part: "Part II",
       period: "c. 538 BCE – 70 CE",
-      title: "The Second Temple Period",
-      summary: "Return to Zion under Persian King Cyrus, rebuilding of the Temple, Maccabean Revolt against Greek rule, Roman siege, and the tragic destruction in 70 CE.",
+      title: "The Second Temple Period & Roman Siege",
+      summary: "Return to Zion under Persian King Cyrus, rebuilding of the Temple, Maccabean Revolt (Hanukkah), Roman occupation, Great Jewish Revolt, and the destruction of 70 CE.",
       sections: [
         {
-          heading: "Return to Zion & Rebuilding",
-          content: "In 538 BCE, Persian King Cyrus the Great issued a decree permitting exiled Jews to return to Jerusalem and rebuild the Second Temple, restoring communal spiritual life."
+          heading: "Return to Zion & Cyrus the Great's Edict",
+          content: "In 538 BCE, Cyrus the Great of Persia conquered Babylon and issued a royal decree permitting Jewish exiles to return to Eretz Yisrael. Under Zerubbabel, Ezra, and Nehemiah, the Jews rebuilt Jerusalem's walls and constructed the Second Temple, renewing covenantal life."
         },
         {
-          heading: "Greek Era & Maccabean Revolt",
-          content: "Alexander the Great brought Greek rule. When Hellenizing reforms tried to outlaw Jewish worship, Judah the Maccabee led the 165 BCE Maccabean Revolt, re-dedicating the Temple—a victory celebrated on Hanukkah."
+          heading: "Hellenistic Rule & The Maccabean Revolt (165 BCE)",
+          content: "Alexander the Great brought Greek rule in 332 BCE. When Seleucid Emperor Antiochus IV Epiphanes outlawed Jewish practice and desecrated the Temple, Judah the Maccabee led the Hasmonean Revolt. In 165 BCE, the Maccabees liberated Jerusalem and rededicated the Temple—a victory celebrated annually on Hanukkah."
         },
         {
-          heading: "Roman Siege & Temple Destruction",
-          content: "Roman legions occupied Judea in 66 BCE. Escalating oppression sparked the First Jewish-Roman War (66–70 CE). In 70 CE, Roman general Titus destroyed Jerusalem and burned the Second Temple."
+          heading: "Hasmonean Dynasty & Herod the Great",
+          content: "The Maccabees established the sovereign Hasmonean Kingdom. In 63 BCE, Roman general Pompey intervened in Judean succession, subjecting the land to Roman vassalage. King Herod later expanded the Second Temple into an architectural wonder of the ancient world."
         },
         {
-          heading: "Bar Kokhba Revolt & Great Diaspora",
-          content: "Simon Bar Kokhba led a desperate second revolt (132–135 CE). Upon crushing it, Rome renamed Judea 'Syria Palaestina' and banned Jews from Jerusalem, initiating 1,900 years of global exile."
+          heading: "The Great Jewish Revolt & Destruction of Jerusalem (70 CE)",
+          content: "Heavy Roman taxation and religious suppression ignited the First Jewish-Roman War in 66 CE. Roman legions under Vespasian and Titus besieged Jerusalem. In the summer of 70 CE (9th of Av / Tisha B'Av), Roman troops breached the walls and burned the Second Temple to the ground."
+        },
+        {
+          heading: "Bar Kokhba Revolt & The Great Dispersion (132–135 CE)",
+          content: "Simon Bar Kokhba led a fierce second rebellion against Emperor Hadrian. Upon crushing it in 135 CE, Rome slaughtered hundreds of thousands of Jews, renamed Judea 'Syria Palaestina' to erase Jewish memory, and banned Jews from entering Jerusalem—initiating 1,900 years of global Diaspora."
         }
       ]
     },
     {
       part: "Part III",
       period: "70 CE – 19th Century",
-      title: "The Long Exile: The Diaspora",
-      summary: "Shift to Rabbinic Judaism, Mishnah & Talmud compilation, Ashkenaz and Sepharad cultural centers, centuries of persecution, and the birth of modern Zionism.",
+      title: "The Long Exile & Rise of Modern Zionism",
+      summary: "Shift to Rabbinic Judaism, Mishnah & Talmud compilation, Ashkenazi and Sephardic cultural centers, centuries of persecutions, and Theodor Herzl's Zionist movement.",
       sections: [
         {
-          heading: "Talmudic & Rabbinic Transformation",
-          content: "With the Temple gone, rabbinic leaders centered Judaism around synagogues, Torah study, and the compilation of the Mishnah and Gemara (Talmud)—creating a portable spiritual homeland."
+          heading: "Yavneh & Rabbinic Transformation",
+          content: "Before Jerusalem's fall, Rabbi Yochanan ben Zakkai established an academy at Yavneh, shifting Judaism from Temple sacrifices to synagogue prayer, deeds of lovingkindness (Chesed), and Torah study. Rabbi Judah the Prince compiled the Mishnah (c. 200 CE), forming the foundation of the Babylonian and Jerusalem Talmud."
         },
         {
           heading: "Ashkenazim & Sephardim Flourishing",
-          content: "Jewish life developed two major branches: Ashkenazim in Central/Eastern Europe (developing Yiddish) and Sephardim in Spain & Portugal (experiencing a Golden Age of poetry and philosophy)."
+          content: "Jewish exile branched into distinct traditions: Sephardim in Islamic Spain & North Africa (enjoying a Golden Age under Maimonides / Rambam and Yehuda Halevi) and Ashkenazim in Franco-Germany & Eastern Europe (guided by commentators like Rashi)."
         },
         {
-          heading: "Persecutions & Expulsions",
-          content: "Diaspora life faced severe trials: Crusaders massacres, expulsions from England (1290) and Spain (1492), and Russian imperial pogroms in the Pale of Settlement."
+          heading: "Centuries of Persecution & Expulsions",
+          content: "Jewish communities endured severe trials: Crusader massacres (1096), blood libels, expulsions from England (1290), France (1394), and Spain (1492), followed by 17th-century Chmielnicki pogroms and confinement to the Tsarist Pale of Settlement."
         },
         {
-          heading: "The Rise of Zionism",
-          content: "Spurred by persistent antisemitism and ancient prayers for Zion, Theodor Herzl founded political Zionism, convening the First Zionist Congress in Basel (1897) to advocate for a sovereign Jewish national home."
+          heading: "Theodor Herzl & Political Zionism (1897)",
+          content: "Confronted by relentless European antisemitism (highlighted by the Dreyfus Affair), Austrian journalist Theodor Herzl authored 'Der Judenstaat' (The Jewish State). In 1897, Herzl convened the First Zionist Congress in Basel, Switzerland, organizing the national movement to restore Jewish sovereignty in Eretz Yisrael."
         }
       ]
     },
     {
       part: "Part IV",
       period: "19th Century – 1948",
-      title: "The Road to Statehood",
-      summary: "Waves of Aliyah pioneers, Hebrew revival, Balfour Declaration (1917), British Mandate, the tragic Holocaust, UN Partition Plan, and May 14, 1948 Independence.",
+      title: "The Road to Statehood & The Holocaust",
+      summary: "Waves of Aliyah pioneers, Hebrew language revival, Balfour Declaration (1917), British Mandate, the tragedy of the Holocaust (Shoah), UN Partition Plan, and May 14, 1948 Declaration of Independence.",
       sections: [
         {
-          heading: "First Aliyahs & Hebrew Revival",
-          content: "Jewish pioneers (Halutzim) returned to drain swamps, build agricultural kibbutzim, and under Eliezer Ben-Yehuda, revived biblical Hebrew into a spoken living language."
+          heading: "Aliyah Waves & Revival of Modern Hebrew",
+          content: "Starting in 1882, Jewish idealists (Halutzim) returned in waves of Aliyah to drain malarial swamps, plant forests, and establish cooperative agricultural communes (Kibbutzim). Linguist Eliezer Ben-Yehuda accomplished the unprecedented feat of reviving biblical Hebrew into a modern spoken language."
         },
         {
-          heading: "Balfour Declaration & British Mandate",
-          content: "In 1917, Britain issued the Balfour Declaration supporting a Jewish national home in Palestine. The League of Nations later ratified the British Mandate (1920–1948)."
+          heading: "Balfour Declaration & British Mandate (1917–1947)",
+          content: "On November 2, 1917, British Foreign Secretary Arthur Balfour issued the Balfour Declaration expressing official support for 'a national home for the Jewish people' in Palestine. The League of Nations formally assigned the British Mandate in 1922."
         },
         {
-          heading: "The Holocaust (Shoah)",
-          content: "The Nazi murder of six million European Jews (1939–1945) proved the absolute existential necessity of an independent Jewish state where Jews could defend themselves."
+          heading: "The Holocaust / Shoah (1939–1945)",
+          content: "During World War II, Nazi Germany systematically murdered six million European Jews—one third of world Jewry—in industrialized death camps. This unparalleled tragedy demonstrated with absolute finality the existential imperative for an independent Jewish state capable of defending Jewish lives."
         },
         {
-          heading: "May 14, 1948: Rebirth of Israel",
-          content: "Following the 1947 UN Partition Plan, David Ben-Gurion proclaimed the State of Israel in Tel Aviv on May 14, 1948, fulfilling 2,000 years of collective longing."
+          heading: "UN Resolution 181 & Declaration of Independence (1948)",
+          content: "On November 29, 1947, the United Nations General Assembly adopted Resolution 181 partitioning Mandate Palestine into Jewish and Arab states. On May 14, 1948 (5 Iyar 5708), David Ben-Gurion read the Declaration of Independence in Tel Aviv, restoring Jewish sovereignty after 1,978 years."
         }
       ]
     },
     {
       part: "Part V",
       period: "1948 – Present",
-      title: "The Modern State of Israel",
-      summary: "1948 War of Independence, ingathering of 850,000+ Middle Eastern Jewish refugees, 1967 Six-Day War & Jerusalem reunification, Start-Up Nation innovation.",
+      title: "The Modern State of Israel & High-Tech Nation",
+      summary: "1948 War of Independence, ingathering of 850,000+ Middle Eastern Jewish refugees, 1967 Six-Day War & Jerusalem reunification, 1973 Yom Kippur War, peace treaties, and global innovation leader.",
       sections: [
         {
-          heading: "War of Independence & Refugee Ingathering",
-          content: "Israel survived invasion by five Arab armies in 1948. Over the next decade, Israel doubled its population by welcoming Holocaust survivors and over 850,000 Mizrahi/Sephardi refugees from Arab lands."
+          heading: "War of Independence & Ingathering of Refugees",
+          content: "Immediately following independence, five Arab armies invaded Israel. Israel survived the 1948 War of Independence and absorbed over 850,000 Mizrahi and Sephardi Jewish refugees expelled from Arab lands (Operation Magic Carpet, Operation Ezra & Nehemiah) alongside European survivors."
         },
         {
-          heading: "1967 Six-Day War & Reunification",
-          content: "In 1967, Israel defeated hostile Arab armies, reunifying Jerusalem and restoring Jewish access to the Western Wall (Kotel), the holiest prayer site."
+          heading: "1967 Six-Day War & Reunification of Jerusalem",
+          content: "In June 1967, facing Egyptian, Syrian, and Jordanian mobilization, Israel launched a preemptive strike, liberating the Old City of Jerusalem, the Kotel (Western Wall), Judea, Samaria, Gaza, and the Golan Heights—reunifying the historic capital."
         },
         {
-          heading: "Modern Innovation & Global Heritage",
-          content: "Today Israel is a global high-tech, medical, and scientific leader ('Start-Up Nation') while preserving its rich ancient spiritual heritage."
+          heading: "Yom Kippur War (1973) & Historic Peace Treaties",
+          content: "Attacked by surprise on Yom Kippur 1973, Israel repelled Egyptian and Syrian forces. Subsequent diplomacy yielded historic peace accords: the Camp David Accords with Egypt (1979), Israel-Jordan Peace Treaty (1994), and the Abraham Accords (2020) with the UAE, Bahrain, Morocco, and Sudan."
+        },
+        {
+          heading: "Start-Up Nation & Modern Jewish Heritage",
+          content: "Today Israel stands as a global superpower in technology, cyber security, medical research, agriculture, and defense ('Start-Up Nation') while remaining the vibrant, beating heart of Jewish spiritual life and democratic freedom."
         }
       ]
     }
@@ -242,21 +276,21 @@ function WayToIsraelPage() {
           </Link>
           <div className="flex items-center gap-2.5">
             <div className="size-9.5 rounded-2xl bg-gradient-to-tr from-blue-600 to-sky-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
-              <Compass className="size-5 text-white" />
+              <StarOfDavidIcon className="size-5 text-white" />
             </div>
             <div>
               <h1 className="text-[17px] font-black tracking-tight leading-none text-white">
                 WAY TO ISRAEL
               </h1>
-              <p className="text-[9.5px] text-slate-400 font-semibold tracking-wider mt-0.5">Heritage, Scriptures & History</p>
+              <p className="text-[9.5px] text-slate-400 font-semibold tracking-wider mt-0.5">Heritage, Scriptures & Detailed History</p>
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <span className="text-[10px] font-bold text-sky-300 bg-sky-500/10 border border-sky-500/20 px-3 py-1 rounded-full flex items-center gap-1.5 backdrop-blur-md">
-            <Shield className="size-3 text-sky-400" />
-            <span>Jewish Culture & History</span>
+            <StarOfDavidIcon className="size-3.5 text-sky-400" />
+            <span>Jewish Culture & Heritage</span>
           </span>
         </div>
       </header>
@@ -327,7 +361,7 @@ function WayToIsraelPage() {
           {/* Flag Symbolism & History */}
           <div className="md:col-span-7 space-y-3.5">
             <div className="inline-flex items-center gap-1.5 text-[10.5px] font-bold text-sky-400 bg-sky-500/10 border border-sky-500/20 px-3 py-1 rounded-full">
-              <Star className="size-3 text-sky-400 fill-sky-400" />
+              <StarOfDavidIcon className="size-3.5 text-sky-400" />
               <span>National Symbol</span>
             </div>
 
@@ -345,7 +379,7 @@ function WayToIsraelPage() {
                 <span>Tallit Prayer Shawl Stripes</span>
               </div>
               <div className="flex items-center gap-2 bg-slate-800/60 border border-white/10 px-3 py-1.5 rounded-xl text-[11px] font-medium text-slate-200">
-                <Star className="size-3.5 text-amber-400" />
+                <StarOfDavidIcon className="size-3.5 text-amber-400" />
                 <span>Magen David (Shield of David)</span>
               </div>
             </div>
@@ -364,7 +398,7 @@ function WayToIsraelPage() {
               }`}
             >
               <History className="size-3.5" />
-              <span>History</span>
+              <span>Detailed History</span>
             </button>
 
             <button
@@ -393,14 +427,14 @@ function WayToIsraelPage() {
           </div>
         </div>
 
-        {/* TAB 1: HISTORY OF ISRAEL */}
+        {/* TAB 1: EXHAUSTIVE HISTORY OF ISRAEL */}
         {activeTab === "history" && (
           <div className="space-y-6 select-text">
             {/* View Mode Switcher */}
             <div className="flex flex-col sm:flex-row justify-between items-center gap-3 bg-slate-900/50 p-3 rounded-2xl border border-white/10 backdrop-blur-xl">
               <div className="flex items-center gap-2 text-xs font-semibold text-slate-300">
                 <BookOpen className="size-4 text-sky-400" />
-                <span>Reading View:</span>
+                <span>Reading Format:</span>
               </div>
               <div className="flex gap-2">
                 <button
@@ -412,7 +446,7 @@ function WayToIsraelPage() {
                   }`}
                 >
                   <ListFilter className="size-3.5" />
-                  <span>Timeline View</span>
+                  <span>5-Part Timeline</span>
                 </button>
                 <button
                   onClick={() => setHistoryViewMode("full")}
@@ -423,7 +457,7 @@ function WayToIsraelPage() {
                   }`}
                 >
                   <FileText className="size-3.5" />
-                  <span>Article View</span>
+                  <span>Full Article View</span>
                 </button>
               </div>
             </div>
@@ -433,10 +467,10 @@ function WayToIsraelPage() {
               <div className="space-y-6">
                 <div className="text-center space-y-1">
                   <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-                    History of Israel Through Jewish Experience
+                    Comprehensive History of Israel
                   </h3>
                   <p className="text-[12.5px] font-medium text-slate-400 max-w-2xl mx-auto">
-                    Select an era to explore key historical events and narratives chronologically.
+                    4,000 years of unbroken Jewish history, covenants, exiles, and national resurrection.
                   </p>
                 </div>
 
@@ -480,18 +514,18 @@ function WayToIsraelPage() {
                           </span>
                         </div>
 
-                        <p className="text-[13px] text-slate-300 italic leading-relaxed">
+                        <p className="text-[13px] text-slate-300 italic leading-relaxed font-medium">
                           "{p.summary}"
                         </p>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                        <div className="space-y-4 pt-2">
                           {p.sections.map((sec, sIdx) => (
-                            <div key={sIdx} className="bg-slate-950/50 border border-white/5 rounded-2xl p-4 space-y-2">
-                              <h5 className="text-[13.5px] font-bold text-sky-300 flex items-center gap-1.5">
-                                <Sparkles className="size-3.5 text-blue-400" />
-                                {sec.heading}
+                            <div key={sIdx} className="bg-slate-950/50 border border-white/5 rounded-2xl p-5 space-y-2">
+                              <h5 className="text-[14px] font-bold text-sky-300 flex items-center gap-2">
+                                <StarOfDavidIcon className="size-3.5 text-blue-400 flex-shrink-0" />
+                                <span>{sec.heading}</span>
                               </h5>
-                              <p className="text-[12px] text-slate-300 leading-relaxed font-normal">
+                              <p className="text-[12.5px] text-slate-300 leading-relaxed font-normal">
                                 {sec.content}
                               </p>
                             </div>
@@ -506,93 +540,106 @@ function WayToIsraelPage() {
 
             {/* FULL ARTICLE READER MODE */}
             {historyViewMode === "full" && (
-              <div className="bg-slate-900/60 border border-white/10 rounded-3xl p-6 sm:p-10 space-y-8 shadow-2xl backdrop-blur-xl leading-relaxed text-slate-200">
+              <div className="bg-slate-900/60 border border-white/10 rounded-3xl p-6 sm:p-10 space-y-10 shadow-2xl backdrop-blur-xl leading-relaxed text-slate-200">
                 <div className="border-b border-white/10 pb-6 text-center space-y-3">
-                  <span className="px-3.5 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-300 text-[11px] font-semibold">
-                    Unabridged Historical Account
-                  </span>
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-300 text-[11px] font-semibold">
+                    <StarOfDavidIcon className="size-3.5 text-sky-400" />
+                    <span>Complete Unabridged History</span>
+                  </div>
                   <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
-                    The History of Israel: Through Jewish Eyes
+                    A Complete History of Israel: Through Jewish Eyes
                   </h2>
                   <p className="text-[13.5px] text-slate-400 max-w-3xl mx-auto italic font-normal">
-                    A vast tapestry woven over millennia—a spiritual, cultural, and national saga of a people, their land, and their enduring covenant.
+                    A vast and intricate tapestry woven over millennia—a spiritual, cultural, and national saga of a people, their land, and their enduring covenant.
                   </p>
                 </div>
 
                 {/* Part I */}
                 <div className="space-y-4">
                   <h3 className="text-xl font-black text-sky-300 border-l-4 border-blue-500 pl-3">
-                    Part I: The Biblical Foundations (c. 2000 BCE – 586 BCE)
+                    Part I: The Biblical Foundations & First Temple Era (c. 2000 BCE – 586 BCE)
                   </h3>
-                  <div className="space-y-3 text-[13px] font-normal text-slate-300">
+                  <div className="space-y-4 text-[13px] font-normal text-slate-300">
                     <p>
-                      <strong>The Patriarchal Age:</strong> History begins around 4,000 years ago with Abraham, Isaac, and Jacob. Summonsed from Ur of the Chaldeans to Canaan, Abraham established a monotheistic people bound by the <em>Brit</em> (Covenant). Jacob was renamed <strong>Israel</strong> ("he who strives with God") and fathered the Twelve Tribes of Israel.
+                      <strong>The Patriarchal Age & Covenant:</strong> Jewish history begins nearly 4,000 years ago in Ur of the Chaldeans, where Abraham recognized single monotheism. Summoned to Canaan, Abraham established a divine covenant (Brit) promising Eretz Yisrael to his descendants. Isaac and Jacob continued this lineage; Jacob was renamed <strong>Israel</strong> ("he who strives with God") after wrestling with an angel, and fathered twelve sons who formed the Twelve Tribes.
                     </p>
                     <p>
-                      <strong>Exodus & Torah:</strong> Enslaved in Egypt for 400 years, the Israelites were led by Moses out of Egypt in the Exodus. At Mount Sinai, they received the Torah and the Ten Commandments, establishing their divine moral law—commemorated annually on Passover.
+                      <strong>Slavery & Exodus:</strong> Following famine, the Israelites settled in Egypt where they grew into a populous nation and were subsequently enslaved by Pharaoh. Under Moses, God delivered the Ten Plagues and redeemed Israel in the Exodus (Pesach). At Mount Sinai, the entire nation witnessed divine revelation, receiving the Ten Commandments and the Torah.
                     </p>
                     <p>
-                      <strong>The Monarchy & Jerusalem:</strong> King David (c. 1004 BCE) unified the nation and declared Jerusalem the eternal capital. King Solomon built the First Temple on Mount Moriah, creating the spiritual heart of Israel.
+                      <strong>Kingdom of Israel & Solomon's Temple:</strong> Led by Joshua into Canaan, Israel was ruled by Judges for two centuries before establishing a monarchy. King David (c. 1004 BCE) unified the tribes, captured Zion, and established Jerusalem as the eternal capital. King Solomon built the magnificent First Temple on Mount Moriah, making Jerusalem the spiritual centerpiece of Jewish life.
                     </p>
                     <p>
-                      <strong>Exile to Babylon:</strong> In 586 BCE, King Nebuchadnezzar of Babylon destroyed Jerusalem and the First Temple, exiling the Jewish population. During 70 years in Babylon, Jewish identity was forged anew through synagogue prayer and Torah study.
+                      <strong>Babylonian Exile (586 BCE):</strong> Following Solomon, the kingdom split into Israel and Judah. In 586 BCE, King Nebuchadnezzar of Babylon destroyed Jerusalem and burned the First Temple, marching the Jews into exile in Babylon. There, by the rivers of Babylon, Jewish identity was preserved through prayer and scripture.
                     </p>
                   </div>
                 </div>
 
                 {/* Part II */}
-                <div className="space-y-4 pt-4 border-t border-white/10">
+                <div className="space-y-4 pt-6 border-t border-white/10">
                   <h3 className="text-xl font-black text-sky-300 border-l-4 border-blue-500 pl-3">
-                    Part II: The Second Temple Period (c. 538 BCE – 70 CE)
+                    Part II: The Second Temple Period & Roman Siege (c. 538 BCE – 70 CE)
                   </h3>
-                  <div className="space-y-3 text-[13px] font-normal text-slate-300">
+                  <div className="space-y-4 text-[13px] font-normal text-slate-300">
                     <p>
-                      <strong>Return to Zion & Maccabean Revolt:</strong> Persian King Cyrus allowed the Jews to return and rebuild the Second Temple. In 165 BCE, Judah the Maccabee defeated Greek oppressors, re-dedicating the Temple—a miracle celebrated on <strong>Hanukkah</strong>.
+                      <strong>Cyrus's Edict & Rebuilding:</strong> In 538 BCE, Persian King Cyrus the Great permitted Jewish exiles to return to Jerusalem. Under Zerubbabel, Ezra, and Nehemiah, they rebuilt the Second Temple and restored Torah covenantal life.
                     </p>
                     <p>
-                      <strong>Roman Destruction (70 CE):</strong> Rome annexed Judea, culminating in the First Jewish-Roman War. In 70 CE, Roman legions burned the Second Temple. A second uprising—the <strong>Bar Kokhba Revolt</strong> (132–135 CE)—was crushed, prompting Rome to rename the land "Syria Palaestina" and disperse the Jewish people into global Diaspora.
+                      <strong>The Maccabean Victory (Hanukkah):</strong> In 165 BCE, when Seleucid Greek Emperor Antiochus IV banned Torah study and desecrated the Temple, Judah the Maccabee led a guerrilla uprising. Reclaiming Jerusalem, the Maccabees rededicated the Temple, celebrated by the miracle of the oil on <strong>Hanukkah</strong>.
+                    </p>
+                    <p>
+                      <strong>Destruction of Second Temple (70 CE):</strong> Rome conquered Judea in 63 BCE. Oppression sparked the Great Revolt (66 CE). In 70 CE, Roman general Titus breached Jerusalem's walls and burned the Second Temple on the 9th of Av (Tisha B'Av).
+                    </p>
+                    <p>
+                      <strong>Bar Kokhba Revolt & Dispersion (135 CE):</strong> A second revolt led by Simon Bar Kokhba (132–135 CE) was crushed by Hadrian. Rome slaughtered hundreds of thousands of Jews, renamed Judea "Syria Palaestina", and banned Jews from Jerusalem, initiating nearly two millennia of global exile.
                     </p>
                   </div>
                 </div>
 
                 {/* Part III */}
-                <div className="space-y-4 pt-4 border-t border-white/10">
+                <div className="space-y-4 pt-6 border-t border-white/10">
                   <h3 className="text-xl font-black text-sky-300 border-l-4 border-blue-500 pl-3">
-                    Part III: The Long Exile & The Rise of Zionism
+                    Part III: The Long Exile & Rise of Zionism (70 CE – 19th Century)
                   </h3>
-                  <div className="space-y-3 text-[13px] font-normal text-slate-300">
+                  <div className="space-y-4 text-[13px] font-normal text-slate-300">
                     <p>
-                      <strong>Rabbinic Judaism & Cultural Centers:</strong> Denied a physical Temple, rabbinic leaders compiled the Mishnah and Talmud, enabling a "portable homeland" of scripture. Two major cultural centers flourished: <strong>Ashkenazim</strong> in Central/Eastern Europe and <strong>Sephardim</strong> in Spain & Portugal.
+                      <strong>Rabbinic Judaism & The Talmud:</strong> Deprived of the Temple, sages like Rabbi Yochanan ben Zakkai shifted Jewish life to prayer and study. Rabbi Judah the Prince compiled the Mishnah (c. 200 CE), forming the foundation of the Talmud.
                     </p>
                     <p>
-                      <strong>Political Zionism:</strong> Facing centuries of expulsions and pogroms, Theodor Herzl founded political Zionism in 1897 at the First Zionist Congress in Basel, advocating for Jewish self-determination in their ancestral land.
+                      <strong>Sephardic & Ashkenazic Heritage:</strong> Sephardim in Spain enjoyed a Golden Age of philosophy and poetry under Maimonides (Rambam), while Ashkenazim in Eastern Europe developed Yiddish culture and rabbinic commentaries under Rashi.
+                    </p>
+                    <p>
+                      <strong>Theodor Herzl & Modern Zionism:</strong> Facing European pogroms and antisemitism, Theodor Herzl published <em>Der Judenstaat</em> and organized the First Zionist Congress in Basel (1897) to restore Jewish national independence in Eretz Yisrael.
                     </p>
                   </div>
                 </div>
 
                 {/* Part IV */}
-                <div className="space-y-4 pt-4 border-t border-white/10">
+                <div className="space-y-4 pt-6 border-t border-white/10">
                   <h3 className="text-xl font-black text-sky-300 border-l-4 border-blue-500 pl-3">
-                    Part IV: The Road to Statehood (19th Century – 1948)
+                    Part IV: The Road to Statehood & The Holocaust (19th Century – 1948)
                   </h3>
-                  <div className="space-y-3 text-[13px] font-normal text-slate-300">
+                  <div className="space-y-4 text-[13px] font-normal text-slate-300">
                     <p>
-                      <strong>Pioneers & Balfour Declaration:</strong> Early pioneers (Halutzim) returned in waves of Aliyah to build kibbutzim and revive Hebrew. In 1917, Britain issued the Balfour Declaration supporting a Jewish national home.
+                      <strong>Aliyah & Modern Hebrew:</strong> Jewish pioneers built agricultural Kibbutzim, founded Tel Aviv (1909), and revived spoken Hebrew under Eliezer Ben-Yehuda. In 1917, Britain issued the Balfour Declaration supporting a Jewish national home.
                     </p>
                     <p>
-                      <strong>The Holocaust & May 14, 1948 Statehood:</strong> The Nazi genocide of six million Jews demonstrated the absolute necessity of a sovereign state. On May 14, 1948, David Ben-Gurion proclaimed the State of Israel, realizing a 2,000-year dream.
+                      <strong>The Holocaust (Shoah):</strong> Nazi Germany murdered six million European Jews in WWII, proving the urgent existential necessity of an independent Jewish state.
+                    </p>
+                    <p>
+                      <strong>May 14, 1948 Declaration of Independence:</strong> Following the 1947 UN Partition Plan, David Ben-Gurion declared the establishment of the State of Israel in Tel Aviv on May 14, 1948.
                     </p>
                   </div>
                 </div>
 
                 {/* Part V */}
-                <div className="space-y-4 pt-4 border-t border-white/10">
+                <div className="space-y-4 pt-6 border-t border-white/10">
                   <h3 className="text-xl font-black text-sky-300 border-l-4 border-blue-500 pl-3">
                     Part V: The Modern State of Israel (1948 – Present)
                   </h3>
-                  <div className="space-y-3 text-[13px] font-normal text-slate-300">
+                  <div className="space-y-4 text-[13px] font-normal text-slate-300">
                     <p>
-                      Israel absorbed over 850,000 Mizrahi and Sephardi refugees from Arab lands alongside European survivors. Reunifying Jerusalem in the 1967 Six-Day War, modern Israel stands today as a flourishing democratic nation, high-tech global leader, and vibrant center of Jewish life.
+                      Israel survived invasion in 1948 and absorbed 850,000 Jewish refugees from Arab lands. In the 1967 Six-Day War, Israel reunited Jerusalem and restored access to the Western Wall (Kotel). Today, Israel flourishes as a democratic high-tech powerhouse and spiritual haven for world Jewry.
                     </p>
                   </div>
                 </div>

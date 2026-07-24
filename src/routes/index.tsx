@@ -22,6 +22,23 @@ import {
   Compass
 } from "lucide-react";
 
+function StarOfDavidIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 100 100"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="9"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <polygon points="50,8 92,80 8,80" />
+      <polygon points="50,92 92,20 8,20" />
+    </svg>
+  );
+}
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -134,7 +151,7 @@ function DashboardHome() {
       id: "israel", 
       title: "Way to Israel", 
       desc: "Comprehensive history of Israel, Jewish culture, heritage, and Am Yisrael Chai anthem.", 
-      icon: Compass, 
+      icon: StarOfDavidIcon, 
       link: "/israel",
       color: "text-sky-400 border-blue-500/20 bg-blue-500/5 hover:border-blue-500/40"
     },
