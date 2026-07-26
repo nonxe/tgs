@@ -16,20 +16,21 @@ import {
   Gamepad2,
   Gauge,
   Users,
-  ShieldCheck
+  Sun,
+  Moon
 } from "lucide-react";
 
 export const Route = createFileRoute("/runner")({
   head: () => ({
     meta: [
-      { title: "Modi Express Runner 3D — Escape the Protestors" },
-      { name: "description", content: "Subway Surfers-style 3D endless runner featuring Narendra Modi. Outrun pursuing protestors, collect lotuses, and dodge obstacles!" },
+      { title: "Modi Express Runner 3D — Full 3D Subway Surfers Engine" },
+      { name: "description", content: "Subway Surfers-style 3D endless runner featuring Narendra Modi. Outrun protestors, collect lotuses, dodge trains, and activate power-ups!" },
     ],
   }),
-  component: ModiRunnerPage,
+  component: ModiRunner3DPage,
 });
 
-// Web Audio API Synthesizer
+// Sound Engine using Web Audio API
 class SoundEngine {
   ctx: AudioContext | null = null;
   muted: boolean = false;
@@ -47,8 +48,8 @@ class SoundEngine {
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
       osc.type = "sine";
-      osc.frequency.setValueAtTime(523.25, this.ctx.currentTime); // C5
-      osc.frequency.exponentialRampToValueAtTime(1046.50, this.ctx.currentTime + 0.15); // C6
+      osc.frequency.setValueAtTime(523.25, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1046.50, this.ctx.currentTime + 0.15);
       gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
       osc.connect(gain);
@@ -127,13 +128,14 @@ interface Item {
   rot: number;
 }
 
-function ModiRunnerPage() {
+function ModiRunner3DPage() {
   const [gameState, setGameState] = useState<"menu" | "playing" | "gameover">("menu");
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [lotusCount, setLotusCount] = useState(0);
   const [speedMultiplier, setSpeedMultiplier] = useState("1.0x");
-  const [protestorGapText, setProtestorGapText] = useState("Close Behind! (5m)");
+  const [protestorStatus, setProtestorStatus] = useState("Close Behind! (5m)");
+  const [themeMode, setThemeMode] = useState<"day" | "neon">("day");
   const [isMuted, setIsMuted] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -176,7 +178,7 @@ function ModiRunnerPage() {
     lotuses: 0,
     obstacles: [],
     items: [],
-    protestorGap: 15, // Starts right behind Modi
+    protestorGap: 15,
     nextId: 1,
     animFrame: 0,
   });
@@ -197,21 +199,21 @@ function ModiRunnerPage() {
       isJumping: false,
       isSliding: false,
       slideTimer: 0,
-      speed: 4.2, // Initially slow for scene build-up
+      speed: 4.2,
       initialSpeed: 4.2,
       distance: 0,
       score: 0,
       lotuses: 0,
       obstacles: [],
       items: [],
-      protestorGap: 15, // Starts right behind Modi
+      protestorGap: 15,
       nextId: 1,
       animFrame: 0,
     };
     setScore(0);
     setLotusCount(0);
     setSpeedMultiplier("1.0x");
-    setProtestorGapText("Close Behind! (5m)");
+    setProtestorStatus("Close Behind! (5m)");
     setGameState("playing");
   };
 
@@ -262,7 +264,7 @@ function ModiRunnerPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [gameState]);
 
-  // Touch Swipe Handlers
+  // Touch Swipe Controls
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length > 0) {
       touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -284,7 +286,7 @@ function ModiRunnerPage() {
     touchStartRef.current = null;
   };
 
-  // 60FPS Game Loop
+  // 60FPS 3D Canvas Projection Engine
   useEffect(() => {
     if (gameState !== "playing") return;
     let running = true;
@@ -313,17 +315,16 @@ function ModiRunnerPage() {
       g.score = Math.floor(g.distance / 10) + g.lotuses * 10;
 
       // Protestor Gap Calculation
-      // As speed increases, protestors fall further and further behind!
       const speedDiff = g.speed - g.initialSpeed;
-      g.protestorGap = 15 + speedDiff * 35; // Expands from 15 to 500+
+      g.protestorGap = 15 + speedDiff * 35;
 
       setScore(g.score);
       setSpeedMultiplier((g.speed / g.initialSpeed).toFixed(1) + "x");
 
-      if (g.protestorGap < 40) setProtestorGapText("Close Behind! (5m)");
-      else if (g.protestorGap < 120) setProtestorGapText("Falling Behind (30m)");
-      else if (g.protestorGap < 300) setProtestorGapText("Far Behind (100m)");
-      else setProtestorGapText("Outran Protestors! 🚀");
+      if (g.protestorGap < 40) setProtestorStatus("Close Behind! (5m)");
+      else if (g.protestorGap < 120) setProtestorStatus("Falling Behind (30m)");
+      else if (g.protestorGap < 300) setProtestorStatus("Far Behind (100m)");
+      else setProtestorStatus("Outran Protestors! 🚀");
 
       // Smooth Lane Switching
       const targetOffset = g.targetLane * (width * 0.23);
@@ -441,18 +442,24 @@ function ModiRunnerPage() {
       const horizonW = width * 0.16;
       const bottomW = width * 0.92;
 
-      // 1. Sky Gradient
+      // 1. Sky Gradient (Day vs Cyberpunk Neon theme)
       const skyGrad = ctx.createLinearGradient(0, 0, 0, horizonY);
-      skyGrad.addColorStop(0, "#080d1a");
-      skyGrad.addColorStop(0.5, "#172554");
-      skyGrad.addColorStop(1, "#f97316");
+      if (themeMode === "day") {
+        skyGrad.addColorStop(0, "#080d1a");
+        skyGrad.addColorStop(0.5, "#172554");
+        skyGrad.addColorStop(1, "#f97316"); // Saffron sunset
+      } else {
+        skyGrad.addColorStop(0, "#030712");
+        skyGrad.addColorStop(0.5, "#31104b");
+        skyGrad.addColorStop(1, "#c026d3"); // Neon Cyberpunk
+      }
       ctx.fillStyle = skyGrad;
       ctx.fillRect(0, 0, width, horizonY);
 
-      // Sun Glow
+      // Sun / Neon Disc
       const sunGrad = ctx.createRadialGradient(width * 0.5, horizonY * 0.75, 10, width * 0.5, horizonY * 0.75, 90);
-      sunGrad.addColorStop(0, "rgba(254, 240, 138, 0.9)");
-      sunGrad.addColorStop(0.5, "rgba(251, 146, 60, 0.4)");
+      sunGrad.addColorStop(0, themeMode === "day" ? "rgba(254, 240, 138, 0.9)" : "rgba(244, 114, 182, 0.9)");
+      sunGrad.addColorStop(0.5, themeMode === "day" ? "rgba(251, 146, 60, 0.4)" : "rgba(192, 38, 211, 0.4)");
       sunGrad.addColorStop(1, "rgba(249, 115, 22, 0)");
       ctx.fillStyle = sunGrad;
       ctx.beginPath();
@@ -460,7 +467,7 @@ function ModiRunnerPage() {
       ctx.fill();
 
       // City Skyline
-      ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+      ctx.fillStyle = themeMode === "day" ? "rgba(15, 23, 42, 0.85)" : "rgba(8, 13, 26, 0.95)";
       ctx.beginPath();
       ctx.moveTo(0, horizonY);
       for (let x = 0; x <= width; x += 30) {
@@ -487,7 +494,7 @@ function ModiRunnerPage() {
       ctx.fill();
 
       // Metallic Side Rails
-      ctx.strokeStyle = "#38bdf8";
+      ctx.strokeStyle = themeMode === "day" ? "#38bdf8" : "#e879f9";
       ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.moveTo(width * 0.5 - horizonW * 0.5, horizonY);
@@ -501,7 +508,7 @@ function ModiRunnerPage() {
         const topX = width * 0.5 + laneIdx * (horizonW / 3);
         const botX = width * 0.5 + laneIdx * (bottomW / 3);
 
-        ctx.strokeStyle = "rgba(249, 115, 22, 0.4)";
+        ctx.strokeStyle = themeMode === "day" ? "rgba(249, 115, 22, 0.4)" : "rgba(192, 38, 211, 0.6)";
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(topX, horizonY);
@@ -528,7 +535,6 @@ function ModiRunnerPage() {
       // ==========================================
       // 3. RENDER PURSUING PROTESTORS (BEHIND MODI)
       // ==========================================
-      // Protestor position calculation:
       const protestorZ = Math.max(-400, playerZ - g.protestorGap);
 
       if (protestorZ > -350) {
@@ -536,7 +542,6 @@ function ModiRunnerPage() {
         const pY = horizonY + (height - horizonY) * (0.88 + (15 / g.protestorGap));
         const pW = horizonW + (bottomW - horizonW) * pScale;
 
-        // Render 3 Protestor Avatars across lanes
         [-0.8, 0, 0.8].forEach((pLaneOffset, pIndex) => {
           const pX = width * 0.5 + pLaneOffset * (pW / 3) + Math.sin(g.animFrame * 0.3 + pIndex) * 8;
           const pBounce = Math.sin(g.animFrame * 0.5 + pIndex) * 5;
@@ -550,7 +555,7 @@ function ModiRunnerPage() {
           ctx.ellipse(0, 4, 16 * pScale, 5 * pScale, 0, 0, Math.PI * 2);
           ctx.fill();
 
-          // Protestor Body / Clothes
+          // Protestor Body
           ctx.fillStyle = pIndex === 0 ? "#ef4444" : pIndex === 1 ? "#3b82f6" : "#10b981";
           ctx.fillRect(-10, -32, 20, 24);
 
@@ -787,11 +792,11 @@ function ModiRunnerPage() {
       running = false;
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
     };
-  }, [gameState]);
+  }, [gameState, themeMode]);
 
   return (
     <main className="min-h-screen bg-[#030712] text-white flex flex-col font-sans relative overflow-x-hidden select-none pb-10">
-      {/* Header */}
+      {/* Navigation Header */}
       <header className="px-5 py-4 border-b border-white/10 backdrop-blur-2xl sticky top-0 z-40 bg-[#030712]/85 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link
@@ -808,12 +813,20 @@ function ModiRunnerPage() {
               <h1 className="text-[17px] font-black tracking-tight leading-none text-white">
                 MODI EXPRESS RUNNER 3D
               </h1>
-              <p className="text-[9.5px] text-amber-400 font-semibold tracking-wider mt-0.5">Outrun the Protestors & Collect Lotuses</p>
+              <p className="text-[9.5px] text-amber-400 font-semibold tracking-wider mt-0.5">3D Subway Surfers Edition</p>
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setThemeMode(themeMode === "day" ? "neon" : "day")}
+            className="size-9 rounded-full bg-slate-900 border border-white/10 text-slate-300 flex items-center justify-center hover:bg-slate-800 transition-all active:scale-95"
+            title="Toggle 3D Theme (Day / Cyberpunk Neon)"
+          >
+            {themeMode === "day" ? <Sun className="size-4 text-amber-400" /> : <Moon className="size-4 text-sky-400" />}
+          </button>
+
           <button
             onClick={() => {
               sounds.muted = !isMuted;
@@ -829,7 +842,7 @@ function ModiRunnerPage() {
       {/* Main Game Container */}
       <section className="relative max-w-4xl mx-auto w-full px-4 pt-4 flex-1 flex flex-col items-center justify-center space-y-4">
 
-        {/* 3D Canvas Screen */}
+        {/* 3D CANVAS VIEWPORT */}
         <div
           className="relative w-full max-w-md aspect-[3/4] sm:aspect-[4/5] rounded-3xl overflow-hidden border-2 border-amber-500/40 bg-slate-950 shadow-2xl touch-none select-none"
           onTouchStart={handleTouchStart}
@@ -846,16 +859,21 @@ function ModiRunnerPage() {
                   <span>{score.toLocaleString()} m</span>
                 </div>
 
-                <div className="bg-slate-950/85 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-pink-500/40 text-pink-300 text-[12px] font-black tracking-wider shadow-lg flex items-center gap-1.5">
+                <div className="bg-slate-950/85 backdrop-blur-md px-3 py-1.5 rounded-full border border-sky-500/40 text-sky-300 text-[11.5px] font-bold tracking-wider shadow-lg flex items-center gap-1">
+                  <Gauge className="size-3.5 text-sky-400" />
+                  <span>Speed: {speedMultiplier}</span>
+                </div>
+
+                <div className="bg-slate-950/85 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-pink-500/40 text-pink-300 text-[12.5px] font-black tracking-wider shadow-lg flex items-center gap-1.5">
                   <Sparkles className="size-3.5 text-pink-400" />
                   <span>{lotusCount} Lotuses</span>
                 </div>
               </div>
 
-              {/* Protestor Distance Banner */}
+              {/* Protestors Banner */}
               <div className="self-center bg-slate-950/90 backdrop-blur-md px-3.5 py-1 rounded-full border border-red-500/30 text-[11px] font-bold text-red-300 shadow-md flex items-center gap-1.5">
                 <Users className="size-3.5 text-red-400 animate-pulse" />
-                <span>Protestors: {protestorGapText}</span>
+                <span>Protestors: {protestorStatus}</span>
               </div>
             </div>
           )}
@@ -868,9 +886,9 @@ function ModiRunnerPage() {
               </div>
 
               <div className="space-y-2">
-                <h2 className="text-3xl font-black text-white tracking-tight">ESCAPE THE PROTEST!</h2>
+                <h2 className="text-3xl font-black text-white tracking-tight">SUBWAY SURFERS 3D</h2>
                 <p className="text-[13px] font-medium text-slate-300 max-w-xs leading-relaxed">
-                  Initially, protestors run close behind Modi! As speed increases over time, Modi outruns them and leaves them far behind!
+                  Inspired by Subway Surfers! Outrun pursuing protestors, collect spinning 3D lotuses, and dodge express trains!
                 </p>
               </div>
 
@@ -884,7 +902,7 @@ function ModiRunnerPage() {
                 className="w-full max-w-xs h-13 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-500 text-white font-black text-base tracking-wider uppercase flex items-center justify-center gap-2 shadow-xl shadow-orange-500/30 transition-all active:scale-95"
               >
                 <Play className="size-5 fill-white" />
-                <span>START RUNNING</span>
+                <span>START 3D RUN</span>
               </button>
             </div>
           )}
@@ -898,7 +916,7 @@ function ModiRunnerPage() {
 
               <div className="space-y-1">
                 <h2 className="text-2xl font-black text-white">RUN COMPLETED!</h2>
-                <p className="text-xs text-slate-400 font-medium">Track obstacle encountered</p>
+                <p className="text-xs text-slate-400 font-medium">Obstacle impact on 3D track</p>
               </div>
 
               <div className="bg-slate-900 border border-white/10 rounded-2xl p-4 w-full max-w-xs space-y-2">
@@ -907,8 +925,8 @@ function ModiRunnerPage() {
                   <span className="text-amber-400 font-black text-sm">{score.toLocaleString()} m</span>
                 </div>
                 <div className="flex justify-between items-center text-xs font-bold text-slate-300">
-                  <span>Protestor Distance:</span>
-                  <span className="text-emerald-400 font-black text-xs">{protestorGapText}</span>
+                  <span>Protestor Status:</span>
+                  <span className="text-emerald-400 font-black text-xs">{protestorStatus}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs font-bold text-slate-300">
                   <span>Lotuses Collected:</span>
@@ -931,7 +949,7 @@ function ModiRunnerPage() {
           )}
         </div>
 
-        {/* CONTROLS */}
+        {/* MOBILE & PC TOUCH CONTROL PAD */}
         <div className="w-full max-w-md space-y-3">
           <div className="grid grid-cols-4 gap-2">
             <button
