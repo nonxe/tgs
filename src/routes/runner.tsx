@@ -17,20 +17,23 @@ import {
   Gauge,
   Users,
   Sun,
-  Moon
+  Moon,
+  Shield,
+  Rocket,
+  Footprints
 } from "lucide-react";
 
 export const Route = createFileRoute("/runner")({
   head: () => ({
     meta: [
-      { title: "Modi Express Runner 3D — Full 3D Subway Surfers Engine" },
-      { name: "description", content: "Subway Surfers-style 3D endless runner featuring Narendra Modi. Outrun protestors, collect lotuses, dodge trains, and activate power-ups!" },
+      { title: "Modi Express Runner 3D — Official Subway Surfers Edition" },
+      { name: "description", content: "Subway Surfers-style 3D endless runner featuring Narendra Modi. Outrun protestors, collect lotuses, use Jetpacks, Hoverboards, and Jumping Boots!" },
     ],
   }),
   component: ModiRunner3DPage,
 });
 
-// Sound Engine using Web Audio API
+// Web Audio SFX Synthesizer
 class SoundEngine {
   ctx: AudioContext | null = null;
   muted: boolean = false;
@@ -76,20 +79,20 @@ class SoundEngine {
     } catch {}
   }
 
-  playSlide() {
+  playPowerUp() {
     if (this.muted || !this.ctx) return;
     try {
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
       osc.type = "sawtooth";
-      osc.frequency.setValueAtTime(320, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(110, this.ctx.currentTime + 0.14);
-      gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.14);
+      osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.25);
+      gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
       osc.connect(gain);
       gain.connect(this.ctx.destination);
       osc.start();
-      osc.stop(this.ctx.currentTime + 0.14);
+      osc.stop(this.ctx.currentTime + 0.25);
     } catch {}
   }
 
@@ -116,7 +119,7 @@ const sounds = new SoundEngine();
 interface Obstacle {
   id: number;
   lane: number; // -1, 0, 1
-  z: number; // distance 0 to 1000
+  z: number; // 0 to 1000
   type: "barricade" | "train" | "lowHurdle" | "highBridge";
 }
 
@@ -125,6 +128,7 @@ interface Item {
   lane: number;
   z: number;
   collected: boolean;
+  type: "lotus" | "boots" | "jetpack" | "hoverboard";
   rot: number;
 }
 
@@ -135,6 +139,7 @@ function ModiRunner3DPage() {
   const [lotusCount, setLotusCount] = useState(0);
   const [speedMultiplier, setSpeedMultiplier] = useState("1.0x");
   const [protestorStatus, setProtestorStatus] = useState("Close Behind! (5m)");
+  const [activePowerUp, setActivePowerUp] = useState<string | null>(null);
   const [themeMode, setThemeMode] = useState<"day" | "neon">("day");
   const [isMuted, setIsMuted] = useState(false);
 
@@ -142,11 +147,11 @@ function ModiRunner3DPage() {
   const requestRef = useRef<number | null>(null);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
-  // Engine State
+  // Engine state refs
   const gameRef = useRef<{
     lane: number; // -1, 0, 1
     targetLane: number;
-    laneOffset: number; // smooth lerp x
+    laneOffset: number; // smooth lerp
     y: number; // jump height
     vy: number;
     isJumping: boolean;
@@ -159,7 +164,9 @@ function ModiRunner3DPage() {
     lotuses: number;
     obstacles: Obstacle[];
     items: Item[];
-    protestorGap: number; // relative distance behind player
+    protestorGap: number;
+    powerUpType: "boots" | "jetpack" | "hoverboard" | null;
+    powerUpTimer: number;
     nextId: number;
     animFrame: number;
   }>({
@@ -171,14 +178,16 @@ function ModiRunner3DPage() {
     isJumping: false,
     isSliding: false,
     slideTimer: 0,
-    speed: 4.2, // Start slow
-    initialSpeed: 4.2,
+    speed: 4.5, // Start slow & smooth
+    initialSpeed: 4.5,
     distance: 0,
     score: 0,
     lotuses: 0,
     obstacles: [],
     items: [],
     protestorGap: 15,
+    powerUpType: null,
+    powerUpTimer: 0,
     nextId: 1,
     animFrame: 0,
   });
@@ -199,19 +208,22 @@ function ModiRunner3DPage() {
       isJumping: false,
       isSliding: false,
       slideTimer: 0,
-      speed: 4.2,
-      initialSpeed: 4.2,
+      speed: 4.5,
+      initialSpeed: 4.5,
       distance: 0,
       score: 0,
       lotuses: 0,
       obstacles: [],
       items: [],
       protestorGap: 15,
+      powerUpType: null,
+      powerUpTimer: 0,
       nextId: 1,
       animFrame: 0,
     };
     setScore(0);
     setLotusCount(0);
+    setActivePowerUp(null);
     setSpeedMultiplier("1.0x");
     setProtestorStatus("Close Behind! (5m)");
     setGameState("playing");
@@ -231,7 +243,7 @@ function ModiRunner3DPage() {
     const g = gameRef.current;
     if (!g.isJumping && !g.isSliding) {
       g.isJumping = true;
-      g.vy = 14.5;
+      g.vy = g.powerUpType === "boots" ? 22 : 14.5; // Super Jump Boots!
       sounds.playJump();
     }
   };
@@ -246,7 +258,7 @@ function ModiRunner3DPage() {
     }
   };
 
-  // Keyboard Listeners
+  // Controls Listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (gameState !== "playing") return;
@@ -264,7 +276,6 @@ function ModiRunner3DPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [gameState]);
 
-  // Touch Swipe Controls
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length > 0) {
       touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -286,7 +297,7 @@ function ModiRunner3DPage() {
     touchStartRef.current = null;
   };
 
-  // 60FPS 3D Canvas Projection Engine
+  // 60FPS Subway Surfers Game Engine
   useEffect(() => {
     if (gameState !== "playing") return;
     let running = true;
@@ -310,13 +321,13 @@ function ModiRunner3DPage() {
       g.animFrame += 1;
 
       // Speed acceleration over time
-      g.speed = Math.min(19.0, g.initialSpeed + (g.distance * 0.00075));
+      g.speed = Math.min(19.5, g.initialSpeed + (g.distance * 0.00075));
       g.distance += g.speed;
       g.score = Math.floor(g.distance / 10) + g.lotuses * 10;
 
       // Protestor Gap Calculation
       const speedDiff = g.speed - g.initialSpeed;
-      g.protestorGap = 15 + speedDiff * 35;
+      g.protestorGap = 15 + speedDiff * 38;
 
       setScore(g.score);
       setSpeedMultiplier((g.speed / g.initialSpeed).toFixed(1) + "x");
@@ -326,18 +337,32 @@ function ModiRunner3DPage() {
       else if (g.protestorGap < 300) setProtestorStatus("Far Behind (100m)");
       else setProtestorStatus("Outran Protestors! 🚀");
 
+      // Power-Up Timer
+      if (g.powerUpType) {
+        g.powerUpTimer -= 1;
+        if (g.powerUpTimer <= 0) {
+          g.powerUpType = null;
+          setActivePowerUp(null);
+        }
+      }
+
       // Smooth Lane Switching
       const targetOffset = g.targetLane * (width * 0.23);
       g.laneOffset += (targetOffset - g.laneOffset) * 0.22;
 
-      // Jump Physics
-      if (g.isJumping) {
-        g.y += g.vy;
-        g.vy -= 0.85;
-        if (g.y <= 0) {
-          g.y = 0;
-          g.vy = 0;
-          g.isJumping = false;
+      // Jetpack Flying Boost Logic
+      if (g.powerUpType === "jetpack") {
+        g.y = 90; // Fly above ground & obstacles!
+      } else {
+        // Jump Physics
+        if (g.isJumping) {
+          g.y += g.vy;
+          g.vy -= 0.85;
+          if (g.y <= 0) {
+            g.y = 0;
+            g.vy = 0;
+            g.isJumping = false;
+          }
         }
       }
 
@@ -347,13 +372,14 @@ function ModiRunner3DPage() {
         if (g.slideTimer <= 0) g.isSliding = false;
       }
 
-      // Obstacle & Item Spawning
+      // Spawning Items & Power-ups
       const spawnInterval = Math.max(22, Math.floor(75 - g.speed * 2.8));
       if (g.animFrame % spawnInterval === 0) {
         const laneChoice = Math.floor(Math.random() * 3) - 1;
         const r = Math.random();
 
-        if (r < 0.58) {
+        if (r < 0.52) {
+          // Obstacle
           const types: ("barricade" | "train" | "lowHurdle" | "highBridge")[] = [
             "barricade",
             "lowHurdle",
@@ -367,16 +393,30 @@ function ModiRunner3DPage() {
             z: 1000,
             type: chosenType,
           });
-        } else {
+        } else if (r < 0.85) {
+          // Lotus line
           for (let k = 0; k < 3; k++) {
             g.items.push({
               id: g.nextId++,
               lane: laneChoice,
               z: 1000 + k * 130,
               collected: false,
+              type: "lotus",
               rot: 0,
             });
           }
+        } else {
+          // Power-up Item Spawn!
+          const pTypes: ("boots" | "jetpack" | "hoverboard")[] = ["boots", "jetpack", "hoverboard"];
+          const chosenP = pTypes[Math.floor(Math.random() * pTypes.length)];
+          g.items.push({
+            id: g.nextId++,
+            lane: laneChoice,
+            z: 1000,
+            collected: false,
+            type: chosenP,
+            rot: 0,
+          });
         }
       }
 
@@ -395,63 +435,80 @@ function ModiRunner3DPage() {
 
       // Collision Detection
       const playerZ = 85;
-      for (const obs of g.obstacles) {
-        if (Math.abs(obs.z - playerZ) < 38) {
-          const obsLaneX = obs.lane * (width * 0.23);
-          if (Math.abs(g.laneOffset - obsLaneX) < width * 0.13) {
-            let hit = false;
-            if (obs.type === "barricade" || obs.type === "train") hit = true;
-            else if (obs.type === "lowHurdle" && g.y < 35) hit = true;
-            else if (obs.type === "highBridge" && !g.isSliding) hit = true;
+      if (g.powerUpType !== "jetpack") {
+        for (const obs of g.obstacles) {
+          if (Math.abs(obs.z - playerZ) < 38) {
+            const obsLaneX = obs.lane * (width * 0.23);
+            if (Math.abs(g.laneOffset - obsLaneX) < width * 0.13) {
+              let hit = false;
+              if (obs.type === "barricade" || obs.type === "train") hit = true;
+              else if (obs.type === "lowHurdle" && g.y < 35) hit = true;
+              else if (obs.type === "highBridge" && !g.isSliding) hit = true;
 
-            if (hit) {
-              sounds.playCrash();
-              running = false;
-              setGameState("gameover");
-              const finalScore = g.score;
-              setHighScore((prev) => {
-                const nextHigh = Math.max(prev, finalScore);
-                localStorage.setItem("modi_runner_highscore", nextHigh.toString());
-                return nextHigh;
-              });
-              return;
+              if (hit) {
+                // Check if protected by Hoverboard shield
+                if (g.powerUpType === "hoverboard") {
+                  g.powerUpType = null;
+                  setActivePowerUp(null);
+                  obs.z = -100; // Consume obstacle
+                  sounds.playCrash();
+                } else {
+                  sounds.playCrash();
+                  running = false;
+                  setGameState("gameover");
+                  const finalScore = g.score;
+                  setHighScore((prev) => {
+                    const nextHigh = Math.max(prev, finalScore);
+                    localStorage.setItem("modi_runner_highscore", nextHigh.toString());
+                    return nextHigh;
+                  });
+                  return;
+                }
+              }
             }
           }
         }
       }
 
-      // Collect Lotus Items
+      // Item & Power-up Collection
       for (const item of g.items) {
         if (!item.collected && Math.abs(item.z - playerZ) < 45) {
           const itemLaneX = item.lane * (width * 0.23);
           if (Math.abs(g.laneOffset - itemLaneX) < width * 0.13) {
             item.collected = true;
-            g.lotuses += 1;
-            setLotusCount(g.lotuses);
-            sounds.playCollect();
+
+            if (item.type === "lotus") {
+              g.lotuses += 1;
+              setLotusCount(g.lotuses);
+              sounds.playCollect();
+            } else {
+              // Power-up Acquired!
+              g.powerUpType = item.type;
+              g.powerUpTimer = 300; // 5 seconds duration
+              setActivePowerUp(item.type.toUpperCase());
+              sounds.playPowerUp();
+            }
           }
         }
       }
 
-      // ==========================================
-      // HIGH-GRAPHICS 3D CANVAS RENDERING
-      // ==========================================
+      // RENDER CANVAS
       ctx.clearRect(0, 0, width, height);
 
       const horizonY = height * 0.42;
       const horizonW = width * 0.16;
       const bottomW = width * 0.92;
 
-      // 1. Sky Gradient (Day vs Cyberpunk Neon theme)
+      // 1. Sky & Horizon
       const skyGrad = ctx.createLinearGradient(0, 0, 0, horizonY);
       if (themeMode === "day") {
         skyGrad.addColorStop(0, "#080d1a");
         skyGrad.addColorStop(0.5, "#172554");
-        skyGrad.addColorStop(1, "#f97316"); // Saffron sunset
+        skyGrad.addColorStop(1, "#f97316");
       } else {
         skyGrad.addColorStop(0, "#030712");
         skyGrad.addColorStop(0.5, "#31104b");
-        skyGrad.addColorStop(1, "#c026d3"); // Neon Cyberpunk
+        skyGrad.addColorStop(1, "#c026d3");
       }
       ctx.fillStyle = skyGrad;
       ctx.fillRect(0, 0, width, horizonY);
@@ -466,7 +523,7 @@ function ModiRunner3DPage() {
       ctx.arc(width * 0.5, horizonY * 0.75, 90, 0, Math.PI * 2);
       ctx.fill();
 
-      // City Skyline
+      // Skyline
       ctx.fillStyle = themeMode === "day" ? "rgba(15, 23, 42, 0.85)" : "rgba(8, 13, 26, 0.95)";
       ctx.beginPath();
       ctx.moveTo(0, horizonY);
@@ -516,7 +573,7 @@ function ModiRunner3DPage() {
         ctx.stroke();
       }
 
-      // Railway Ties / Road Lines
+      // Road Lines
       const roadZOffset = (g.distance * 2.5) % 50;
       for (let zProgress = 0; zProgress <= 1000; zProgress += 50) {
         const adjustedZ = (zProgress - roadZOffset + 1000) % 1000;
@@ -532,9 +589,7 @@ function ModiRunner3DPage() {
         ctx.stroke();
       }
 
-      // ==========================================
-      // 3. RENDER PURSUING PROTESTORS (BEHIND MODI)
-      // ==========================================
+      // 3. PURSUING PROTESTORS (BEHIND MODI)
       const protestorZ = Math.max(-400, playerZ - g.protestorGap);
 
       if (protestorZ > -350) {
@@ -549,29 +604,24 @@ function ModiRunner3DPage() {
           ctx.save();
           ctx.translate(pX, pY + pBounce);
 
-          // Protestor Shadow
           ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
           ctx.beginPath();
           ctx.ellipse(0, 4, 16 * pScale, 5 * pScale, 0, 0, Math.PI * 2);
           ctx.fill();
 
-          // Protestor Body
           ctx.fillStyle = pIndex === 0 ? "#ef4444" : pIndex === 1 ? "#3b82f6" : "#10b981";
           ctx.fillRect(-10, -32, 20, 24);
 
-          // Legs Running
           ctx.fillStyle = "#1e293b";
           const legLeg = Math.sin(g.animFrame * 0.5 + pIndex) * 10;
           ctx.fillRect(-8, -10, 6, 12 + legLeg);
           ctx.fillRect(2, -10, 6, 12 - legLeg);
 
-          // Head
           ctx.fillStyle = "#fde047";
           ctx.beginPath();
           ctx.arc(0, -40, 8, 0, Math.PI * 2);
           ctx.fill();
 
-          // Protest Sign / Flag
           ctx.strokeStyle = "#78350f";
           ctx.lineWidth = 2;
           ctx.beginPath();
@@ -593,7 +643,7 @@ function ModiRunner3DPage() {
         });
       }
 
-      // 4. Render 3D Lotus Collectibles
+      // 4. Render Items & Power-ups
       for (const item of g.items) {
         if (item.collected || item.z < 0) continue;
         const scale = Math.pow(1 - item.z / 1000, 2);
@@ -606,36 +656,51 @@ function ModiRunner3DPage() {
         ctx.save();
         ctx.translate(objX, objY - size * 1.2 - bob);
 
-        ctx.fillStyle = "rgba(251, 207, 232, 0.3)";
-        ctx.beginPath();
-        ctx.arc(0, 0, size * 0.85, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = "#ec4899";
-        for (let p = 0; p < 6; p++) {
-          const angle = (p * Math.PI) / 3 + item.rot;
+        if (item.type === "lotus") {
+          ctx.fillStyle = "rgba(251, 207, 232, 0.3)";
           ctx.beginPath();
-          ctx.ellipse(
-            Math.cos(angle) * (size * 0.4),
-            Math.sin(angle) * (size * 0.4),
-            size * 0.4,
-            size * 0.2,
-            angle,
-            0,
-            Math.PI * 2
-          );
+          ctx.arc(0, 0, size * 0.85, 0, Math.PI * 2);
           ctx.fill();
-        }
 
-        ctx.fillStyle = "#facc15";
-        ctx.beginPath();
-        ctx.arc(0, 0, size * 0.28, 0, Math.PI * 2);
-        ctx.fill();
+          ctx.fillStyle = "#ec4899";
+          for (let p = 0; p < 6; p++) {
+            const angle = (p * Math.PI) / 3 + item.rot;
+            ctx.beginPath();
+            ctx.ellipse(
+              Math.cos(angle) * (size * 0.4),
+              Math.sin(angle) * (size * 0.4),
+              size * 0.4,
+              size * 0.2,
+              angle,
+              0,
+              Math.PI * 2
+            );
+            ctx.fill();
+          }
+
+          ctx.fillStyle = "#facc15";
+          ctx.beginPath();
+          ctx.arc(0, 0, size * 0.28, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          // Power-up Icon Badge (Boots / Jetpack / Hoverboard)
+          ctx.fillStyle = item.type === "boots" ? "#f59e0b" : item.type === "jetpack" ? "#3b82f6" : "#a855f7";
+          ctx.beginPath();
+          ctx.arc(0, 0, size * 0.7, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = "#ffffff";
+          ctx.font = `bold ${Math.max(8, size * 0.5)}px sans-serif`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          const iconText = item.type === "boots" ? "🥾" : item.type === "jetpack" ? "🚀" : "🛹";
+          ctx.fillText(iconText, 0, 0);
+        }
 
         ctx.restore();
       }
 
-      // 5. Render 3D Obstacles
+      // 5. Render Obstacles
       for (const obs of g.obstacles) {
         if (obs.z < 0) continue;
         const scale = Math.pow(1 - obs.z / 1000, 2);
@@ -702,6 +767,15 @@ function ModiRunner3DPage() {
       ctx.save();
       ctx.translate(playerX, playerY);
 
+      // Hoverboard Shield Glow Effect
+      if (g.powerUpType === "hoverboard") {
+        ctx.strokeStyle = "#c026d3";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.ellipse(0, -30, 30, 45, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
       // Shadow
       const shadowScale = Math.max(0.2, 1 - g.y / 180);
       ctx.fillStyle = `rgba(0, 0, 0, ${0.45 * shadowScale})`;
@@ -709,11 +783,12 @@ function ModiRunner3DPage() {
       ctx.ellipse(0, 6, 26 * shadowScale, 9 * shadowScale, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Speed Trail
-      if (g.speed > 8) {
-        ctx.fillStyle = "rgba(249, 115, 22, 0.15)";
+      // Jetpack Thruster Flames if active
+      if (g.powerUpType === "jetpack") {
+        ctx.fillStyle = "#f97316";
         ctx.beginPath();
-        ctx.ellipse(0, -30, 20, 40, 0, 0, Math.PI * 2);
+        ctx.ellipse(-12, 15, 5, 15, 0, 0, Math.PI * 2);
+        ctx.ellipse(12, 15, 5, 15, 0, 0, Math.PI * 2);
         ctx.fill();
       }
 
@@ -813,7 +888,7 @@ function ModiRunner3DPage() {
               <h1 className="text-[17px] font-black tracking-tight leading-none text-white">
                 MODI EXPRESS RUNNER 3D
               </h1>
-              <p className="text-[9.5px] text-amber-400 font-semibold tracking-wider mt-0.5">3D Subway Surfers Edition</p>
+              <p className="text-[9.5px] text-amber-400 font-semibold tracking-wider mt-0.5">Official Subway Surfers Edition</p>
             </div>
           </div>
         </div>
@@ -870,6 +945,14 @@ function ModiRunner3DPage() {
                 </div>
               </div>
 
+              {/* Active Power-up Badge */}
+              {activePowerUp && (
+                <div className="self-center bg-purple-950/90 backdrop-blur-md px-4 py-1 rounded-full border border-purple-500/50 text-[11.5px] font-black text-purple-300 shadow-xl flex items-center gap-1.5 animate-pulse">
+                  <Zap className="size-4 text-purple-400 fill-purple-400" />
+                  <span>POWER-UP: {activePowerUp}</span>
+                </div>
+              )}
+
               {/* Protestors Banner */}
               <div className="self-center bg-slate-950/90 backdrop-blur-md px-3.5 py-1 rounded-full border border-red-500/30 text-[11px] font-bold text-red-300 shadow-md flex items-center gap-1.5">
                 <Users className="size-3.5 text-red-400 animate-pulse" />
@@ -888,7 +971,7 @@ function ModiRunner3DPage() {
               <div className="space-y-2">
                 <h2 className="text-3xl font-black text-white tracking-tight">SUBWAY SURFERS 3D</h2>
                 <p className="text-[13px] font-medium text-slate-300 max-w-xs leading-relaxed">
-                  Inspired by Subway Surfers! Outrun pursuing protestors, collect spinning 3D lotuses, and dodge express trains!
+                  Imported Subway Surfers engine! Features Jetpacks 🚀, Jumping Boots 🥾, Hoverboard Shields 🛹, Pursuing Protestors, and 3D Lotuses!
                 </p>
               </div>
 
@@ -949,7 +1032,7 @@ function ModiRunner3DPage() {
           )}
         </div>
 
-        {/* MOBILE & PC TOUCH CONTROL PAD */}
+        {/* CONTROLS */}
         <div className="w-full max-w-md space-y-3">
           <div className="grid grid-cols-4 gap-2">
             <button
