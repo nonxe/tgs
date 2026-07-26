@@ -14,14 +14,16 @@ import {
   ChevronDown,
   Sparkles,
   Gamepad2,
-  Gauge
+  Gauge,
+  Users,
+  ShieldCheck
 } from "lucide-react";
 
 export const Route = createFileRoute("/runner")({
   head: () => ({
     meta: [
-      { title: "Modi Express Runner 3D — Enhanced Graphics & Smooth Gameplay" },
-      { name: "description", content: "Subway Surfers-style 3D endless runner featuring Narendra Modi. Enhanced 3D graphics, progressive speed acceleration, collect lotuses, and dodge hurdles!" },
+      { title: "Modi Express Runner 3D — Escape the Protestors" },
+      { name: "description", content: "Subway Surfers-style 3D endless runner featuring Narendra Modi. Outrun pursuing protestors, collect lotuses, and dodge obstacles!" },
     ],
   }),
   component: ModiRunnerPage,
@@ -131,6 +133,7 @@ function ModiRunnerPage() {
   const [highScore, setHighScore] = useState(0);
   const [lotusCount, setLotusCount] = useState(0);
   const [speedMultiplier, setSpeedMultiplier] = useState("1.0x");
+  const [protestorGapText, setProtestorGapText] = useState("Close Behind! (5m)");
   const [isMuted, setIsMuted] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -154,9 +157,9 @@ function ModiRunnerPage() {
     lotuses: number;
     obstacles: Obstacle[];
     items: Item[];
+    protestorGap: number; // relative distance behind player
     nextId: number;
     animFrame: number;
-    lastTime: number;
   }>({
     lane: 0,
     targetLane: 0,
@@ -166,16 +169,16 @@ function ModiRunnerPage() {
     isJumping: false,
     isSliding: false,
     slideTimer: 0,
-    speed: 4.5, // Start slow & comfortable
-    initialSpeed: 4.5,
+    speed: 4.2, // Start slow
+    initialSpeed: 4.2,
     distance: 0,
     score: 0,
     lotuses: 0,
     obstacles: [],
     items: [],
+    protestorGap: 15, // Starts right behind Modi
     nextId: 1,
     animFrame: 0,
-    lastTime: 0,
   });
 
   useEffect(() => {
@@ -194,20 +197,21 @@ function ModiRunnerPage() {
       isJumping: false,
       isSliding: false,
       slideTimer: 0,
-      speed: 4.5, // Initially slow for smooth start
-      initialSpeed: 4.5,
+      speed: 4.2, // Initially slow for scene build-up
+      initialSpeed: 4.2,
       distance: 0,
       score: 0,
       lotuses: 0,
       obstacles: [],
       items: [],
+      protestorGap: 15, // Starts right behind Modi
       nextId: 1,
       animFrame: 0,
-      lastTime: performance.now(),
     };
     setScore(0);
     setLotusCount(0);
     setSpeedMultiplier("1.0x");
+    setProtestorGapText("Close Behind! (5m)");
     setGameState("playing");
   };
 
@@ -235,7 +239,7 @@ function ModiRunnerPage() {
     if (!g.isSliding) {
       g.isSliding = true;
       g.slideTimer = 35;
-      if (g.isJumping) g.vy = -16; // Quick landing
+      if (g.isJumping) g.vy = -16;
       sounds.playSlide();
     }
   };
@@ -280,12 +284,12 @@ function ModiRunnerPage() {
     touchStartRef.current = null;
   };
 
-  // 60FPS Enhanced 3D Canvas Game Engine
+  // 60FPS Game Loop
   useEffect(() => {
     if (gameState !== "playing") return;
     let running = true;
 
-    const loop = (currentTime: number) => {
+    const loop = () => {
       if (!running) return;
 
       const canvas = canvasRef.current;
@@ -293,7 +297,6 @@ function ModiRunnerPage() {
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      // Handle Canvas Sizing
       const width = canvas.clientWidth;
       const height = canvas.clientHeight;
       if (canvas.width !== width || canvas.height !== height) {
@@ -304,16 +307,25 @@ function ModiRunnerPage() {
       const g = gameRef.current;
       g.animFrame += 1;
 
-      // Progressively accelerate speed over time
-      // Starts slow (4.5) -> smoothly ramps up as distance increases
-      g.speed = Math.min(18.0, g.initialSpeed + (g.distance * 0.0006));
+      // Speed acceleration over time
+      g.speed = Math.min(19.0, g.initialSpeed + (g.distance * 0.00075));
       g.distance += g.speed;
       g.score = Math.floor(g.distance / 10) + g.lotuses * 10;
-      
+
+      // Protestor Gap Calculation
+      // As speed increases, protestors fall further and further behind!
+      const speedDiff = g.speed - g.initialSpeed;
+      g.protestorGap = 15 + speedDiff * 35; // Expands from 15 to 500+
+
       setScore(g.score);
       setSpeedMultiplier((g.speed / g.initialSpeed).toFixed(1) + "x");
 
-      // Smooth Lane Switching (Lerp)
+      if (g.protestorGap < 40) setProtestorGapText("Close Behind! (5m)");
+      else if (g.protestorGap < 120) setProtestorGapText("Falling Behind (30m)");
+      else if (g.protestorGap < 300) setProtestorGapText("Far Behind (100m)");
+      else setProtestorGapText("Outran Protestors! 🚀");
+
+      // Smooth Lane Switching
       const targetOffset = g.targetLane * (width * 0.23);
       g.laneOffset += (targetOffset - g.laneOffset) * 0.22;
 
@@ -334,7 +346,7 @@ function ModiRunnerPage() {
         if (g.slideTimer <= 0) g.isSliding = false;
       }
 
-      // Spawn Obstacles & 3D Lotuses
+      // Obstacle & Item Spawning
       const spawnInterval = Math.max(22, Math.floor(75 - g.speed * 2.8));
       if (g.animFrame % spawnInterval === 0) {
         const laneChoice = Math.floor(Math.random() * 3) - 1;
@@ -373,7 +385,7 @@ function ModiRunnerPage() {
         if (g.obstacles[i].z < -50) g.obstacles.splice(i, 1);
       }
 
-      // Move Items & Rotate
+      // Move Items
       for (let i = g.items.length - 1; i >= 0; i--) {
         g.items[i].z -= g.speed * 5;
         g.items[i].rot += 0.08;
@@ -421,23 +433,23 @@ function ModiRunnerPage() {
       }
 
       // ==========================================
-      // HIGH-GRAPHICS 3D CANVAS RENDERING PIPELINE
+      // HIGH-GRAPHICS 3D CANVAS RENDERING
       // ==========================================
       ctx.clearRect(0, 0, width, height);
 
-      // 1. Sky & Horizon Gradient
       const horizonY = height * 0.42;
       const horizonW = width * 0.16;
       const bottomW = width * 0.92;
 
+      // 1. Sky Gradient
       const skyGrad = ctx.createLinearGradient(0, 0, 0, horizonY);
       skyGrad.addColorStop(0, "#080d1a");
       skyGrad.addColorStop(0.5, "#172554");
-      skyGrad.addColorStop(1, "#f97316"); // Saffron sunset glow
+      skyGrad.addColorStop(1, "#f97316");
       ctx.fillStyle = skyGrad;
       ctx.fillRect(0, 0, width, horizonY);
 
-      // Sun Glow Disk
+      // Sun Glow
       const sunGrad = ctx.createRadialGradient(width * 0.5, horizonY * 0.75, 10, width * 0.5, horizonY * 0.75, 90);
       sunGrad.addColorStop(0, "rgba(254, 240, 138, 0.9)");
       sunGrad.addColorStop(0.5, "rgba(251, 146, 60, 0.4)");
@@ -447,7 +459,7 @@ function ModiRunnerPage() {
       ctx.arc(width * 0.5, horizonY * 0.75, 90, 0, Math.PI * 2);
       ctx.fill();
 
-      // Distant City / Mountain Silhouette
+      // City Skyline
       ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
       ctx.beginPath();
       ctx.moveTo(0, horizonY);
@@ -459,7 +471,7 @@ function ModiRunnerPage() {
       ctx.closePath();
       ctx.fill();
 
-      // 2. 3D Track & Roadway
+      // 2. Track & Roadway
       const roadGrad = ctx.createLinearGradient(0, horizonY, 0, height);
       roadGrad.addColorStop(0, "#1e293b");
       roadGrad.addColorStop(0.6, "#0f172a");
@@ -484,7 +496,7 @@ function ModiRunnerPage() {
       ctx.lineTo(width * 0.5 + bottomW * 0.5, height);
       ctx.stroke();
 
-      // 3 Lanes Dividers with Neon Glow
+      // 3 Lanes Dividers
       for (let laneIdx = -1.5; laneIdx <= 1.5; laneIdx += 1) {
         const topX = width * 0.5 + laneIdx * (horizonW / 3);
         const botX = width * 0.5 + laneIdx * (bottomW / 3);
@@ -497,7 +509,7 @@ function ModiRunnerPage() {
         ctx.stroke();
       }
 
-      // Moving Railway Ties / Road Strips (3D perspective scaling)
+      // Railway Ties / Road Lines
       const roadZOffset = (g.distance * 2.5) % 50;
       for (let zProgress = 0; zProgress <= 1000; zProgress += 50) {
         const adjustedZ = (zProgress - roadZOffset + 1000) % 1000;
@@ -513,7 +525,70 @@ function ModiRunnerPage() {
         ctx.stroke();
       }
 
-      // 3. Render 3D Lotus Collectibles
+      // ==========================================
+      // 3. RENDER PURSUING PROTESTORS (BEHIND MODI)
+      // ==========================================
+      // Protestor position calculation:
+      const protestorZ = Math.max(-400, playerZ - g.protestorGap);
+
+      if (protestorZ > -350) {
+        const pScale = Math.pow(1 - Math.max(0, protestorZ) / 1000, 2);
+        const pY = horizonY + (height - horizonY) * (0.88 + (15 / g.protestorGap));
+        const pW = horizonW + (bottomW - horizonW) * pScale;
+
+        // Render 3 Protestor Avatars across lanes
+        [-0.8, 0, 0.8].forEach((pLaneOffset, pIndex) => {
+          const pX = width * 0.5 + pLaneOffset * (pW / 3) + Math.sin(g.animFrame * 0.3 + pIndex) * 8;
+          const pBounce = Math.sin(g.animFrame * 0.5 + pIndex) * 5;
+
+          ctx.save();
+          ctx.translate(pX, pY + pBounce);
+
+          // Protestor Shadow
+          ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+          ctx.beginPath();
+          ctx.ellipse(0, 4, 16 * pScale, 5 * pScale, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Protestor Body / Clothes
+          ctx.fillStyle = pIndex === 0 ? "#ef4444" : pIndex === 1 ? "#3b82f6" : "#10b981";
+          ctx.fillRect(-10, -32, 20, 24);
+
+          // Legs Running
+          ctx.fillStyle = "#1e293b";
+          const legLeg = Math.sin(g.animFrame * 0.5 + pIndex) * 10;
+          ctx.fillRect(-8, -10, 6, 12 + legLeg);
+          ctx.fillRect(2, -10, 6, 12 - legLeg);
+
+          // Head
+          ctx.fillStyle = "#fde047";
+          ctx.beginPath();
+          ctx.arc(0, -40, 8, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Protest Sign / Flag
+          ctx.strokeStyle = "#78350f";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(8, -25);
+          ctx.lineTo(14, -58);
+          ctx.stroke();
+
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(8, -68, 22, 12);
+          ctx.strokeStyle = "#dc2626";
+          ctx.lineWidth = 1;
+          ctx.strokeRect(8, -68, 22, 12);
+
+          ctx.fillStyle = "#dc2626";
+          ctx.font = "bold 7px sans-serif";
+          ctx.fillText("STOP", 10, -60);
+
+          ctx.restore();
+        });
+      }
+
+      // 4. Render 3D Lotus Collectibles
       for (const item of g.items) {
         if (item.collected || item.z < 0) continue;
         const scale = Math.pow(1 - item.z / 1000, 2);
@@ -526,14 +601,12 @@ function ModiRunnerPage() {
         ctx.save();
         ctx.translate(objX, objY - size * 1.2 - bob);
 
-        // Golden Aura Glow
         ctx.fillStyle = "rgba(251, 207, 232, 0.3)";
         ctx.beginPath();
         ctx.arc(0, 0, size * 0.85, 0, Math.PI * 2);
         ctx.fill();
 
-        // 3D Petals
-        ctx.fillStyle = "#ec4899"; // Pink Lotus
+        ctx.fillStyle = "#ec4899";
         for (let p = 0; p < 6; p++) {
           const angle = (p * Math.PI) / 3 + item.rot;
           ctx.beginPath();
@@ -549,7 +622,6 @@ function ModiRunnerPage() {
           ctx.fill();
         }
 
-        // Center Gold Core
         ctx.fillStyle = "#facc15";
         ctx.beginPath();
         ctx.arc(0, 0, size * 0.28, 0, Math.PI * 2);
@@ -558,7 +630,7 @@ function ModiRunnerPage() {
         ctx.restore();
       }
 
-      // 4. Render 3D Obstacles
+      // 5. Render 3D Obstacles
       for (const obs of g.obstacles) {
         if (obs.z < 0) continue;
         const scale = Math.pow(1 - obs.z / 1000, 2);
@@ -573,15 +645,12 @@ function ModiRunnerPage() {
         ctx.translate(objX, objY);
 
         if (obs.type === "barricade" || obs.type === "train") {
-          // 3D Express Bus / Train Box
-          // Front Face
           const faceGrad = ctx.createLinearGradient(0, -obsHeight, 0, 0);
           faceGrad.addColorStop(0, obs.type === "train" ? "#ef4444" : "#f97316");
           faceGrad.addColorStop(1, obs.type === "train" ? "#991b1b" : "#c2410c");
           ctx.fillStyle = faceGrad;
           ctx.fillRect(-obsWidth * 0.5, -obsHeight, obsWidth, obsHeight);
 
-          // 3D Top Bevel Face
           ctx.fillStyle = "#fcd34d";
           ctx.beginPath();
           ctx.moveTo(-obsWidth * 0.5, -obsHeight);
@@ -591,7 +660,6 @@ function ModiRunnerPage() {
           ctx.closePath();
           ctx.fill();
 
-          // Front Headlights / Grill
           ctx.fillStyle = "#fef08a";
           ctx.fillRect(-obsWidth * 0.4, -obsHeight * 0.3, obsWidth * 0.25, obsHeight * 0.15);
           ctx.fillRect(obsWidth * 0.15, -obsHeight * 0.3, obsWidth * 0.25, obsHeight * 0.15);
@@ -600,23 +668,18 @@ function ModiRunnerPage() {
           ctx.strokeRect(-obsWidth * 0.5, -obsHeight, obsWidth, obsHeight);
 
         } else if (obs.type === "lowHurdle") {
-          // Low Barrier (Jump Over)
           ctx.fillStyle = "#eab308";
           ctx.fillRect(-obsWidth * 0.5, -obsHeight * 0.45, obsWidth, obsHeight * 0.45);
-          // Stripes
           ctx.fillStyle = "#1e293b";
           ctx.fillRect(-obsWidth * 0.2, -obsHeight * 0.45, obsWidth * 0.15, obsHeight * 0.45);
           ctx.fillRect(obsWidth * 0.1, -obsHeight * 0.45, obsWidth * 0.15, obsHeight * 0.45);
 
         } else if (obs.type === "highBridge") {
-          // High Bridge Archway (Slide Under)
           ctx.fillStyle = "#3b82f6";
           ctx.fillRect(-obsWidth * 0.65, -obsHeight * 1.55, obsWidth * 1.3, obsHeight * 0.5);
-          // 3D Pillars
           ctx.fillStyle = "#1d4ed8";
           ctx.fillRect(-obsWidth * 0.65, -obsHeight * 1.55, obsWidth * 0.16, obsHeight * 1.55);
           ctx.fillRect(obsWidth * 0.49, -obsHeight * 1.55, obsWidth * 0.16, obsHeight * 1.55);
-          // Warning Lights
           ctx.fillStyle = "#ef4444";
           ctx.beginPath();
           ctx.arc(0, -obsHeight * 1.3, Math.max(2, 5 * scale), 0, Math.PI * 2);
@@ -626,7 +689,7 @@ function ModiRunnerPage() {
         ctx.restore();
       }
 
-      // 5. RENDER 3D NARENDRA MODI AVATAR
+      // 6. RENDER NARENDRA MODI AVATAR
       const playerX = width * 0.5 + g.laneOffset;
       const playerY = height * 0.85 - g.y;
       const isSliding = g.isSliding;
@@ -634,14 +697,14 @@ function ModiRunnerPage() {
       ctx.save();
       ctx.translate(playerX, playerY);
 
-      // Dynamic 3D Shadow (Shrinks & Fades on Jump)
+      // Shadow
       const shadowScale = Math.max(0.2, 1 - g.y / 180);
       ctx.fillStyle = `rgba(0, 0, 0, ${0.45 * shadowScale})`;
       ctx.beginPath();
       ctx.ellipse(0, 6, 26 * shadowScale, 9 * shadowScale, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Speed Trail Effect when moving fast
+      // Speed Trail
       if (g.speed > 8) {
         ctx.fillStyle = "rgba(249, 115, 22, 0.15)";
         ctx.beginPath();
@@ -649,7 +712,7 @@ function ModiRunnerPage() {
         ctx.fill();
       }
 
-      // Avatar Body Animation
+      // Body Animation
       const bounce = Math.sin(g.animFrame * 0.45) * 4;
       const bodyY = isSliding ? 14 : bounce;
 
@@ -663,27 +726,25 @@ function ModiRunnerPage() {
         ctx.fillRect(3, -bodyY - 26, 10, 26 - legSwing);
       }
 
-      // Torso / 3D Modi Jacket (Saffron Vest with Gold Buttons)
+      // Torso / Modi Jacket
       const vestGrad = ctx.createLinearGradient(-16, -bodyY - 54, 16, -bodyY - 24);
-      vestGrad.addColorStop(0, "#f97316"); // Saffron top
-      vestGrad.addColorStop(1, "#ea580c"); // Dark saffron shadow
+      vestGrad.addColorStop(0, "#f97316");
+      vestGrad.addColorStop(1, "#ea580c");
       ctx.fillStyle = vestGrad;
       ctx.beginPath();
       ctx.roundRect(-17, -bodyY - 54, 34, 30, 7);
       ctx.fill();
 
-      // Tricolor Pocket Accent Line
-      ctx.fillStyle = "#16a34a"; // Green
+      ctx.fillStyle = "#16a34a";
       ctx.fillRect(-13, -bodyY - 54, 26, 4);
 
-      // Gold Buttons
       ctx.fillStyle = "#facc15";
       ctx.beginPath();
       ctx.arc(0, -bodyY - 44, 2, 0, Math.PI * 2);
       ctx.arc(0, -bodyY - 36, 2, 0, Math.PI * 2);
       ctx.fill();
 
-      // Running Arms
+      // Arms
       ctx.fillStyle = "#ffffff";
       if (!isSliding) {
         const armCycle = Math.cos(g.animFrame * 0.45) * 15;
@@ -691,24 +752,22 @@ function ModiRunnerPage() {
         ctx.fillRect(16, -bodyY - 48, 7, 22 - armCycle);
       }
 
-      // Head & White Hair / Groomed Beard
-      ctx.fillStyle = "#fef08a"; // Skin tone
+      // Head & White Beard
+      ctx.fillStyle = "#fef08a";
       ctx.beginPath();
       ctx.arc(0, -bodyY - 64, 12.5, 0, Math.PI * 2);
       ctx.fill();
 
-      // White Hair (Top)
       ctx.fillStyle = "#ffffff";
       ctx.beginPath();
       ctx.arc(0, -bodyY - 68, 13.5, Math.PI, Math.PI * 2);
       ctx.fill();
 
-      // White Sculpted Beard
       ctx.beginPath();
       ctx.arc(0, -bodyY - 60, 11.5, 0, Math.PI);
       ctx.fill();
 
-      // Glasses / Spectacles with Lens Highlight
+      // Glasses
       ctx.strokeStyle = "#0f172a";
       ctx.lineWidth = 2.2;
       ctx.strokeRect(-8, -bodyY - 67, 6, 5);
@@ -749,7 +808,7 @@ function ModiRunnerPage() {
               <h1 className="text-[17px] font-black tracking-tight leading-none text-white">
                 MODI EXPRESS RUNNER 3D
               </h1>
-              <p className="text-[9.5px] text-amber-400 font-semibold tracking-wider mt-0.5">High-Graphics Endless Runner</p>
+              <p className="text-[9.5px] text-amber-400 font-semibold tracking-wider mt-0.5">Outrun the Protestors & Collect Lotuses</p>
             </div>
           </div>
         </div>
@@ -780,20 +839,23 @@ function ModiRunnerPage() {
 
           {/* Playing HUD Overlay */}
           {gameState === "playing" && (
-            <div className="absolute top-4 inset-x-4 flex justify-between items-center pointer-events-none z-20">
-              <div className="bg-slate-950/85 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-amber-500/40 text-amber-300 text-[12.5px] font-black tracking-wider shadow-lg flex items-center gap-1.5">
-                <Zap className="size-4 text-amber-400 fill-amber-400" />
-                <span>{score.toLocaleString()} m</span>
+            <div className="absolute top-3 inset-x-3 flex flex-col gap-2 pointer-events-none z-20">
+              <div className="flex justify-between items-center">
+                <div className="bg-slate-950/85 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-amber-500/40 text-amber-300 text-[12px] font-black tracking-wider shadow-lg flex items-center gap-1.5">
+                  <Zap className="size-3.5 text-amber-400 fill-amber-400" />
+                  <span>{score.toLocaleString()} m</span>
+                </div>
+
+                <div className="bg-slate-950/85 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-pink-500/40 text-pink-300 text-[12px] font-black tracking-wider shadow-lg flex items-center gap-1.5">
+                  <Sparkles className="size-3.5 text-pink-400" />
+                  <span>{lotusCount} Lotuses</span>
+                </div>
               </div>
 
-              <div className="bg-slate-950/85 backdrop-blur-md px-3 py-1.5 rounded-full border border-sky-500/40 text-sky-300 text-[11.5px] font-bold tracking-wider shadow-lg flex items-center gap-1">
-                <Gauge className="size-3.5 text-sky-400" />
-                <span>Speed: {speedMultiplier}</span>
-              </div>
-
-              <div className="bg-slate-950/85 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-pink-500/40 text-pink-300 text-[12.5px] font-black tracking-wider shadow-lg flex items-center gap-1.5">
-                <Sparkles className="size-4 text-pink-400" />
-                <span>{lotusCount} Lotuses</span>
+              {/* Protestor Distance Banner */}
+              <div className="self-center bg-slate-950/90 backdrop-blur-md px-3.5 py-1 rounded-full border border-red-500/30 text-[11px] font-bold text-red-300 shadow-md flex items-center gap-1.5">
+                <Users className="size-3.5 text-red-400 animate-pulse" />
+                <span>Protestors: {protestorGapText}</span>
               </div>
             </div>
           )}
@@ -806,9 +868,9 @@ function ModiRunnerPage() {
               </div>
 
               <div className="space-y-2">
-                <h2 className="text-3xl font-black text-white tracking-tight">MODI RUNNER 3D</h2>
-                <p className="text-[13px] font-medium text-slate-300 max-w-xs">
-                  Smooth 3D gameplay! Starts at a relaxed speed and accelerates over time. Collect lotuses & dodge obstacles!
+                <h2 className="text-3xl font-black text-white tracking-tight">ESCAPE THE PROTEST!</h2>
+                <p className="text-[13px] font-medium text-slate-300 max-w-xs leading-relaxed">
+                  Initially, protestors run close behind Modi! As speed increases over time, Modi outruns them and leaves them far behind!
                 </p>
               </div>
 
@@ -836,7 +898,7 @@ function ModiRunnerPage() {
 
               <div className="space-y-1">
                 <h2 className="text-2xl font-black text-white">RUN COMPLETED!</h2>
-                <p className="text-xs text-slate-400 font-medium">Obstacle collided on track</p>
+                <p className="text-xs text-slate-400 font-medium">Track obstacle encountered</p>
               </div>
 
               <div className="bg-slate-900 border border-white/10 rounded-2xl p-4 w-full max-w-xs space-y-2">
@@ -845,8 +907,8 @@ function ModiRunnerPage() {
                   <span className="text-amber-400 font-black text-sm">{score.toLocaleString()} m</span>
                 </div>
                 <div className="flex justify-between items-center text-xs font-bold text-slate-300">
-                  <span>Max Speed Reached:</span>
-                  <span className="text-sky-400 font-black text-sm">{speedMultiplier}</span>
+                  <span>Protestor Distance:</span>
+                  <span className="text-emerald-400 font-black text-xs">{protestorGapText}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs font-bold text-slate-300">
                   <span>Lotuses Collected:</span>
@@ -869,7 +931,7 @@ function ModiRunnerPage() {
           )}
         </div>
 
-        {/* MOBILE & PC TOUCH CONTROL PAD */}
+        {/* CONTROLS */}
         <div className="w-full max-w-md space-y-3">
           <div className="grid grid-cols-4 gap-2">
             <button
