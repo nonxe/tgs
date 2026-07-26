@@ -19,7 +19,8 @@ import {
   Database,
   MessageSquare,
   Youtube,
-  Compass
+  Compass,
+  Gamepad2
 } from "lucide-react";
 
 function StarOfDavidIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -154,6 +155,14 @@ function DashboardHome() {
       icon: StarOfDavidIcon, 
       link: "/israel",
       color: "text-sky-400 border-blue-500/20 bg-blue-500/5 hover:border-blue-500/40"
+    },
+    { 
+      id: "runner", 
+      title: "Modi Express Runner", 
+      desc: "Subway Surfers-style 3D endless runner featuring Narendra Modi. Collect lotuses & dodge hurdles!", 
+      icon: Gamepad2, 
+      link: "/runner",
+      color: "text-amber-400 border-amber-500/20 bg-amber-500/5 hover:border-amber-500/40"
     },
     { 
       id: "tempmail", 
