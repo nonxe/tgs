@@ -219,17 +219,6 @@ function SecurityGatekeeper({ children }: { children: ReactNode }) {
             Security policy enforced. Your current IP address is not recognized by the edge firewall grid.
           </p>
         </div>
-
-        {/* Secret Click Counter Feedback */}
-        {clickCount > 0 && clickCount < 10 && (
-          <div className="pt-2 text-[11px] font-mono text-red-400/80 animate-pulse">
-            Verifying node signature... ({clickCount}/10 clicks)
-          </div>
-        )}
-
-        <div className="pt-4 border-t border-white/10 text-[11px] font-mono text-slate-500">
-          NODE_ID: SHS_EDGE_NODE_09 • SEC_ERR_403
-        </div>
       </div>
 
       {/* Error Toast Feedback */}
