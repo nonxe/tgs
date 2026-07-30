@@ -80,7 +80,7 @@ function DashboardHome() {
   const [accMsg, setAccMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // Activity History state (synced via nonxe/db history.txt)
-  const [userHistory, setUserHistory] = useState<Array<{ action: string; detail: string; timestamp: string }>>([])
+  const [userHistory, setUserHistory] = useState<Array<{ action: string; detail: string; timestamp: string }>>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
 
   const fetchUserHistory = useCallback(async (userId: string) => {
@@ -110,6 +110,7 @@ function DashboardHome() {
   }, []);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     try {
       const stored = localStorage.getItem("cloud_user_account");
       if (stored) {

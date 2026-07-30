@@ -49,6 +49,9 @@ import { Route as ApiCloudifySongsRouteImport } from './routes/api/cloudify/song
 import { Route as ApiCloudifySearchRouteImport } from './routes/api/cloudify/search'
 import { Route as ApiCloudifyDeleteRouteImport } from './routes/api/cloudify/delete'
 import { Route as ApiCloudifyCreateRouteImport } from './routes/api/cloudify/create'
+import { Route as ApiAccountsLoginRouteImport } from './routes/api/accounts/login'
+import { Route as ApiAccountsHistoryRouteImport } from './routes/api/accounts/history'
+import { Route as ApiAccountsCreateRouteImport } from './routes/api/accounts/create'
 import { Route as ApiMessagesFeedLikeRouteImport } from './routes/api/messages/feed/like'
 import { Route as ApiMessagesFeedCommentRouteImport } from './routes/api/messages/feed/comment'
 
@@ -253,6 +256,21 @@ const ApiCloudifyCreateRoute = ApiCloudifyCreateRouteImport.update({
   path: '/api/cloudify/create',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAccountsLoginRoute = ApiAccountsLoginRouteImport.update({
+  id: '/api/accounts/login',
+  path: '/api/accounts/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAccountsHistoryRoute = ApiAccountsHistoryRouteImport.update({
+  id: '/api/accounts/history',
+  path: '/api/accounts/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAccountsCreateRoute = ApiAccountsCreateRouteImport.update({
+  id: '/api/accounts/create',
+  path: '/api/accounts/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiMessagesFeedLikeRoute = ApiMessagesFeedLikeRouteImport.update({
   id: '/like',
   path: '/like',
@@ -286,6 +304,9 @@ export interface FileRoutesByFullPath {
   '/shsdb/$id': typeof ShsdbIdRoute
   '/shsdb/create': typeof ShsdbCreateRoute
   '/note/': typeof NoteIndexRoute
+  '/api/accounts/create': typeof ApiAccountsCreateRoute
+  '/api/accounts/history': typeof ApiAccountsHistoryRoute
+  '/api/accounts/login': typeof ApiAccountsLoginRoute
   '/api/cloudify/create': typeof ApiCloudifyCreateRoute
   '/api/cloudify/delete': typeof ApiCloudifyDeleteRoute
   '/api/cloudify/search': typeof ApiCloudifySearchRoute
@@ -329,6 +350,9 @@ export interface FileRoutesByTo {
   '/shsdb/$id': typeof ShsdbIdRoute
   '/shsdb/create': typeof ShsdbCreateRoute
   '/note': typeof NoteIndexRoute
+  '/api/accounts/create': typeof ApiAccountsCreateRoute
+  '/api/accounts/history': typeof ApiAccountsHistoryRoute
+  '/api/accounts/login': typeof ApiAccountsLoginRoute
   '/api/cloudify/create': typeof ApiCloudifyCreateRoute
   '/api/cloudify/delete': typeof ApiCloudifyDeleteRoute
   '/api/cloudify/search': typeof ApiCloudifySearchRoute
@@ -374,6 +398,9 @@ export interface FileRoutesById {
   '/shsdb/$id': typeof ShsdbIdRoute
   '/shsdb/create': typeof ShsdbCreateRoute
   '/note/': typeof NoteIndexRoute
+  '/api/accounts/create': typeof ApiAccountsCreateRoute
+  '/api/accounts/history': typeof ApiAccountsHistoryRoute
+  '/api/accounts/login': typeof ApiAccountsLoginRoute
   '/api/cloudify/create': typeof ApiCloudifyCreateRoute
   '/api/cloudify/delete': typeof ApiCloudifyDeleteRoute
   '/api/cloudify/search': typeof ApiCloudifySearchRoute
@@ -420,6 +447,9 @@ export interface FileRouteTypes {
     | '/shsdb/$id'
     | '/shsdb/create'
     | '/note/'
+    | '/api/accounts/create'
+    | '/api/accounts/history'
+    | '/api/accounts/login'
     | '/api/cloudify/create'
     | '/api/cloudify/delete'
     | '/api/cloudify/search'
@@ -463,6 +493,9 @@ export interface FileRouteTypes {
     | '/shsdb/$id'
     | '/shsdb/create'
     | '/note'
+    | '/api/accounts/create'
+    | '/api/accounts/history'
+    | '/api/accounts/login'
     | '/api/cloudify/create'
     | '/api/cloudify/delete'
     | '/api/cloudify/search'
@@ -507,6 +540,9 @@ export interface FileRouteTypes {
     | '/shsdb/$id'
     | '/shsdb/create'
     | '/note/'
+    | '/api/accounts/create'
+    | '/api/accounts/history'
+    | '/api/accounts/login'
     | '/api/cloudify/create'
     | '/api/cloudify/delete'
     | '/api/cloudify/search'
@@ -550,6 +586,9 @@ export interface RootRouteChildren {
   DbCreateRoute: typeof DbCreateRoute
   ShsdbIdRoute: typeof ShsdbIdRoute
   ShsdbCreateRoute: typeof ShsdbCreateRoute
+  ApiAccountsCreateRoute: typeof ApiAccountsCreateRoute
+  ApiAccountsHistoryRoute: typeof ApiAccountsHistoryRoute
+  ApiAccountsLoginRoute: typeof ApiAccountsLoginRoute
   ApiCloudifyCreateRoute: typeof ApiCloudifyCreateRoute
   ApiCloudifyDeleteRoute: typeof ApiCloudifyDeleteRoute
   ApiCloudifySearchRoute: typeof ApiCloudifySearchRoute
@@ -853,6 +892,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCloudifyCreateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/accounts/login': {
+      id: '/api/accounts/login'
+      path: '/api/accounts/login'
+      fullPath: '/api/accounts/login'
+      preLoaderRoute: typeof ApiAccountsLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/accounts/history': {
+      id: '/api/accounts/history'
+      path: '/api/accounts/history'
+      fullPath: '/api/accounts/history'
+      preLoaderRoute: typeof ApiAccountsHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/accounts/create': {
+      id: '/api/accounts/create'
+      path: '/api/accounts/create'
+      fullPath: '/api/accounts/create'
+      preLoaderRoute: typeof ApiAccountsCreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/messages/feed/like': {
       id: '/api/messages/feed/like'
       path: '/like'
@@ -916,6 +976,9 @@ const rootRouteChildren: RootRouteChildren = {
   DbCreateRoute: DbCreateRoute,
   ShsdbIdRoute: ShsdbIdRoute,
   ShsdbCreateRoute: ShsdbCreateRoute,
+  ApiAccountsCreateRoute: ApiAccountsCreateRoute,
+  ApiAccountsHistoryRoute: ApiAccountsHistoryRoute,
+  ApiAccountsLoginRoute: ApiAccountsLoginRoute,
   ApiCloudifyCreateRoute: ApiCloudifyCreateRoute,
   ApiCloudifyDeleteRoute: ApiCloudifyDeleteRoute,
   ApiCloudifySearchRoute: ApiCloudifySearchRoute,
