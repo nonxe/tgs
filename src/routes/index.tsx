@@ -160,8 +160,8 @@ function DashboardHome() {
         setAccMsg({
           type: "success",
           text: accTab === "create" 
-            ? "Account created & saved in nonxe/db (log.txt)!" 
-            : "Logged in successfully from nonxe/db!"
+            ? "Account created & synced to cloud!" 
+            : "Logged in successfully!"
         });
       }
     } catch {
@@ -700,7 +700,7 @@ function DashboardHome() {
                 </div>
               </div>
 
-              {/* Account Section (GitHub DB nonxe/db) */}
+              {/* Account Section */}
               <div className="pt-4 border-t border-border/40 space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-foreground font-black text-[13px]">
@@ -708,7 +708,7 @@ function DashboardHome() {
                     <span>Cloud Account System</span>
                   </div>
                   <span className="text-[9.5px] font-bold text-muted-foreground uppercase tracking-widest bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-full">
-                    nonxe/db
+                    Cloud Sync
                   </span>
                 </div>
 
@@ -722,7 +722,7 @@ function DashboardHome() {
                           </div>
                           <div>
                             <p className="text-[13px] font-black text-foreground leading-none">{savedAccount.id}</p>
-                            <p className="text-[10px] text-emerald-400 font-semibold mt-1">● Synced via nonxe/db</p>
+                            <p className="text-[10px] text-emerald-400 font-semibold mt-1">● Synced to Cloud</p>
                           </div>
                         </div>
                         <button
@@ -735,7 +735,7 @@ function DashboardHome() {
                       </div>
                     </div>
 
-                    {/* Recent Activity (history.txt) */}
+                    {/* Recent Activity */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-1.5 text-muted-foreground">
                         <History className="size-3.5" />
@@ -854,12 +854,12 @@ function DashboardHome() {
                         {accLoading ? (
                           <>
                             <Loader2 className="size-3.5 animate-spin" />
-                            <span>Connecting to nonxe/db log.txt...</span>
+                            <span>Connecting to Cloud...</span>
                           </>
                         ) : accTab === "create" ? (
                           <>
                             <UserPlus className="size-3.5" />
-                            <span>Create Account (Save to log.txt)</span>
+                            <span>Create Account</span>
                           </>
                         ) : (
                           <>
