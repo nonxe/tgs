@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { 
   Upload, 
   FileText, 
@@ -20,7 +20,10 @@ import {
   MessageSquare,
   Youtube,
   Compass,
-  Gamepad2
+  Gamepad2,
+  Wifi,
+  MapPin,
+  Clock
 } from "lucide-react";
 
 function StarOfDavidIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -55,6 +58,10 @@ function DashboardHome() {
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [usernameInput, setUsernameInput] = useState("");
   const [showQueenPopup, setShowQueenPopup] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [ipInfo, setIpInfo] = useState<{ ip: string; country: string; city: string } | null>(null);
+  const [ipLoading, setIpLoading] = useState(false);
+  const [lastVisit, setLastVisit] = useState<string | null>(null);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
@@ -62,6 +69,58 @@ function DashboardHome() {
     setTheme(initialTheme);
     document.documentElement.classList.toggle("dark", initialTheme === "dark");
   }, []);
+
+  // Track last visit
+  useEffect(() => {
+    const stored = localStorage.getItem("cloud_last_visit");
+    if (stored) {
+      setLastVisit(stored);
+    }
+    localStorage.setItem("cloud_last_visit", new Date().toISOString());
+  }, []);
+
+  const fetchIpInfo = useCallback(async () => {
+    if (ipInfo) return; // already fetched
+    setIpLoading(true);
+    try {
+      const res = await fetch("https://ipapi.co/json/");
+      const data = await res.json();
+      setIpInfo({
+        ip: data.ip || "Unknown",
+        country: data.country_name || "Unknown",
+        city: data.city || "Unknown",
+      });
+    } catch {
+      setIpInfo({ ip: "Unavailable", country: "Unavailable", city: "Unavailable" });
+    } finally {
+      setIpLoading(false);
+    }
+  }, [ipInfo]);
+
+  const handleOpenInfo = () => {
+    setShowInfoModal(true);
+    fetchIpInfo();
+  };
+
+  const formatLastVisit = (iso: string) => {
+    const date = new Date(iso);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    let relative = "";
+    if (diffMins < 1) relative = "Just now";
+    else if (diffMins < 60) relative = `${diffMins}m ago`;
+    else if (diffHours < 24) relative = `${diffHours}h ago`;
+    else if (diffDays < 7) relative = `${diffDays}d ago`;
+    else relative = date.toLocaleDateString();
+
+    const time = date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const dateStr = date.toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" });
+    return { relative, full: `${dateStr} at ${time}` };
+  };
 
   const toggleTheme = () => {
     const next = theme === "dark" ? "light" : "dark";
@@ -223,13 +282,23 @@ function DashboardHome() {
           </Link>
         </div>
 
-        <button 
-          onClick={toggleTheme}
-          className="size-10 rounded-full border border-border flex items-center justify-center hover:bg-secondary transition-all active:scale-90 flex-shrink-0 ml-3"
-          aria-label="Toggle theme"
-        >
-          {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
-        </button>
+        <div className="flex items-center gap-2 flex-shrink-0 ml-3">
+          <button 
+            onClick={handleOpenInfo}
+            className="h-9 px-3.5 rounded-full border border-purple-500/30 bg-purple-500/10 flex items-center gap-2 hover:bg-purple-500/20 hover:border-purple-500/50 transition-all active:scale-95 text-purple-400 hover:text-purple-300"
+            aria-label="Your Info"
+          >
+            <User className="size-4" />
+            <span className="text-[12px] font-bold tracking-tight hidden sm:inline">Your Info</span>
+          </button>
+          <button 
+            onClick={toggleTheme}
+            className="size-10 rounded-full border border-border flex items-center justify-center hover:bg-secondary transition-all active:scale-90"
+            aria-label="Toggle theme"
+          >
+            {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
+          </button>
+        </div>
       </header>
 
       {/* Body Content */}
@@ -433,6 +502,106 @@ function DashboardHome() {
           </div>
         </div>
       )}
+
+      {/* Modal: Your Info */}
+      {showInfoModal && (
+        <div 
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-background/80 backdrop-blur-md"
+          onClick={(e) => { if (e.target === e.currentTarget) setShowInfoModal(false); }}
+          style={{ animation: 'fadeIn 0.25s ease-out' }}
+        >
+          <div 
+            className="w-full max-w-sm rounded-[24px] border border-purple-500/30 bg-secondary/95 p-6 shadow-2xl relative overflow-hidden ios-glass"
+            style={{ animation: 'springScale 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
+          >
+            <button 
+              onClick={() => setShowInfoModal(false)}
+              className="absolute top-4 right-4 size-8 rounded-full bg-background/50 border border-border/40 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <X className="size-4" />
+            </button>
+
+            <h3 className="text-[20px] font-black tracking-tight flex items-center gap-2 text-purple-400">
+              <User className="size-5" />
+              <span>Your Info</span>
+            </h3>
+            <p className="text-[12px] text-muted-foreground mt-1">
+              Your current session details.
+            </p>
+
+            <div className="mt-5 space-y-3">
+              {/* IP Address */}
+              <div className="flex items-center gap-3 p-3.5 rounded-[16px] bg-background/60 border border-border/30">
+                <div className="size-10 rounded-[12px] bg-purple-500/10 border border-purple-500/20 flex items-center justify-center flex-shrink-0">
+                  <Wifi className="size-5 text-purple-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">IP Address</p>
+                  {ipLoading ? (
+                    <div className="h-5 w-28 mt-0.5 rounded-md bg-purple-500/10 animate-pulse" />
+                  ) : (
+                    <p className="text-[14px] font-black tracking-tight text-foreground truncate">{ipInfo?.ip || "—"}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Country & City */}
+              <div className="flex items-center gap-3 p-3.5 rounded-[16px] bg-background/60 border border-border/30">
+                <div className="size-10 rounded-[12px] bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                  <MapPin className="size-5 text-emerald-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">Location</p>
+                  {ipLoading ? (
+                    <div className="h-5 w-36 mt-0.5 rounded-md bg-emerald-500/10 animate-pulse" />
+                  ) : (
+                    <p className="text-[14px] font-black tracking-tight text-foreground truncate">
+                      {ipInfo ? `${ipInfo.city}, ${ipInfo.country}` : "—"}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Last Visit */}
+              <div className="flex items-center gap-3 p-3.5 rounded-[16px] bg-background/60 border border-border/30">
+                <div className="size-10 rounded-[12px] bg-amber-500/10 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
+                  <Clock className="size-5 text-amber-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">Last Visit</p>
+                  {lastVisit ? (() => {
+                    const { relative, full } = formatLastVisit(lastVisit);
+                    return (
+                      <div>
+                        <p className="text-[14px] font-black tracking-tight text-foreground">{relative}</p>
+                        <p className="text-[11px] text-muted-foreground">{full}</p>
+                      </div>
+                    );
+                  })() : (
+                    <p className="text-[14px] font-black tracking-tight text-foreground">First visit! 🎉</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Decorative bottom gradient */}
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500 opacity-60" />
+          </div>
+        </div>
+      )}
+
+      {/* Info Modal Animations */}
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes springScale {
+          0% { opacity: 0; transform: scale(0.85) translateY(10px); }
+          60% { opacity: 1; transform: scale(1.03) translateY(-2px); }
+          100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+      `}</style>
     </main>
   );
 }
