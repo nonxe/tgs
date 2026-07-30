@@ -30,7 +30,8 @@ import {
   LogOut,
   CheckCircle2,
   AlertCircle,
-  Loader2
+  Loader2,
+  History
 } from "lucide-react";
 
 function StarOfDavidIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -78,14 +79,46 @@ function DashboardHome() {
   const [accLoading, setAccLoading] = useState(false);
   const [accMsg, setAccMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+  // Activity History state (synced via nonxe/db history.txt)
+  const [userHistory, setUserHistory] = useState<Array<{ action: string; detail: string; timestamp: string }>>([])
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  const fetchUserHistory = useCallback(async (userId: string) => {
+    setHistoryLoading(true);
+    try {
+      const res = await fetch(`/api/accounts/history?userId=${encodeURIComponent(userId)}`);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.history)) {
+        setUserHistory(data.history.slice(0, 20)); // show last 20
+      }
+    } catch {}
+    setHistoryLoading(false);
+  }, []);
+
+  const trackActivity = useCallback(async (action: string, detail: string) => {
+    try {
+      const stored = localStorage.getItem("cloud_user_account");
+      if (!stored) return;
+      const acc = JSON.parse(stored);
+      if (!acc?.id) return;
+      await fetch("/api/accounts/history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: acc.id, action, detail }),
+      });
+    } catch {}
+  }, []);
+
   useEffect(() => {
     try {
       const stored = localStorage.getItem("cloud_user_account");
       if (stored) {
-        setSavedAccount(JSON.parse(stored));
+        const acc = JSON.parse(stored);
+        setSavedAccount(acc);
+        if (acc?.id) fetchUserHistory(acc.id);
       }
     } catch {}
-  }, []);
+  }, [fetchUserHistory]);
 
   const handleAccountSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,6 +149,14 @@ function DashboardHome() {
         setSavedAccount(accountData);
         setAccIdInput("");
         setAccPassInput("");
+        fetchUserHistory(data.account.id);
+        // Track account creation / login itself
+        setTimeout(() => {
+          trackActivity(
+            accTab === "create" ? "Account Created" : "Login",
+            accTab === "create" ? "New account registered" : "Logged in from new session"
+          );
+        }, 500);
         setAccMsg({
           type: "success",
           text: accTab === "create" 
@@ -413,6 +454,8 @@ function DashboardHome() {
             
             const handleCardClick = () => {
               if (card.action) card.action();
+              // Track activity for logged-in user
+              trackActivity(`Opened ${card.title}`, card.desc);
             };
 
             const CardContent = (
@@ -435,6 +478,7 @@ function DashboardHome() {
                 <Link
                   key={card.id}
                   to={card.link}
+                  onClick={() => trackActivity(`Opened ${card.title}`, card.desc)}
                   className={`group flex flex-col p-5 rounded-[24px] border bg-secondary/15 hover:bg-secondary/25 text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-black/5 gap-4 ios-glass ${card.color.split(" ").pop()}`}
                 >
                   {CardContent}
@@ -669,24 +713,67 @@ function DashboardHome() {
                 </div>
 
                 {savedAccount ? (
-                  <div className="p-3.5 rounded-[16px] bg-purple-500/10 border border-purple-500/30 space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2.5">
-                        <div className="size-9 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-300 font-black text-[13px]">
-                          {savedAccount.id.charAt(0).toUpperCase()}
+                  <div className="space-y-3">
+                    <div className="p-3.5 rounded-[16px] bg-purple-500/10 border border-purple-500/30 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <div className="size-9 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-300 font-black text-[13px]">
+                            {savedAccount.id.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="text-[13px] font-black text-foreground leading-none">{savedAccount.id}</p>
+                            <p className="text-[10px] text-emerald-400 font-semibold mt-1">● Synced via nonxe/db</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-[13px] font-black text-foreground leading-none">{savedAccount.id}</p>
-                          <p className="text-[10px] text-emerald-400 font-semibold mt-1">● Saved in nonxe/db log.txt</p>
-                        </div>
+                        <button
+                          onClick={handleLogout}
+                          className="px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[11px] font-bold flex items-center gap-1 transition-colors"
+                        >
+                          <LogOut className="size-3" />
+                          <span>Logout</span>
+                        </button>
                       </div>
-                      <button
-                        onClick={handleLogout}
-                        className="px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[11px] font-bold flex items-center gap-1 transition-colors"
-                      >
-                        <LogOut className="size-3" />
-                        <span>Logout</span>
-                      </button>
+                    </div>
+
+                    {/* Recent Activity (history.txt) */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1.5 text-muted-foreground">
+                        <History className="size-3.5" />
+                        <span className="text-[10.5px] font-bold uppercase tracking-wider">Recent Activity</span>
+                        {historyLoading && <Loader2 className="size-3 animate-spin ml-auto" />}
+                      </div>
+
+                      {userHistory.length > 0 ? (
+                        <div className="max-h-[200px] overflow-y-auto space-y-1.5 pr-1 scrollbar-thin">
+                          {userHistory.map((entry, i) => {
+                            const date = new Date(entry.timestamp);
+                            const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                            const dateStr = date.toLocaleDateString([], { day: 'numeric', month: 'short' });
+                            return (
+                              <div
+                                key={i}
+                                className="flex items-start gap-2.5 p-2.5 rounded-xl bg-background/60 border border-border/30 group hover:border-purple-500/30 transition-colors"
+                              >
+                                <div className="size-7 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  <History className="size-3 text-purple-400" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-[11.5px] font-bold text-foreground leading-tight truncate">{entry.action}</p>
+                                  {entry.detail && (
+                                    <p className="text-[10px] text-muted-foreground truncate mt-0.5">{entry.detail}</p>
+                                  )}
+                                </div>
+                                <div className="text-[9px] text-muted-foreground font-mono flex-shrink-0 text-right leading-tight mt-0.5">
+                                  <div>{timeStr}</div>
+                                  <div>{dateStr}</div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-muted-foreground/60 italic py-2">No activity recorded yet. Use any tool to start tracking.</p>
+                      )}
                     </div>
                   </div>
                 ) : (
