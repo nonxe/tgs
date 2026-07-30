@@ -23,7 +23,14 @@ import {
   Gamepad2,
   Wifi,
   MapPin,
-  Clock
+  Clock,
+  Lock,
+  KeyRound,
+  LogIn,
+  LogOut,
+  CheckCircle2,
+  AlertCircle,
+  Loader2
 } from "lucide-react";
 
 function StarOfDavidIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -62,6 +69,72 @@ function DashboardHome() {
   const [ipInfo, setIpInfo] = useState<{ ip: string; country: string; city: string } | null>(null);
   const [ipLoading, setIpLoading] = useState(false);
   const [lastVisit, setLastVisit] = useState<string | null>(null);
+
+  // nonxe/db User Account state
+  const [savedAccount, setSavedAccount] = useState<{ id: string; createdAt?: string } | null>(null);
+  const [accTab, setAccTab] = useState<"create" | "login">("create");
+  const [accIdInput, setAccIdInput] = useState("");
+  const [accPassInput, setAccPassInput] = useState("");
+  const [accLoading, setAccLoading] = useState(false);
+  const [accMsg, setAccMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("cloud_user_account");
+      if (stored) {
+        setSavedAccount(JSON.parse(stored));
+      }
+    } catch {}
+  }, []);
+
+  const handleAccountSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!accIdInput.trim() || !accPassInput.trim()) {
+      setAccMsg({ type: "error", text: "ID and Password are required." });
+      return;
+    }
+
+    setAccLoading(true);
+    setAccMsg(null);
+
+    const endpoint = accTab === "create" ? "/api/accounts/create" : "/api/accounts/login";
+
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: accIdInput.trim(), pass: accPassInput.trim() }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setAccMsg({ type: "error", text: data.error || "Authentication failed." });
+      } else {
+        const accountData = { id: data.account.id, createdAt: data.account.createdAt };
+        localStorage.setItem("cloud_user_account", JSON.stringify(accountData));
+        setSavedAccount(accountData);
+        setAccIdInput("");
+        setAccPassInput("");
+        setAccMsg({
+          type: "success",
+          text: accTab === "create" 
+            ? "Account created & saved in nonxe/db (log.txt)!" 
+            : "Logged in successfully from nonxe/db!"
+        });
+      }
+    } catch {
+      setAccMsg({ type: "error", text: "Network error. Please try again." });
+    } finally {
+      setAccLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("cloud_user_account");
+    setSavedAccount(null);
+    setAccMsg({ type: "success", text: "Logged out successfully." });
+  };
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
@@ -581,6 +654,136 @@ function DashboardHome() {
                     <p className="text-[14px] font-black tracking-tight text-foreground">First visit! 🎉</p>
                   )}
                 </div>
+              </div>
+
+              {/* Account Section (GitHub DB nonxe/db) */}
+              <div className="pt-4 border-t border-border/40 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-foreground font-black text-[13px]">
+                    <Lock className="size-4 text-purple-400" />
+                    <span>Cloud Account System</span>
+                  </div>
+                  <span className="text-[9.5px] font-bold text-muted-foreground uppercase tracking-widest bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-full">
+                    nonxe/db
+                  </span>
+                </div>
+
+                {savedAccount ? (
+                  <div className="p-3.5 rounded-[16px] bg-purple-500/10 border border-purple-500/30 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="size-9 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-300 font-black text-[13px]">
+                          {savedAccount.id.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-[13px] font-black text-foreground leading-none">{savedAccount.id}</p>
+                          <p className="text-[10px] text-emerald-400 font-semibold mt-1">● Saved in nonxe/db log.txt</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleLogout}
+                        className="px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[11px] font-bold flex items-center gap-1 transition-colors"
+                      >
+                        <LogOut className="size-3" />
+                        <span>Logout</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {/* Mode Selector Tabs */}
+                    <div className="grid grid-cols-2 p-1 rounded-xl bg-background/80 border border-border/40">
+                      <button
+                        type="button"
+                        onClick={() => { setAccTab("create"); setAccMsg(null); }}
+                        className={`py-1.5 text-[11px] font-black rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                          accTab === "create"
+                            ? "bg-purple-600 text-white shadow-md shadow-purple-600/30"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <UserPlus className="size-3.5" />
+                        <span>Create Account</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setAccTab("login"); setAccMsg(null); }}
+                        className={`py-1.5 text-[11px] font-black rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                          accTab === "login"
+                            ? "bg-purple-600 text-white shadow-md shadow-purple-600/30"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <LogIn className="size-3.5" />
+                        <span>Login</span>
+                      </button>
+                    </div>
+
+                    <form onSubmit={handleAccountSubmit} className="space-y-2.5">
+                      <div>
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 block">
+                          Account ID / Username
+                        </label>
+                        <input
+                          type="text"
+                          value={accIdInput}
+                          onChange={(e) => setAccIdInput(e.target.value)}
+                          placeholder="Enter Account ID..."
+                          required
+                          className="w-full h-9 bg-background/80 border border-border/50 rounded-xl px-3 text-[12px] font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-purple-500 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 block">
+                          Password
+                        </label>
+                        <input
+                          type="password"
+                          value={accPassInput}
+                          onChange={(e) => setAccPassInput(e.target.value)}
+                          placeholder="Enter Password..."
+                          required
+                          className="w-full h-9 bg-background/80 border border-border/50 rounded-xl px-3 text-[12px] font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-purple-500 transition-all font-mono"
+                        />
+                      </div>
+
+                      {accMsg && (
+                        <div className={`p-2.5 rounded-xl border text-[11px] font-semibold flex items-center gap-2 ${
+                          accMsg.type === "success" 
+                            ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" 
+                            : "bg-red-500/10 border-red-500/30 text-red-400"
+                        }`}>
+                          {accMsg.type === "success" ? <CheckCircle2 className="size-4 flex-shrink-0" /> : <AlertCircle className="size-4 flex-shrink-0" />}
+                          <span>{accMsg.text}</span>
+                        </div>
+                      )}
+
+                      <button
+                        type="submit"
+                        disabled={accLoading}
+                        className="w-full h-9 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-[12px] font-black shadow-lg shadow-purple-600/30 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50"
+                      >
+                        {accLoading ? (
+                          <>
+                            <Loader2 className="size-3.5 animate-spin" />
+                            <span>Connecting to nonxe/db log.txt...</span>
+                          </>
+                        ) : accTab === "create" ? (
+                          <>
+                            <UserPlus className="size-3.5" />
+                            <span>Create Account (Save to log.txt)</span>
+                          </>
+                        ) : (
+                          <>
+                            <LogIn className="size-3.5" />
+                            <span>Login Account</span>
+                          </>
+                        )}
+                      </button>
+                    </form>
+                  </div>
+                )}
               </div>
             </div>
 
