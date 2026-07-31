@@ -407,3 +407,38 @@
   animation: flagRipple 4s ease-in-out infinite;
 }
 
+/* Hide scrollbar utility */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Mobile & PC Desktop Specific Optimizations */
+@media (max-width: 640px) {
+  html, body {
+    overflow-x: hidden;
+    width: 100%;
+    min-height: 100dvh;
+  }
+  
+  /* Touch target optimization */
+  button, input, select, a {
+    min-height: 38px;
+  }
+}
+
+@media (min-width: 1024px) {
+  /* PC Desktop Hover & Scale Enhancements */
+  .ios-glass:hover {
+    box-shadow: 0 16px 48px -12px rgba(167, 139, 250, 0.15), 0 2px 6px rgba(0, 0, 0, 0.04);
+  }
+  
+  .dark .ios-glass:hover {
+    box-shadow: 0 16px 48px -12px rgba(167, 139, 250, 0.25), 0 2px 6px rgba(255, 255, 255, 0.03);
+  }
+}
+
+

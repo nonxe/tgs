@@ -401,18 +401,24 @@ function DashboardHome() {
       <div className="orb orb-3" />
 
       {/* Header */}
-      <header className="px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between max-w-4xl mx-auto w-full border-b border-border/40 backdrop-blur-md sticky top-0 z-40 bg-background/85 select-none">
-        <div className="flex items-center gap-3 sm:gap-4 overflow-x-auto">
-          <Link to="/" className="text-[16px] sm:text-[20px] font-black tracking-tighter select-none flex-shrink-0">
+      <header className="px-4 sm:px-6 md:px-8 py-3.5 sm:py-5 flex items-center justify-between max-w-6xl mx-auto w-full border-b border-border/40 backdrop-blur-md sticky top-0 z-40 bg-background/85 select-none">
+        <div className="flex items-center gap-3 sm:gap-6 overflow-x-auto scrollbar-none py-1">
+          <Link to="/" className="text-[16px] sm:text-[20px] font-black tracking-tighter select-none flex-shrink-0 text-foreground">
             CLOUD
           </Link>
-          <Link to="/note" className="text-[16px] sm:text-[20px] font-black tracking-tighter select-none opacity-40 hover:opacity-100 transition-opacity flex-shrink-0">
+          <Link to="/note" className="text-[14px] sm:text-[16px] md:text-[18px] font-black tracking-tighter select-none opacity-50 hover:opacity-100 transition-opacity flex-shrink-0">
             NOTES
           </Link>
-          <Link to="/convert" className="text-[16px] sm:text-[20px] font-black tracking-tighter select-none opacity-40 hover:opacity-100 transition-opacity flex-shrink-0">
+          <Link to="/convert" className="text-[14px] sm:text-[16px] md:text-[18px] font-black tracking-tighter select-none opacity-50 hover:opacity-100 transition-opacity flex-shrink-0">
             CONVERTS
           </Link>
-          <Link to="/owner" className="text-[16px] sm:text-[20px] font-black tracking-tighter select-none opacity-40 hover:opacity-100 transition-opacity flex-shrink-0">
+          <Link to="/links" className="text-[14px] sm:text-[16px] md:text-[18px] font-black tracking-tighter select-none opacity-50 hover:opacity-100 transition-opacity flex-shrink-0">
+            LINKS
+          </Link>
+          <Link to="/tempchat" className="text-[14px] sm:text-[16px] md:text-[18px] font-black tracking-tighter select-none opacity-50 hover:opacity-100 transition-opacity flex-shrink-0">
+            CHAT
+          </Link>
+          <Link to="/owner" className="text-[14px] sm:text-[16px] md:text-[18px] font-black tracking-tighter select-none opacity-50 hover:opacity-100 transition-opacity flex-shrink-0">
             ABOUT
           </Link>
         </div>
@@ -420,7 +426,7 @@ function DashboardHome() {
         <div className="flex items-center gap-2 flex-shrink-0 ml-3">
           <button 
             onClick={handleOpenInfo}
-            className="h-9 px-3.5 rounded-full border border-purple-500/30 bg-purple-500/10 flex items-center gap-2 hover:bg-purple-500/20 hover:border-purple-500/50 transition-all active:scale-95 text-purple-400 hover:text-purple-300"
+            className="h-9 px-3 sm:px-4 rounded-full border border-purple-500/30 bg-purple-500/10 flex items-center gap-2 hover:bg-purple-500/20 hover:border-purple-500/50 transition-all active:scale-95 text-purple-400 hover:text-purple-300"
             aria-label="Your Info"
           >
             <User className="size-4" />
@@ -428,48 +434,48 @@ function DashboardHome() {
           </button>
           <button 
             onClick={toggleTheme}
-            className="size-10 rounded-full border border-border flex items-center justify-center hover:bg-secondary transition-all active:scale-90"
+            className="size-9 sm:size-10 rounded-full border border-border flex items-center justify-center hover:bg-secondary transition-all active:scale-90"
             aria-label="Toggle theme"
           >
-            {theme === "dark" ? <Sun className="size-5" /> : <Moon className="size-5" />}
+            {theme === "dark" ? <Sun className="size-4.5 sm:size-5" /> : <Moon className="size-4.5 sm:size-5" />}
           </button>
         </div>
       </header>
 
       {/* Body Content */}
-      <section className="flex-1 flex flex-col items-center justify-center py-10 px-4 max-w-4xl mx-auto w-full space-y-10 z-10">
+      <section className="flex-1 flex flex-col items-center justify-center py-8 sm:py-12 px-4 sm:px-6 md:px-8 max-w-6xl mx-auto w-full space-y-8 sm:space-y-12 z-10">
         
         {/* Intro Layout */}
-        <div className="flex flex-col md:flex-row items-center justify-between w-full gap-8 select-none">
+        <div className="flex flex-col md:flex-row items-center justify-between w-full gap-6 sm:gap-10 select-none">
           {/* Left Column: Intro Text */}
-          <div className="text-center md:text-left space-y-4 max-w-xl">
-            <h1 className="text-[42px] sm:text-[54px] font-black tracking-tighter leading-[1.05] bg-gradient-to-r from-foreground via-purple-400 to-foreground bg-clip-text text-transparent animate-spring-scale">
+          <div className="text-center md:text-left space-y-3 sm:space-y-4 max-w-2xl">
+            <h1 className="text-[34px] sm:text-[48px] md:text-[56px] lg:text-[64px] font-black tracking-tighter leading-[1.05] bg-gradient-to-r from-foreground via-purple-400 to-foreground bg-clip-text text-transparent animate-spring-scale">
               CLOUD OS SPACE
             </h1>
-            <p className="text-[14.5px] text-muted-foreground font-medium leading-relaxed">
+            <p className="text-[13.5px] sm:text-[15.5px] text-muted-foreground font-medium leading-relaxed max-w-xl">
               Choose a service to launch. Fast, edge-backed, anonymous utilities without tracking or registrations.
             </p>
           </div>
           
           {/* Right Column: Professional Futuristic CSS Glow Orb */}
-          <div className="flex items-center justify-center flex-shrink-0 relative w-40 h-40 sm:w-48 sm:h-48">
+          <div className="flex items-center justify-center flex-shrink-0 relative w-32 h-32 sm:w-44 sm:h-44 md:w-52 md:h-52">
             {/* Outer blur glow */}
             <div className="absolute inset-0 bg-purple-500/10 rounded-full blur-3xl opacity-35 scale-75 pointer-events-none" />
             {/* Spinning dashed orbital rings */}
             <div className="absolute inset-0 rounded-full border-2 border-dashed border-purple-500/20 animate-spin" style={{ animationDuration: '25s' }} />
-            <div className="absolute inset-5 rounded-full border border-dashed border-pink-500/20 animate-spin" style={{ animationDuration: '15s', animationDirection: 'reverse' }} />
+            <div className="absolute inset-4 rounded-full border border-dashed border-pink-500/20 animate-spin" style={{ animationDuration: '15s', animationDirection: 'reverse' }} />
             
             {/* Central pulsing core node */}
-            <div className="size-20 rounded-full bg-gradient-to-tr from-purple-500 via-pink-400 to-blue-400 p-[2px] animate-pulse shadow-xl shadow-purple-500/5">
+            <div className="size-16 sm:size-20 rounded-full bg-gradient-to-tr from-purple-500 via-pink-400 to-blue-400 p-[2px] animate-pulse shadow-xl shadow-purple-500/5">
               <div className="w-full h-full rounded-full bg-background flex items-center justify-center">
-                <Database className="size-8 text-purple-400" />
+                <Database className="size-7 sm:size-8 text-purple-400" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Dashboard Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full select-none">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5 sm:gap-4.5 w-full select-none">
           {cards.map((card) => {
             const Icon = card.icon;
             

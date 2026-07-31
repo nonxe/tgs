@@ -411,7 +411,7 @@ function TempChatPage() {
 
   // ── CHAT VIEW ──
   return (
-    <main className="h-screen bg-background text-foreground font-sans flex flex-col relative overflow-hidden">
+    <main className="h-[100dvh] bg-background text-foreground font-sans flex flex-col relative overflow-hidden">
       <div className="orb orb-1" /><div className="orb orb-2" />
 
       {/* Chat Header */}
@@ -494,7 +494,7 @@ function TempChatPage() {
 
           return (
             <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[80%] space-y-1 ${isMe ? "items-end" : "items-start"}`}>
+              <div className={`max-w-[85%] sm:max-w-[70%] md:max-w-[55%] lg:max-w-[45%] space-y-1 ${isMe ? "items-end" : "items-start"}`}>
                 {!isMe && (
                   <div className="flex items-center gap-1.5 px-1">
                     <span className="text-[10px] font-bold text-teal-400">{msg.sender}</span>
