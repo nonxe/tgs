@@ -297,6 +297,14 @@ function DashboardHome() {
       color: "text-blue-400 border-blue-500/20 bg-blue-500/5 hover:border-blue-500/40"
     },
     { 
+      id: "whiteboard", 
+      title: "Cloud Whiteboard", 
+      desc: "Interactive hand/cursor drawing & code canvas. Saved as code in nonxe/database repo.", 
+      icon: Palette, 
+      link: "/whiteboard",
+      color: "text-pink-400 border-pink-500/20 bg-pink-500/5 hover:border-pink-500/40"
+    },
+    { 
       id: "convert", 
       title: "Media Convert", 
       desc: "Transcode images, audio, video and extract files locally.", 
@@ -359,14 +367,6 @@ function DashboardHome() {
       icon: MessageCircle, 
       link: "/tempchat",
       color: "text-teal-400 border-teal-500/20 bg-teal-500/5 hover:border-teal-500/40"
-    },
-    { 
-      id: "whiteboard", 
-      title: "Cloud Whiteboard", 
-      desc: "Interactive drawing & code canvas. Saved directly as code in nonxe/database repo.", 
-      icon: Palette, 
-      link: "/whiteboard",
-      color: "text-pink-400 border-pink-500/20 bg-pink-500/5 hover:border-pink-500/40"
     },
     { 
       id: "gitnetwork", 
@@ -435,6 +435,9 @@ function DashboardHome() {
           </Link>
           <Link to="/tempchat" className="text-[14px] sm:text-[16px] md:text-[18px] font-black tracking-tighter select-none opacity-50 hover:opacity-100 transition-opacity flex-shrink-0">
             CHAT
+          </Link>
+          <Link to="/whiteboard" className="text-[14px] sm:text-[16px] md:text-[18px] font-black tracking-tighter select-none opacity-50 hover:opacity-100 transition-opacity flex-shrink-0 text-pink-400">
+            BOARD
           </Link>
           <Link to="/owner" className="text-[14px] sm:text-[16px] md:text-[18px] font-black tracking-tighter select-none opacity-50 hover:opacity-100 transition-opacity flex-shrink-0">
             ABOUT
