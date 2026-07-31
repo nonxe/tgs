@@ -34,7 +34,8 @@ import {
   History,
   Link2,
   MessageCircle,
-  Network
+  Network,
+  Palette
 } from "lucide-react";
 
 function StarOfDavidIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -358,6 +359,14 @@ function DashboardHome() {
       icon: MessageCircle, 
       link: "/tempchat",
       color: "text-teal-400 border-teal-500/20 bg-teal-500/5 hover:border-teal-500/40"
+    },
+    { 
+      id: "whiteboard", 
+      title: "Cloud Whiteboard", 
+      desc: "Interactive drawing & code canvas. Saved directly as code in nonxe/database repo.", 
+      icon: Palette, 
+      link: "/whiteboard",
+      color: "text-pink-400 border-pink-500/20 bg-pink-500/5 hover:border-pink-500/40"
     },
     { 
       id: "gitnetwork", 

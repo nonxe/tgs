@@ -81,7 +81,7 @@ async function saveLinks(links: ShortLink[], sha: string | null, commitMsg: stri
 // Reserved slugs — existing routes that cannot be used as short links
 const RESERVED = new Set([
   "main", "note", "convert", "more", "x", "cloudify", "ytdl",
-  "israel", "tempmail", "messages", "owner", "api", "links", "tempchat", "gitnetwork",
+  "israel", "tempmail", "messages", "owner", "api", "links", "tempchat", "gitnetwork", "whiteboard",
   "db-console", "shsdb-console", "-db", "-shsdb",
 ]);
 
