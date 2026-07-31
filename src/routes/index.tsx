@@ -302,6 +302,7 @@ function DashboardHome() {
       desc: "Interactive hand/cursor drawing & code canvas. Saved as code in nonxe/database repo.", 
       icon: Palette, 
       link: "/whiteboard",
+      badge: "NEW FEATURE",
       color: "text-pink-400 border-pink-500/20 bg-pink-500/5 hover:border-pink-500/40"
     },
     { 
@@ -508,8 +509,15 @@ function DashboardHome() {
 
             const CardContent = (
               <>
-                <div className={`size-11 rounded-[16px] border flex items-center justify-center shadow-sm ${card.color.split(" ").slice(0,2).join(" ")}`}>
-                  <Icon className="size-5.5" />
+                <div className="flex items-center justify-between w-full">
+                  <div className={`size-11 rounded-[16px] border flex items-center justify-center shadow-sm ${card.color.split(" ").slice(0,2).join(" ")}`}>
+                    <Icon className="size-5.5" />
+                  </div>
+                  {"badge" in card && (card as any).badge && (
+                    <span className="text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30 animate-pulse">
+                      {(card as any).badge}
+                    </span>
+                  )}
                 </div>
                 <div className="flex-1 space-y-1">
                   <h3 className="text-[15px] font-black tracking-tight text-foreground flex items-center justify-between">
