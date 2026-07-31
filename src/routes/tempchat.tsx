@@ -173,12 +173,11 @@ function TempChatPage() {
     setUploading(true);
     try {
       const formData = new FormData();
-      formData.append("reqtype", "fileupload");
-      formData.append("fileToUpload", file);
-      const upRes = await fetch("https://catbox.moe/user/api.php", { method: "POST", body: formData });
-      const mediaUrl = await upRes.text();
+      formData.append("file", file);
+      const upRes = await fetch("/api/chat/upload", { method: "POST", body: formData });
+      const data = await upRes.json();
 
-      if (mediaUrl.startsWith("https://")) {
+      if (data.success && data.url) {
         await fetch("/api/chat/room", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -187,7 +186,7 @@ function TempChatPage() {
             roomId: room.id,
             sender: username.trim(),
             text: file.name,
-            media: mediaUrl.trim(),
+            media: data.url,
           }),
         });
         await pollRoom();
@@ -360,7 +359,6 @@ function TempChatPage() {
               <li>Share the <strong>join code</strong> with others to let them in</li>
               <li>When Admin leaves, <strong className="text-red-400">entire room + all data is permanently deleted</strong></li>
               <li>Send text messages and media (images, files)</li>
-              <li>The name <strong className="text-amber-400">"suhu"</strong> is reserved — it belongs to the Queen 👑</li>
             </ul>
           </div>
         </div>

@@ -52,6 +52,7 @@ import { Route as ApiCloudifySongsRouteImport } from './routes/api/cloudify/song
 import { Route as ApiCloudifySearchRouteImport } from './routes/api/cloudify/search'
 import { Route as ApiCloudifyDeleteRouteImport } from './routes/api/cloudify/delete'
 import { Route as ApiCloudifyCreateRouteImport } from './routes/api/cloudify/create'
+import { Route as ApiChatUploadRouteImport } from './routes/api/chat/upload'
 import { Route as ApiChatRoomRouteImport } from './routes/api/chat/room'
 import { Route as ApiAccountsLoginRouteImport } from './routes/api/accounts/login'
 import { Route as ApiAccountsHistoryRouteImport } from './routes/api/accounts/history'
@@ -275,6 +276,11 @@ const ApiCloudifyCreateRoute = ApiCloudifyCreateRouteImport.update({
   path: '/api/cloudify/create',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiChatUploadRoute = ApiChatUploadRouteImport.update({
+  id: '/api/chat/upload',
+  path: '/api/chat/upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiChatRoomRoute = ApiChatRoomRouteImport.update({
   id: '/api/chat/room',
   path: '/api/chat/room',
@@ -334,6 +340,7 @@ export interface FileRoutesByFullPath {
   '/api/accounts/history': typeof ApiAccountsHistoryRoute
   '/api/accounts/login': typeof ApiAccountsLoginRoute
   '/api/chat/room': typeof ApiChatRoomRoute
+  '/api/chat/upload': typeof ApiChatUploadRoute
   '/api/cloudify/create': typeof ApiCloudifyCreateRoute
   '/api/cloudify/delete': typeof ApiCloudifyDeleteRoute
   '/api/cloudify/search': typeof ApiCloudifySearchRoute
@@ -384,6 +391,7 @@ export interface FileRoutesByTo {
   '/api/accounts/history': typeof ApiAccountsHistoryRoute
   '/api/accounts/login': typeof ApiAccountsLoginRoute
   '/api/chat/room': typeof ApiChatRoomRoute
+  '/api/chat/upload': typeof ApiChatUploadRoute
   '/api/cloudify/create': typeof ApiCloudifyCreateRoute
   '/api/cloudify/delete': typeof ApiCloudifyDeleteRoute
   '/api/cloudify/search': typeof ApiCloudifySearchRoute
@@ -436,6 +444,7 @@ export interface FileRoutesById {
   '/api/accounts/history': typeof ApiAccountsHistoryRoute
   '/api/accounts/login': typeof ApiAccountsLoginRoute
   '/api/chat/room': typeof ApiChatRoomRoute
+  '/api/chat/upload': typeof ApiChatUploadRoute
   '/api/cloudify/create': typeof ApiCloudifyCreateRoute
   '/api/cloudify/delete': typeof ApiCloudifyDeleteRoute
   '/api/cloudify/search': typeof ApiCloudifySearchRoute
@@ -489,6 +498,7 @@ export interface FileRouteTypes {
     | '/api/accounts/history'
     | '/api/accounts/login'
     | '/api/chat/room'
+    | '/api/chat/upload'
     | '/api/cloudify/create'
     | '/api/cloudify/delete'
     | '/api/cloudify/search'
@@ -539,6 +549,7 @@ export interface FileRouteTypes {
     | '/api/accounts/history'
     | '/api/accounts/login'
     | '/api/chat/room'
+    | '/api/chat/upload'
     | '/api/cloudify/create'
     | '/api/cloudify/delete'
     | '/api/cloudify/search'
@@ -590,6 +601,7 @@ export interface FileRouteTypes {
     | '/api/accounts/history'
     | '/api/accounts/login'
     | '/api/chat/room'
+    | '/api/chat/upload'
     | '/api/cloudify/create'
     | '/api/cloudify/delete'
     | '/api/cloudify/search'
@@ -640,6 +652,7 @@ export interface RootRouteChildren {
   ApiAccountsHistoryRoute: typeof ApiAccountsHistoryRoute
   ApiAccountsLoginRoute: typeof ApiAccountsLoginRoute
   ApiChatRoomRoute: typeof ApiChatRoomRoute
+  ApiChatUploadRoute: typeof ApiChatUploadRoute
   ApiCloudifyCreateRoute: typeof ApiCloudifyCreateRoute
   ApiCloudifyDeleteRoute: typeof ApiCloudifyDeleteRoute
   ApiCloudifySearchRoute: typeof ApiCloudifySearchRoute
@@ -965,6 +978,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCloudifyCreateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/chat/upload': {
+      id: '/api/chat/upload'
+      path: '/api/chat/upload'
+      fullPath: '/api/chat/upload'
+      preLoaderRoute: typeof ApiChatUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/chat/room': {
       id: '/api/chat/room'
       path: '/api/chat/room'
@@ -1062,6 +1082,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAccountsHistoryRoute: ApiAccountsHistoryRoute,
   ApiAccountsLoginRoute: ApiAccountsLoginRoute,
   ApiChatRoomRoute: ApiChatRoomRoute,
+  ApiChatUploadRoute: ApiChatUploadRoute,
   ApiCloudifyCreateRoute: ApiCloudifyCreateRoute,
   ApiCloudifyDeleteRoute: ApiCloudifyDeleteRoute,
   ApiCloudifySearchRoute: ApiCloudifySearchRoute,
