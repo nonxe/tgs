@@ -13,6 +13,7 @@ import {
   MousePointerClick,
   Clock,
 } from "lucide-react";
+import { trackGlobalActivity } from "../lib/activity";
 
 interface ShortLink {
   slug: string;
@@ -85,6 +86,7 @@ function LinksPage() {
       if (data.success) {
         const domain = window.location.origin;
         setSuccess(`${domain}/${data.link.slug}`);
+        trackGlobalActivity("Generated Short Link", `/${data.link.slug} → ${url.trim()}`);
         setSlug("");
         setUrl("");
         fetchLinks();

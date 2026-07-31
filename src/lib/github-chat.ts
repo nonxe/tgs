@@ -168,16 +168,19 @@ export async function joinRoom(
   const room = rooms.find((r) => r.code === cleanCode);
   if (!room) return { success: false, error: "Room not found. Check the join code." };
 
-  if (!room.members.includes(cleanUser)) {
-    room.members.push(cleanUser);
-    room.messages.push({
-      id: makeId(10),
-      sender: "system",
-      text: `${cleanUser} joined the room.`,
-      timestamp: new Date().toISOString(),
-    });
-    await saveRooms(rooms, sha, `join: ${cleanUser} -> ${room.id}`);
+  const isMember = room.members.map((m) => m.toLowerCase()).includes(cleanUser);
+  if (isMember) {
+    return { success: false, error: "Username already taken in this room. Please choose a different name." };
   }
+
+  room.members.push(cleanUser);
+  room.messages.push({
+    id: makeId(10),
+    sender: "system",
+    text: `${cleanUser} joined the room.`,
+    timestamp: new Date().toISOString(),
+  });
+  await saveRooms(rooms, sha, `join: ${cleanUser} -> ${room.id}`);
 
   return { success: true, room };
 }

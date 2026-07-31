@@ -18,6 +18,7 @@ import {
   X,
   Shield,
 } from "lucide-react";
+import { trackGlobalActivity } from "../lib/activity";
 
 interface ChatMessage {
   id: string;
@@ -144,6 +145,7 @@ function TempChatPage() {
             JSON.stringify({ roomId: data.room.id, username: username.trim() })
           );
         } catch {}
+        trackGlobalActivity("Created TempChat Room", `Room: "${roomName.trim()}" (Code: ${data.room.code})`);
       } else {
         setLobbyError(data.error || "Failed to create room.");
       }
@@ -176,6 +178,7 @@ function TempChatPage() {
             JSON.stringify({ roomId: data.room.id, username: username.trim() })
           );
         } catch {}
+        trackGlobalActivity("Joined TempChat Room", `Joined room: "${data.room.name}"`);
       } else {
         setLobbyError(data.error || "Failed to join.");
       }
@@ -227,6 +230,7 @@ function TempChatPage() {
             media: data.url,
           }),
         });
+        trackGlobalActivity("Uploaded Chat Media", `File: ${file.name}`);
         await pollRoom();
       }
     } catch {}

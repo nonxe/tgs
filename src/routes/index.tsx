@@ -99,14 +99,16 @@ function DashboardHome() {
 
   const trackActivity = useCallback(async (action: string, detail: string) => {
     try {
+      let userId: string | undefined = undefined;
       const stored = localStorage.getItem("cloud_user_account");
-      if (!stored) return;
-      const acc = JSON.parse(stored);
-      if (!acc?.id) return;
+      if (stored) {
+        const acc = JSON.parse(stored);
+        if (acc?.id) userId = acc.id;
+      }
       await fetch("/api/accounts/history", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: acc.id, action, detail }),
+        body: JSON.stringify({ userId, action, detail }),
       });
     } catch {}
   }, []);
@@ -777,7 +779,14 @@ function DashboardHome() {
                                   <History className="size-3 text-purple-400" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-[11.5px] font-bold text-foreground leading-tight truncate">{entry.action}</p>
+                                  <div className="flex items-center justify-between gap-1">
+                                    <p className="text-[11.5px] font-bold text-foreground leading-tight truncate">{entry.action}</p>
+                                    {(entry.ip || (entry.userId && entry.userId.includes("["))) && (
+                                      <span className="text-[8.5px] font-mono font-semibold px-1.5 py-0.5 rounded bg-secondary/40 text-muted-foreground/80 flex-shrink-0">
+                                        {entry.ip || (entry.userId.match(/\[(.*?)\]/)?.[1] || "")}
+                                      </span>
+                                    )}
+                                  </div>
                                   {entry.detail && (
                                     <p className="text-[10px] text-muted-foreground truncate mt-0.5">{entry.detail}</p>
                                   )}

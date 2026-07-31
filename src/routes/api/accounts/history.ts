@@ -8,22 +8,45 @@ const CORS_HEADERS = {
   "Content-Type": "application/json; charset=utf-8",
 };
 
+function getClientIp(request: Request): string {
+  const cfIp = request.headers.get("cf-connecting-ip");
+  if (cfIp) return cfIp;
+  const xForwardedFor = request.headers.get("x-forwarded-for");
+  if (xForwardedFor) return xForwardedFor.split(",")[0].trim();
+  const xRealIp = request.headers.get("x-real-ip");
+  if (xRealIp) return xRealIp;
+  return "Unknown IP";
+}
+
 async function handleSaveHistory(request: Request) {
   try {
-    const { userId, action, detail } = (await request.json()) as {
+    const { userId, action, detail, ip: clientProvidedIp } = (await request.json()) as {
       userId?: string;
       action?: string;
       detail?: string;
+      ip?: string;
     };
 
-    if (!userId || !action) {
-      return new Response(JSON.stringify({ success: false, error: "userId and action required." }), {
+    if (!action) {
+      return new Response(JSON.stringify({ success: false, error: "action is required." }), {
         status: 400,
         headers: CORS_HEADERS,
       });
     }
 
-    const result = await addHistoryEntry(userId, action, detail || "");
+    const requestIp = getClientIp(request);
+    const ipToUse = clientProvidedIp && clientProvidedIp !== "Unknown IP" ? clientProvidedIp : requestIp;
+
+    const cleanId = userId?.trim();
+    const isLoggedIn = cleanId && cleanId.toLowerCase() !== "anonymous" && cleanId.toLowerCase() !== "guest";
+
+    const formattedIdentity = isLoggedIn
+      ? `${cleanId} [${ipToUse}]`
+      : `[${ipToUse}]`;
+
+    const rawUserId = isLoggedIn ? cleanId : undefined;
+
+    const result = await addHistoryEntry(formattedIdentity, action, detail || "", ipToUse, rawUserId);
 
     if (!result.success) {
       return new Response(JSON.stringify({ success: false, error: result.error }), {

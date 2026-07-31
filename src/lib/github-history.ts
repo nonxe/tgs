@@ -12,7 +12,9 @@ function getGithubToken(): string {
 }
 
 export interface HistoryEntry {
-  userId: string;
+  userId: string; // Formatted identity, e.g. "john [1.2.3.4]" or "[1.2.3.4]"
+  rawUserId?: string;
+  ip?: string;
   action: string;
   detail: string;
   timestamp: string;
@@ -60,7 +62,9 @@ export async function fetchHistory(): Promise<{ sha: string | null; entries: His
 export async function addHistoryEntry(
   userId: string,
   action: string,
-  detail: string
+  detail: string,
+  ip?: string,
+  rawUserId?: string
 ): Promise<{ success: boolean; error?: string }> {
   if (!userId || !action) {
     return { success: false, error: "userId and action are required." };
@@ -69,7 +73,9 @@ export async function addHistoryEntry(
   const { sha, entries } = await fetchHistory();
 
   const newEntry: HistoryEntry = {
-    userId: userId.trim().toLowerCase(),
+    userId: userId.trim(),
+    rawUserId: rawUserId ? rawUserId.trim().toLowerCase() : undefined,
+    ip,
     action,
     detail,
     timestamp: new Date().toISOString(),
@@ -113,7 +119,13 @@ export async function addHistoryEntry(
 
 export async function getUserHistory(userId: string): Promise<HistoryEntry[]> {
   const { entries } = await fetchHistory();
+  const target = userId.trim().toLowerCase();
   return entries
-    .filter((e) => e.userId === userId.trim().toLowerCase())
+    .filter((e) => {
+      if (e.rawUserId && e.rawUserId === target) return true;
+      if (e.userId.toLowerCase().startsWith(target + " [")) return true;
+      if (e.userId.toLowerCase() === target) return true;
+      return false;
+    })
     .reverse(); // newest first
 }
