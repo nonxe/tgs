@@ -32,7 +32,8 @@ import {
   AlertCircle,
   Loader2,
   History,
-  Link2
+  Link2,
+  MessageCircle
 } from "lucide-react";
 
 function StarOfDavidIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -346,6 +347,14 @@ function DashboardHome() {
       icon: Mail, 
       link: "/tempmail",
       color: "text-violet-400 border-violet-500/20 bg-violet-500/5 hover:border-violet-500/40"
+    },
+    { 
+      id: "tempchat", 
+      title: "TempChat", 
+      desc: "Temporary chat rooms with media support. Vanishes when admin leaves.", 
+      icon: MessageCircle, 
+      link: "/tempchat",
+      color: "text-teal-400 border-teal-500/20 bg-teal-500/5 hover:border-teal-500/40"
     },
     { 
       id: "shsdb", 

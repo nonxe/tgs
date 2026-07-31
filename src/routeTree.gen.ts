@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as YtdlRouteImport } from './routes/ytdl'
 import { Route as XRouteImport } from './routes/x'
 import { Route as TempmailRouteImport } from './routes/tempmail'
+import { Route as TempchatRouteImport } from './routes/tempchat'
 import { Route as ShsdbConsoleRouteImport } from './routes/shsdb-console'
 import { Route as OwnerRouteImport } from './routes/owner'
 import { Route as NoteRouteImport } from './routes/note'
@@ -51,6 +52,7 @@ import { Route as ApiCloudifySongsRouteImport } from './routes/api/cloudify/song
 import { Route as ApiCloudifySearchRouteImport } from './routes/api/cloudify/search'
 import { Route as ApiCloudifyDeleteRouteImport } from './routes/api/cloudify/delete'
 import { Route as ApiCloudifyCreateRouteImport } from './routes/api/cloudify/create'
+import { Route as ApiChatRoomRouteImport } from './routes/api/chat/room'
 import { Route as ApiAccountsLoginRouteImport } from './routes/api/accounts/login'
 import { Route as ApiAccountsHistoryRouteImport } from './routes/api/accounts/history'
 import { Route as ApiAccountsCreateRouteImport } from './routes/api/accounts/create'
@@ -70,6 +72,11 @@ const XRoute = XRouteImport.update({
 const TempmailRoute = TempmailRouteImport.update({
   id: '/tempmail',
   path: '/tempmail',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TempchatRoute = TempchatRouteImport.update({
+  id: '/tempchat',
+  path: '/tempchat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ShsdbConsoleRoute = ShsdbConsoleRouteImport.update({
@@ -268,6 +275,11 @@ const ApiCloudifyCreateRoute = ApiCloudifyCreateRouteImport.update({
   path: '/api/cloudify/create',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiChatRoomRoute = ApiChatRoomRouteImport.update({
+  id: '/api/chat/room',
+  path: '/api/chat/room',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAccountsLoginRoute = ApiAccountsLoginRouteImport.update({
   id: '/api/accounts/login',
   path: '/api/accounts/login',
@@ -308,6 +320,7 @@ export interface FileRoutesByFullPath {
   '/note': typeof NoteRouteWithChildren
   '/owner': typeof OwnerRoute
   '/shsdb-console': typeof ShsdbConsoleRoute
+  '/tempchat': typeof TempchatRoute
   '/tempmail': typeof TempmailRoute
   '/x': typeof XRoute
   '/ytdl': typeof YtdlRoute
@@ -320,6 +333,7 @@ export interface FileRoutesByFullPath {
   '/api/accounts/create': typeof ApiAccountsCreateRoute
   '/api/accounts/history': typeof ApiAccountsHistoryRoute
   '/api/accounts/login': typeof ApiAccountsLoginRoute
+  '/api/chat/room': typeof ApiChatRoomRoute
   '/api/cloudify/create': typeof ApiCloudifyCreateRoute
   '/api/cloudify/delete': typeof ApiCloudifyDeleteRoute
   '/api/cloudify/search': typeof ApiCloudifySearchRoute
@@ -356,6 +370,7 @@ export interface FileRoutesByTo {
   '/more': typeof MoreRoute
   '/owner': typeof OwnerRoute
   '/shsdb-console': typeof ShsdbConsoleRoute
+  '/tempchat': typeof TempchatRoute
   '/tempmail': typeof TempmailRoute
   '/x': typeof XRoute
   '/ytdl': typeof YtdlRoute
@@ -368,6 +383,7 @@ export interface FileRoutesByTo {
   '/api/accounts/create': typeof ApiAccountsCreateRoute
   '/api/accounts/history': typeof ApiAccountsHistoryRoute
   '/api/accounts/login': typeof ApiAccountsLoginRoute
+  '/api/chat/room': typeof ApiChatRoomRoute
   '/api/cloudify/create': typeof ApiCloudifyCreateRoute
   '/api/cloudify/delete': typeof ApiCloudifyDeleteRoute
   '/api/cloudify/search': typeof ApiCloudifySearchRoute
@@ -406,6 +422,7 @@ export interface FileRoutesById {
   '/note': typeof NoteRouteWithChildren
   '/owner': typeof OwnerRoute
   '/shsdb-console': typeof ShsdbConsoleRoute
+  '/tempchat': typeof TempchatRoute
   '/tempmail': typeof TempmailRoute
   '/x': typeof XRoute
   '/ytdl': typeof YtdlRoute
@@ -418,6 +435,7 @@ export interface FileRoutesById {
   '/api/accounts/create': typeof ApiAccountsCreateRoute
   '/api/accounts/history': typeof ApiAccountsHistoryRoute
   '/api/accounts/login': typeof ApiAccountsLoginRoute
+  '/api/chat/room': typeof ApiChatRoomRoute
   '/api/cloudify/create': typeof ApiCloudifyCreateRoute
   '/api/cloudify/delete': typeof ApiCloudifyDeleteRoute
   '/api/cloudify/search': typeof ApiCloudifySearchRoute
@@ -457,6 +475,7 @@ export interface FileRouteTypes {
     | '/note'
     | '/owner'
     | '/shsdb-console'
+    | '/tempchat'
     | '/tempmail'
     | '/x'
     | '/ytdl'
@@ -469,6 +488,7 @@ export interface FileRouteTypes {
     | '/api/accounts/create'
     | '/api/accounts/history'
     | '/api/accounts/login'
+    | '/api/chat/room'
     | '/api/cloudify/create'
     | '/api/cloudify/delete'
     | '/api/cloudify/search'
@@ -505,6 +525,7 @@ export interface FileRouteTypes {
     | '/more'
     | '/owner'
     | '/shsdb-console'
+    | '/tempchat'
     | '/tempmail'
     | '/x'
     | '/ytdl'
@@ -517,6 +538,7 @@ export interface FileRouteTypes {
     | '/api/accounts/create'
     | '/api/accounts/history'
     | '/api/accounts/login'
+    | '/api/chat/room'
     | '/api/cloudify/create'
     | '/api/cloudify/delete'
     | '/api/cloudify/search'
@@ -554,6 +576,7 @@ export interface FileRouteTypes {
     | '/note'
     | '/owner'
     | '/shsdb-console'
+    | '/tempchat'
     | '/tempmail'
     | '/x'
     | '/ytdl'
@@ -566,6 +589,7 @@ export interface FileRouteTypes {
     | '/api/accounts/create'
     | '/api/accounts/history'
     | '/api/accounts/login'
+    | '/api/chat/room'
     | '/api/cloudify/create'
     | '/api/cloudify/delete'
     | '/api/cloudify/search'
@@ -604,6 +628,7 @@ export interface RootRouteChildren {
   NoteRoute: typeof NoteRouteWithChildren
   OwnerRoute: typeof OwnerRoute
   ShsdbConsoleRoute: typeof ShsdbConsoleRoute
+  TempchatRoute: typeof TempchatRoute
   TempmailRoute: typeof TempmailRoute
   XRoute: typeof XRoute
   YtdlRoute: typeof YtdlRoute
@@ -614,6 +639,7 @@ export interface RootRouteChildren {
   ApiAccountsCreateRoute: typeof ApiAccountsCreateRoute
   ApiAccountsHistoryRoute: typeof ApiAccountsHistoryRoute
   ApiAccountsLoginRoute: typeof ApiAccountsLoginRoute
+  ApiChatRoomRoute: typeof ApiChatRoomRoute
   ApiCloudifyCreateRoute: typeof ApiCloudifyCreateRoute
   ApiCloudifyDeleteRoute: typeof ApiCloudifyDeleteRoute
   ApiCloudifySearchRoute: typeof ApiCloudifySearchRoute
@@ -657,6 +683,13 @@ declare module '@tanstack/react-router' {
       path: '/tempmail'
       fullPath: '/tempmail'
       preLoaderRoute: typeof TempmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tempchat': {
+      id: '/tempchat'
+      path: '/tempchat'
+      fullPath: '/tempchat'
+      preLoaderRoute: typeof TempchatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/shsdb-console': {
@@ -932,6 +965,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCloudifyCreateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/chat/room': {
+      id: '/api/chat/room'
+      path: '/api/chat/room'
+      fullPath: '/api/chat/room'
+      preLoaderRoute: typeof ApiChatRoomRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/accounts/login': {
       id: '/api/accounts/login'
       path: '/api/accounts/login'
@@ -1010,6 +1050,7 @@ const rootRouteChildren: RootRouteChildren = {
   NoteRoute: NoteRouteWithChildren,
   OwnerRoute: OwnerRoute,
   ShsdbConsoleRoute: ShsdbConsoleRoute,
+  TempchatRoute: TempchatRoute,
   TempmailRoute: TempmailRoute,
   XRoute: XRoute,
   YtdlRoute: YtdlRoute,
@@ -1020,6 +1061,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAccountsCreateRoute: ApiAccountsCreateRoute,
   ApiAccountsHistoryRoute: ApiAccountsHistoryRoute,
   ApiAccountsLoginRoute: ApiAccountsLoginRoute,
+  ApiChatRoomRoute: ApiChatRoomRoute,
   ApiCloudifyCreateRoute: ApiCloudifyCreateRoute,
   ApiCloudifyDeleteRoute: ApiCloudifyDeleteRoute,
   ApiCloudifySearchRoute: ApiCloudifySearchRoute,
