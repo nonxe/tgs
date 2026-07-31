@@ -31,7 +31,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
-  History
+  History,
+  Link2
 } from "lucide-react";
 
 function StarOfDavidIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -273,6 +274,14 @@ function DashboardHome() {
       icon: Upload, 
       link: "/main",
       color: "text-purple-400 border-purple-500/20 bg-purple-500/5 hover:border-purple-500/40"
+    },
+    { 
+      id: "links", 
+      title: "Link Shortener", 
+      desc: "Create custom short links with your own slugs. Instant redirects.", 
+      icon: Link2, 
+      link: "/links",
+      color: "text-orange-400 border-orange-500/20 bg-orange-500/5 hover:border-orange-500/40"
     },
     { 
       id: "notes", 

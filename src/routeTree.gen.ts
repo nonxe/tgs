@@ -18,6 +18,7 @@ import { Route as NoteRouteImport } from './routes/note'
 import { Route as MoreRouteImport } from './routes/more'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as MainRouteImport } from './routes/main'
+import { Route as LinksRouteImport } from './routes/links'
 import { Route as IsraelRouteImport } from './routes/israel'
 import { Route as DbConsoleRouteImport } from './routes/db-console'
 import { Route as ConvertRouteImport } from './routes/convert'
@@ -44,6 +45,7 @@ import { Route as ApiMessagesPostRouteImport } from './routes/api/messages/post'
 import { Route as ApiMessagesListRouteImport } from './routes/api/messages/list'
 import { Route as ApiMessagesFeedRouteImport } from './routes/api/messages/feed'
 import { Route as ApiMessagesActionRouteImport } from './routes/api/messages/action'
+import { Route as ApiLinksManageRouteImport } from './routes/api/links/manage'
 import { Route as ApiCloudifyUpdateRouteImport } from './routes/api/cloudify/update'
 import { Route as ApiCloudifySongsRouteImport } from './routes/api/cloudify/songs'
 import { Route as ApiCloudifySearchRouteImport } from './routes/api/cloudify/search'
@@ -98,6 +100,11 @@ const MessagesRoute = MessagesRouteImport.update({
 const MainRoute = MainRouteImport.update({
   id: '/main',
   path: '/main',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LinksRoute = LinksRouteImport.update({
+  id: '/links',
+  path: '/links',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IsraelRoute = IsraelRouteImport.update({
@@ -231,6 +238,11 @@ const ApiMessagesActionRoute = ApiMessagesActionRouteImport.update({
   path: '/api/messages/action',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiLinksManageRoute = ApiLinksManageRouteImport.update({
+  id: '/api/links/manage',
+  path: '/api/links/manage',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCloudifyUpdateRoute = ApiCloudifyUpdateRouteImport.update({
   id: '/api/cloudify/update',
   path: '/api/cloudify/update',
@@ -289,6 +301,7 @@ export interface FileRoutesByFullPath {
   '/convert': typeof ConvertRoute
   '/db-console': typeof DbConsoleRoute
   '/israel': typeof IsraelRoute
+  '/links': typeof LinksRoute
   '/main': typeof MainRoute
   '/messages': typeof MessagesRoute
   '/more': typeof MoreRoute
@@ -312,6 +325,7 @@ export interface FileRoutesByFullPath {
   '/api/cloudify/search': typeof ApiCloudifySearchRoute
   '/api/cloudify/songs': typeof ApiCloudifySongsRoute
   '/api/cloudify/update': typeof ApiCloudifyUpdateRoute
+  '/api/links/manage': typeof ApiLinksManageRoute
   '/api/messages/action': typeof ApiMessagesActionRoute
   '/api/messages/feed': typeof ApiMessagesFeedRouteWithChildren
   '/api/messages/list': typeof ApiMessagesListRoute
@@ -336,6 +350,7 @@ export interface FileRoutesByTo {
   '/convert': typeof ConvertRoute
   '/db-console': typeof DbConsoleRoute
   '/israel': typeof IsraelRoute
+  '/links': typeof LinksRoute
   '/main': typeof MainRoute
   '/messages': typeof MessagesRoute
   '/more': typeof MoreRoute
@@ -358,6 +373,7 @@ export interface FileRoutesByTo {
   '/api/cloudify/search': typeof ApiCloudifySearchRoute
   '/api/cloudify/songs': typeof ApiCloudifySongsRoute
   '/api/cloudify/update': typeof ApiCloudifyUpdateRoute
+  '/api/links/manage': typeof ApiLinksManageRoute
   '/api/messages/action': typeof ApiMessagesActionRoute
   '/api/messages/feed': typeof ApiMessagesFeedRouteWithChildren
   '/api/messages/list': typeof ApiMessagesListRoute
@@ -383,6 +399,7 @@ export interface FileRoutesById {
   '/convert': typeof ConvertRoute
   '/db-console': typeof DbConsoleRoute
   '/israel': typeof IsraelRoute
+  '/links': typeof LinksRoute
   '/main': typeof MainRoute
   '/messages': typeof MessagesRoute
   '/more': typeof MoreRoute
@@ -406,6 +423,7 @@ export interface FileRoutesById {
   '/api/cloudify/search': typeof ApiCloudifySearchRoute
   '/api/cloudify/songs': typeof ApiCloudifySongsRoute
   '/api/cloudify/update': typeof ApiCloudifyUpdateRoute
+  '/api/links/manage': typeof ApiLinksManageRoute
   '/api/messages/action': typeof ApiMessagesActionRoute
   '/api/messages/feed': typeof ApiMessagesFeedRouteWithChildren
   '/api/messages/list': typeof ApiMessagesListRoute
@@ -432,6 +450,7 @@ export interface FileRouteTypes {
     | '/convert'
     | '/db-console'
     | '/israel'
+    | '/links'
     | '/main'
     | '/messages'
     | '/more'
@@ -455,6 +474,7 @@ export interface FileRouteTypes {
     | '/api/cloudify/search'
     | '/api/cloudify/songs'
     | '/api/cloudify/update'
+    | '/api/links/manage'
     | '/api/messages/action'
     | '/api/messages/feed'
     | '/api/messages/list'
@@ -479,6 +499,7 @@ export interface FileRouteTypes {
     | '/convert'
     | '/db-console'
     | '/israel'
+    | '/links'
     | '/main'
     | '/messages'
     | '/more'
@@ -501,6 +522,7 @@ export interface FileRouteTypes {
     | '/api/cloudify/search'
     | '/api/cloudify/songs'
     | '/api/cloudify/update'
+    | '/api/links/manage'
     | '/api/messages/action'
     | '/api/messages/feed'
     | '/api/messages/list'
@@ -525,6 +547,7 @@ export interface FileRouteTypes {
     | '/convert'
     | '/db-console'
     | '/israel'
+    | '/links'
     | '/main'
     | '/messages'
     | '/more'
@@ -548,6 +571,7 @@ export interface FileRouteTypes {
     | '/api/cloudify/search'
     | '/api/cloudify/songs'
     | '/api/cloudify/update'
+    | '/api/links/manage'
     | '/api/messages/action'
     | '/api/messages/feed'
     | '/api/messages/list'
@@ -573,6 +597,7 @@ export interface RootRouteChildren {
   ConvertRoute: typeof ConvertRoute
   DbConsoleRoute: typeof DbConsoleRoute
   IsraelRoute: typeof IsraelRoute
+  LinksRoute: typeof LinksRoute
   MainRoute: typeof MainRoute
   MessagesRoute: typeof MessagesRoute
   MoreRoute: typeof MoreRoute
@@ -594,6 +619,7 @@ export interface RootRouteChildren {
   ApiCloudifySearchRoute: typeof ApiCloudifySearchRoute
   ApiCloudifySongsRoute: typeof ApiCloudifySongsRoute
   ApiCloudifyUpdateRoute: typeof ApiCloudifyUpdateRoute
+  ApiLinksManageRoute: typeof ApiLinksManageRoute
   ApiMessagesActionRoute: typeof ApiMessagesActionRoute
   ApiMessagesFeedRoute: typeof ApiMessagesFeedRouteWithChildren
   ApiMessagesListRoute: typeof ApiMessagesListRoute
@@ -673,6 +699,13 @@ declare module '@tanstack/react-router' {
       path: '/main'
       fullPath: '/main'
       preLoaderRoute: typeof MainRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/links': {
+      id: '/links'
+      path: '/links'
+      fullPath: '/links'
+      preLoaderRoute: typeof LinksRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/israel': {
@@ -857,6 +890,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMessagesActionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/links/manage': {
+      id: '/api/links/manage'
+      path: '/api/links/manage'
+      fullPath: '/api/links/manage'
+      preLoaderRoute: typeof ApiLinksManageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/cloudify/update': {
       id: '/api/cloudify/update'
       path: '/api/cloudify/update'
@@ -963,6 +1003,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConvertRoute: ConvertRoute,
   DbConsoleRoute: DbConsoleRoute,
   IsraelRoute: IsraelRoute,
+  LinksRoute: LinksRoute,
   MainRoute: MainRoute,
   MessagesRoute: MessagesRoute,
   MoreRoute: MoreRoute,
@@ -984,6 +1025,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCloudifySearchRoute: ApiCloudifySearchRoute,
   ApiCloudifySongsRoute: ApiCloudifySongsRoute,
   ApiCloudifyUpdateRoute: ApiCloudifyUpdateRoute,
+  ApiLinksManageRoute: ApiLinksManageRoute,
   ApiMessagesActionRoute: ApiMessagesActionRoute,
   ApiMessagesFeedRoute: ApiMessagesFeedRouteWithChildren,
   ApiMessagesListRoute: ApiMessagesListRoute,
