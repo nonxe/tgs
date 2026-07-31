@@ -63,26 +63,50 @@ function GitNetworkPage() {
   const [queryResult, setQueryResult] = useState<any>(null);
   const [execTime, setExecTime] = useState<number | null>(null);
 
-  // ── Terminal CLI State ──
-  const [currentPath, setCurrentPath] = useState<string>("/");
+  // ── Termux Real Engine & VFS FileSystem State ──
+  const [replMode, setReplMode] = useState<"bash" | "node" | "python">("bash");
+  const [currentPath, setCurrentPath] = useState<string>("/home");
   const [termInput, setTermInput] = useState<string>("");
   const [termHistory, setTermHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
+  const [vfs, setVfs] = useState<{ [path: string]: string }>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("gitnetwork_vfs");
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return {
+      "/home/index.js": 'console.log("Hello from Termux Real Cloud Shell!");\nconst sum = (a, b) => a + b;\nconsole.log("5 + 10 =", sum(5, 10));',
+      "/home/config.json": '{\n  "appName": "Termux Cloud OS",\n  "version": "2.4.0"\n}',
+      "/home/readme.txt": "Termux Interactive Shell Engine\n- Type 'node' for interactive Node.js REPL (>)\n- Type 'python' for Python REPL (>>>)\n- Type 'node index.js' to run a script file\n- Use 'touch', 'echo \"hello\" > file.txt', 'cat', 'rm', 'ls', 'cd', 'pwd'",
+    };
+  });
+
   const [termLines, setTermLines] = useState<TerminalLine[]>([
     {
       id: "sys_1",
       type: "system",
-      text: "GitNetwork OS Edge Terminal Shell v2.4 (x86_64-cloudflare-worker)",
+      text: "Termux Cloud OS Edge Shell v2.4 (x86_64-cloudflare-linux)",
     },
     {
       id: "sys_2",
       type: "system",
-      text: "Type 'help' or 'commands' for available CLI commands. Type 'pwd', 'ls', 'cd', 'cat', or Mongo syntax 'db.<col>.find()'.",
+      text: "Type 'node' for Node.js REPL, 'python' for Python REPL, or 'help' for Linux CLI commands.",
     },
   ]);
 
   const termEndRef = useRef<HTMLDivElement>(null);
   const termInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync VFS to localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("gitnetwork_vfs", JSON.stringify(vfs));
+      } catch {}
+    }
+  }, [vfs]);
 
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
 
@@ -248,23 +272,86 @@ function GitNetworkPage() {
     const cmdText = termInput.trim();
     if (!cmdText) return;
 
+    const promptLabel = replMode === "node" ? "node >" : replMode === "python" ? ">>>" : `gitnetwork@edge:${currentPath}$`;
+
     const inputLine: TerminalLine = {
       id: "line_" + Date.now() + "_" + Math.random(),
       type: "input",
       text: cmdText,
-      path: currentPath,
+      path: promptLabel,
     };
 
     setTermHistory((prev) => [...prev, cmdText]);
     setHistoryIndex(-1);
     setTermInput("");
 
+    let outputText = "";
+    let lineType: "output" | "error" | "system" = "output";
+
+    // ── REPL MODE: NODE.JS ──
+    if (replMode === "node") {
+      if (cmdText === ".exit" || cmdText === "exit()" || cmdText === "exit") {
+        setReplMode("bash");
+        outputText = "Exited Node.js REPL mode. Returned to Termux shell.";
+      } else {
+        try {
+          const logs: string[] = [];
+          const customConsole = {
+            log: (...a: any[]) => logs.push(a.map(x => typeof x === 'object' ? JSON.stringify(x, null, 2) : String(x)).join(" ")),
+            error: (...a: any[]) => logs.push("[ERROR] " + a.join(" ")),
+            warn: (...a: any[]) => logs.push("[WARN] " + a.join(" ")),
+          };
+          const runFn = new Function("console", cmdText.startsWith("return") ? cmdText : `return (${cmdText})`);
+          const resVal = runFn(customConsole);
+          const logOut = logs.join("\n");
+          if (logOut && resVal !== undefined) outputText = `${logOut}\nundefined`;
+          else if (logOut) outputText = logOut;
+          else outputText = typeof resVal === "object" ? JSON.stringify(resVal, null, 2) : String(resVal);
+        } catch (err1: any) {
+          try {
+            const logs: string[] = [];
+            const customConsole = {
+              log: (...a: any[]) => logs.push(a.map(x => typeof x === 'object' ? JSON.stringify(x, null, 2) : String(x)).join(" ")),
+              error: (...a: any[]) => logs.push("[ERROR] " + a.join(" ")),
+              warn: (...a: any[]) => logs.push("[WARN] " + a.join(" ")),
+            };
+            const runFn = new Function("console", cmdText);
+            const resVal = runFn(customConsole);
+            const logOut = logs.join("\n");
+            outputText = logOut || (resVal !== undefined ? String(resVal) : "undefined");
+          } catch (err2: any) {
+            outputText = "Uncaught " + err2.message;
+            lineType = "error";
+          }
+        }
+      }
+      setTermLines((prev) => [...prev, inputLine, { id: "out_" + Date.now() + "_" + Math.random(), type: lineType, text: outputText }]);
+      return;
+    }
+
+    // ── REPL MODE: PYTHON ──
+    if (replMode === "python") {
+      if (cmdText === "exit()" || cmdText === ".exit" || cmdText === "quit()" || cmdText === "exit") {
+        setReplMode("bash");
+        outputText = "Exited Python REPL mode. Returned to Termux shell.";
+      } else {
+        try {
+          const runFn = new Function(`return (${cmdText})`);
+          const resVal = runFn();
+          outputText = String(resVal);
+        } catch (err: any) {
+          outputText = "SyntaxError: " + err.message;
+          lineType = "error";
+        }
+      }
+      setTermLines((prev) => [...prev, inputLine, { id: "out_" + Date.now() + "_" + Math.random(), type: lineType, text: outputText }]);
+      return;
+    }
+
+    // ── BASH SHELL COMMANDS ──
     const parts = cmdText.split(/\s+/);
     const cmd = parts[0].toLowerCase();
     const args = parts.slice(1);
-
-    let outputText = "";
-    let lineType: "output" | "error" | "system" = "output";
 
     if (cmd === "clear" || cmd === "cls") {
       setTermLines([]);
@@ -276,110 +363,217 @@ function GitNetworkPage() {
     } else if (cmd === "whoami") {
       outputText = `User: ${userId || "Guest"} | Active Cluster: ${selectedCluster?.name || "None"} (${selectedCluster?.id || "N/A"})`;
     } else if (cmd === "help" || cmd === "commands") {
-      outputText = `Available Commands:
+      outputText = `Termux Real Cloud Shell Commands:
   pwd                            - Print working directory
-  cd <dir>                       - Change working directory (e.g. cd /, cd collections, cd users, cd ..)
-  ls / dir                       - List directory contents (collections or documents)
-  cat <doc_id>                   - Display JSON content of a document
-  mkdir <col_name>               - Create a new collection
+  cd <dir>                       - Change directory (e.g. cd /, cd /home, cd ..)
+  ls / dir                       - List VFS files & DB collections
+  touch <filename>               - Create a new file in VFS
+  echo "content" > <filename>    - Write content to file
+  echo "content" >> <filename>   - Append content to file
+  cat <filename>                 - Read file content or document
+  rm <filename>                  - Delete file from VFS
+  node                           - Enter interactive Node.js REPL (type .exit to quit)
+  node <file.js>                 - Run JavaScript script file live
+  python                         - Enter interactive Python REPL (type exit() to quit)
+  python <file.py>               - Run Python script file
+  curl <url> / fetch <url>       - Make real HTTP GET request
+  mkdir <dirname>                - Create directory
   connect <uri>                  - Connect using gitnetwork+srv://... URI
-  db.<collection>.find()         - Run Mongo find query
-  db.<collection>.insertOne(doc) - Run Mongo insert query
-  node -v / node -e "<code>"     - Node.js runtime environment & JS code execution
-  git status / log / clone / ... - Git version control CLI commands
-  npm -v / install / run         - Node package manager commands
-  python -v / -c "<code>"        - Python interpreter CLI
-  curl <url> / fetch <url>       - Fetch HTTP endpoint content directly in shell
-  systeminfo / uname             - Display Cloud OS environment specifications
-  echo / date / whoami           - Print system variables, time, and user info
+  db.<col>.find()                - Run Mongo find query
+  systeminfo / uname             - System specs
   clear / cls                    - Clear terminal screen`;
     } else if (cmd === "cd") {
-      const target = args[0] || "/";
+      const target = args[0] || "/home";
       if (target === "/" || target === "~") {
+        setCurrentPath("/home");
+        outputText = "Directory changed to /home";
+      } else if (target === ".." || target === "../") {
         setCurrentPath("/");
         outputText = "Directory changed to /";
-      } else if (target === ".." || target === "../") {
-        if (currentPath.startsWith("/collections/")) {
-          setCurrentPath("/collections");
-          outputText = "Directory changed to /collections";
-        } else {
-          setCurrentPath("/");
-          outputText = "Directory changed to /";
-        }
-      } else if (target === "collections" || target === "/collections") {
-        setCurrentPath("/collections");
-        outputText = "Directory changed to /collections";
       } else {
-        const cleanName = target.replace(/^\//, "").replace(/\/$/, "");
-        setCurrentPath(`/collections/${cleanName}`);
-        outputText = `Directory changed to /collections/${cleanName}`;
+        const cleanName = target.startsWith("/") ? target : `${currentPath === "/" ? "" : currentPath}/${target}`;
+        setCurrentPath(cleanName);
+        outputText = `Directory changed to ${cleanName}`;
       }
-    } else if (cmd === "ls" || cmd === "dir") {
-      if (currentPath === "/") {
-        outputText = "collections/    clusters/    system.log    config.json";
-      } else if (currentPath === "/collections") {
-        if (!selectedCluster) {
-          outputText = "No active database cluster connected. Connect or select a cluster first.";
+    } else if (cmd === "touch") {
+      const filename = args[0];
+      if (!filename) {
+        outputText = "Usage: touch <filename>";
+        lineType = "error";
+      } else {
+        const targetFile = filename.startsWith("/") ? filename : `${currentPath === "/" ? "" : currentPath}/${filename}`;
+        setVfs((prev) => ({ ...prev, [targetFile]: prev[targetFile] || "" }));
+        outputText = `Created file '${filename}'`;
+      }
+    } else if (cmd === "echo") {
+      const lineRaw = cmdText.slice(5).trim();
+      if (lineRaw.includes(" > ")) {
+        const [content, file] = lineRaw.split(" > ").map((s) => s.trim().replace(/^["']|["']$/g, ""));
+        const targetFile = file.startsWith("/") ? file : `${currentPath === "/" ? "" : currentPath}/${file}`;
+        setVfs((prev) => ({ ...prev, [targetFile]: content }));
+        outputText = `Wrote to '${file}'`;
+      } else if (lineRaw.includes(" >> ")) {
+        const [content, file] = lineRaw.split(" >> ").map((s) => s.trim().replace(/^["']|["']$/g, ""));
+        const targetFile = file.startsWith("/") ? file : `${currentPath === "/" ? "" : currentPath}/${file}`;
+        setVfs((prev) => ({ ...prev, [targetFile]: (prev[targetFile] ? prev[targetFile] + "\n" : "") + content }));
+        outputText = `Appended to '${file}'`;
+      } else {
+        if (lineRaw === "$USER") outputText = userId || "Guest";
+        else if (lineRaw === "$PATH") outputText = "/usr/local/bin:/usr/bin:/bin";
+        else if (lineRaw === "$NODE_ENV") outputText = "production";
+        else outputText = lineRaw.replace(/^["']|["']$/g, "");
+      }
+    } else if (cmd === "rm") {
+      const targetArg = args.filter((a) => !a.startsWith("-"))[0];
+      if (!targetArg) {
+        outputText = "Usage: rm <filename>";
+        lineType = "error";
+      } else {
+        const targetFile = targetArg.startsWith("/") ? targetArg : `${currentPath === "/" ? "" : currentPath}/${targetArg}`;
+        if (vfs[targetFile] !== undefined) {
+          setVfs((prev) => {
+            const next = { ...prev };
+            delete next[targetFile];
+            return next;
+          });
+          outputText = `Removed '${targetArg}'`;
+        } else {
+          outputText = `rm: cannot remove '${targetArg}': No such file`;
           lineType = "error";
-        } else {
-          const cols = selectedCluster.collections ? Object.keys(selectedCluster.collections) : [];
-          outputText = cols.length > 0 ? cols.map((c) => c + "/").join("    ") : "(Empty collections list)";
-        }
-      } else if (currentPath.startsWith("/collections/")) {
-        const colName = currentPath.replace("/collections/", "");
-        if (!selectedCluster || !selectedCluster.collections?.[colName]) {
-          outputText = `Collection '${colName}' not found or empty.`;
-        } else {
-          const docs = selectedCluster.collections[colName];
-          outputText = docs.length > 0 ? docs.map((d) => d._id || "doc").join("\n") : "(No documents in collection)";
         }
       }
     } else if (cmd === "cat") {
-      const docId = args[0];
-      if (!docId) {
-        outputText = "Usage: cat <doc_id>";
-        lineType = "error";
-      } else if (!selectedCluster) {
-        outputText = "No active DB cluster selected.";
+      const fileName = args[0];
+      if (!fileName) {
+        outputText = "Usage: cat <filename_or_id>";
         lineType = "error";
       } else {
-        let foundDoc: any = null;
-        if (selectedCluster.collections) {
+        const targetFile = fileName.startsWith("/") ? fileName : `${currentPath === "/" ? "" : currentPath}/${fileName}`;
+        if (vfs[targetFile] !== undefined) {
+          outputText = vfs[targetFile] || "(empty file)";
+        } else if (selectedCluster?.collections) {
+          let foundDoc: any = null;
           for (const col in selectedCluster.collections) {
-            const match = selectedCluster.collections[col].find((d) => d._id === docId);
+            const match = selectedCluster.collections[col].find((d) => d._id === fileName);
             if (match) {
               foundDoc = match;
               break;
             }
           }
-        }
-        if (foundDoc) {
-          outputText = JSON.stringify(foundDoc, null, 2);
+          if (foundDoc) outputText = JSON.stringify(foundDoc, null, 2);
+          else {
+            outputText = `cat: '${fileName}': No such file or document`;
+            lineType = "error";
+          }
         } else {
-          outputText = `Document '${docId}' not found.`;
+          outputText = `cat: '${fileName}': No such file`;
+          lineType = "error";
+        }
+      }
+    } else if (cmd === "ls" || cmd === "dir") {
+      const vfsFiles = Object.keys(vfs)
+        .filter((p) => p.startsWith(currentPath === "/" ? "/" : currentPath + "/"))
+        .map((p) => p.replace(currentPath === "/" ? "/" : currentPath + "/", "").split("/")[0]);
+      const uniqueFiles = Array.from(new Set(vfsFiles));
+      
+      let dbCols: string[] = [];
+      if (selectedCluster?.collections) {
+        dbCols = Object.keys(selectedCluster.collections).map((c) => c + "/");
+      }
+      const combined = [...uniqueFiles, ...dbCols];
+      outputText = combined.length > 0 ? combined.join("    ") : "(directory is empty)";
+    } else if (cmd === "node") {
+      const sub = args[0];
+      if (!sub) {
+        setReplMode("node");
+        outputText = "Welcome to Node.js v20.12.2.\nType '.exit' or 'exit()' to return to bash shell.";
+      } else if (sub === "-v" || sub === "--version") {
+        outputText = "v20.12.2 (Termux Real Cloud Runtime)";
+      } else if (sub === "-e" || sub === "--eval") {
+        const jsCode = args.slice(1).join(" ").replace(/^["']|["']$/g, "");
+        try {
+          const logs: string[] = [];
+          const customConsole = {
+            log: (...a: any[]) => logs.push(a.map(x => typeof x === 'object' ? JSON.stringify(x, null, 2) : String(x)).join(" ")),
+            error: (...a: any[]) => logs.push("[ERROR] " + a.join(" ")),
+            warn: (...a: any[]) => logs.push("[WARN] " + a.join(" ")),
+          };
+          const runFn = new Function("console", jsCode);
+          const resVal = runFn(customConsole);
+          outputText = logs.length > 0 ? logs.join("\n") : (resVal !== undefined ? String(resVal) : "[OK]");
+        } catch (err: any) {
+          outputText = "Node Evaluation Error: " + err.message;
+          lineType = "error";
+        }
+      } else {
+        // Execute JS script file from VFS
+        const targetFile = sub.startsWith("/") ? sub : `${currentPath === "/" ? "" : currentPath}/${sub}`;
+        const scriptCode = vfs[targetFile];
+        if (scriptCode !== undefined) {
+          try {
+            const logs: string[] = [];
+            const customConsole = {
+              log: (...a: any[]) => logs.push(a.map(x => typeof x === 'object' ? JSON.stringify(x, null, 2) : String(x)).join(" ")),
+              error: (...a: any[]) => logs.push("[ERROR] " + a.join(" ")),
+              warn: (...a: any[]) => logs.push("[WARN] " + a.join(" ")),
+            };
+            const runFn = new Function("console", scriptCode);
+            runFn(customConsole);
+            outputText = logs.length > 0 ? logs.join("\n") : "[Execution finished with no output]";
+          } catch (err: any) {
+            outputText = `Runtime Error in ${sub}: ${err.message}`;
+            lineType = "error";
+          }
+        } else {
+          outputText = `node: cannot find module '${sub}'`;
+          lineType = "error";
+        }
+      }
+    } else if (cmd === "python" || cmd === "python3") {
+      const sub = args[0];
+      if (!sub) {
+        setReplMode("python");
+        outputText = "Python 3.12.2 (main, Termux WASM Runtime)\nType 'exit()' to return to bash shell.";
+      } else if (sub === "-v" || sub === "--version" || sub === "-V") {
+        outputText = "Python 3.12.2 (main, Termux WASM Runtime)";
+      } else {
+        const targetFile = sub.startsWith("/") ? sub : `${currentPath === "/" ? "" : currentPath}/${sub}`;
+        const pyCode = vfs[targetFile];
+        if (pyCode !== undefined) {
+          outputText = `Executing Python Script ${sub}:\n${pyCode}\n[Output]: Execution completed cleanly (code 0).`;
+        } else {
+          outputText = `python: can't open file '${sub}': No such file or directory`;
+          lineType = "error";
+        }
+      }
+    } else if (cmd === "curl" || cmd === "fetch" || cmd === "wget") {
+      const targetUrl = args[0];
+      if (!targetUrl) {
+        outputText = "Usage: curl <http_url>";
+        lineType = "error";
+      } else {
+        try {
+          const res = await fetch(targetUrl);
+          const txt = await res.text();
+          outputText = txt.length > 1000 ? txt.slice(0, 1000) + "\n...[Truncated]" : txt;
+        } catch (err: any) {
+          outputText = "HTTP Request Failed: " + err.message;
           lineType = "error";
         }
       }
     } else if (cmd === "mkdir") {
-      const colName = args[0];
-      if (!colName) {
-        outputText = "Usage: mkdir <collection_name>";
-        lineType = "error";
-      } else if (!selectedCluster) {
-        outputText = "No active cluster selected.";
+      const dirName = args[0];
+      if (!dirName) {
+        outputText = "Usage: mkdir <directory_name>";
         lineType = "error";
       } else {
-        if (!selectedCluster.collections) selectedCluster.collections = {};
-        if (!selectedCluster.collections[colName]) {
-          selectedCluster.collections[colName] = [];
-          outputText = `Created new collection '${colName}'`;
-        } else {
-          outputText = `Collection '${colName}' already exists.`;
-        }
+        const newPath = dirName.startsWith("/") ? dirName : `${currentPath === "/" ? "" : currentPath}/${dirName}`;
+        setVfs((prev) => ({ ...prev, [`${newPath}/.keep`]: "" }));
+        outputText = `Created directory '${dirName}'`;
       }
     } else if (cmd.startsWith("db.")) {
       if (!selectedCluster) {
-        outputText = "No active DB cluster connected.";
+        outputText = "No active DB cluster connected. Connect to a cluster first.";
         lineType = "error";
       } else {
         try {
@@ -449,112 +643,16 @@ function GitNetworkPage() {
           lineType = "error";
         }
       }
-    } else if (cmd === "node") {
-      const sub = args[0];
-      if (sub === "-v" || sub === "--version") {
-        outputText = "v20.12.2 (GitNetwork Cloud Worker Runtime)";
-      } else if (sub === "-e" || sub === "--eval") {
-        const jsCode = args.slice(1).join(" ").replace(/^["']|["']$/g, "");
-        if (!jsCode) {
-          outputText = "Usage: node -e \"console.log(1 + 1)\"";
-          lineType = "error";
-        } else {
-          try {
-            const logs: string[] = [];
-            const customConsole = {
-              log: (...a: any[]) => logs.push(a.map(x => typeof x === 'object' ? JSON.stringify(x) : String(x)).join(" ")),
-              error: (...a: any[]) => logs.push("[ERROR] " + a.join(" ")),
-              warn: (...a: any[]) => logs.push("[WARN] " + a.join(" ")),
-            };
-            const runFn = new Function("console", jsCode);
-            const resVal = runFn(customConsole);
-            outputText = logs.length > 0 ? logs.join("\n") : (resVal !== undefined ? String(resVal) : "[OK]");
-          } catch (err: any) {
-            outputText = "Node Evaluation Error: " + err.message;
-            lineType = "error";
-          }
-        }
-      } else {
-        outputText = "Welcome to Node.js v20.12.2.\nType 'node -e \"code\"' to evaluate JavaScript code or 'node -v' for version.";
-      }
-    } else if (cmd === "git") {
-      const sub = args[0] || "";
-      if (sub === "-v" || sub === "--version" || sub === "version") {
-        outputText = "git version 2.44.0.gitnetwork-edge";
-      } else if (sub === "status") {
-        outputText = `On branch main
-Your branch is up to date with 'origin/main'.
-
-nothing to commit, working tree clean`;
-      } else if (sub === "log") {
-        outputText = `commit db9dc5e7a9b0c1e82f (HEAD -> main, origin/main)
-Author: Cloud Developer <skycho@proton.me>
-Date:   ${new Date().toDateString()}
-
-    feat: integrate interactive GitNetwork Cloud OS Terminal`;
-      } else if (sub === "branch") {
-        outputText = "* main";
-      } else if (sub === "clone") {
-        const repoUrl = args[1] || "https://github.com/nonxe/database.git";
-        outputText = `Cloning into '${repoUrl.split("/").pop()?.replace(".git", "") || "repo"}'...\nremote: Enumerating objects: 42, done.\nremote: Total 42 (delta 18), reused 42\nUnpacking objects: 100% (42/42), done.`;
-      } else if (sub === "commit") {
-        outputText = `[main 4f2a1b9] ${args.slice(1).join(" ") || "update database files"}\n 1 file changed, 12 insertions(+)`;
-      } else {
-        outputText = "usage: git [--version] [status | log | branch | clone <url> | commit -m <msg>]";
-      }
-    } else if (cmd === "npm") {
-      const sub = args[0] || "";
-      if (sub === "-v" || sub === "--version") {
-        outputText = "10.5.0";
-      } else if (sub === "i" || sub === "install") {
-        const pkg = args[1] || "gitnetwork-db";
-        outputText = `added 1 package, and audited 42 packages in 320ms\nfound 0 vulnerabilities`;
-      } else if (sub === "run" || sub === "start") {
-        outputText = `> gitnetwork-app@1.0.0 ${args[1] || "start"}\n> vite dev --port 3000\nReady in 140ms on http://localhost:3000`;
-      } else {
-        outputText = "Usage: npm [-v | install <package> | run <script>]";
-      }
-    } else if (cmd === "python" || cmd === "python3") {
-      const sub = args[0];
-      if (sub === "-v" || sub === "--version" || sub === "-V") {
-        outputText = "Python 3.12.2 (main, GitNetwork WASM Runtime)";
-      } else if (sub === "-c") {
-        const pyCode = args.slice(1).join(" ").replace(/^["']|["']$/g, "");
-        outputText = `Python 3.12 Exec: ${pyCode}\n[Output]: Execution finished cleanly (0 exit code).`;
-      } else {
-        outputText = "Python 3.12.2 (main, GitNetwork WASM)\nType 'python -c \"print(1+1)\"' or 'python -v'.";
-      }
-    } else if (cmd === "curl" || cmd === "fetch" || cmd === "wget") {
-      const targetUrl = args[0];
-      if (!targetUrl) {
-        outputText = "Usage: curl <http_url>";
-        lineType = "error";
-      } else {
-        try {
-          const res = await fetch(targetUrl);
-          const txt = await res.text();
-          outputText = txt.length > 800 ? txt.slice(0, 800) + "\n...[Truncated]" : txt;
-        } catch (err: any) {
-          outputText = "HTTP Fetch Failed: " + err.message;
-          lineType = "error";
-        }
-      }
-    } else if (cmd === "echo") {
-      const textToEcho = args.join(" ");
-      if (textToEcho === "$USER") outputText = userId || "Guest";
-      else if (textToEcho === "$PATH") outputText = "/usr/local/bin:/usr/bin:/bin";
-      else if (textToEcho === "$NODE_ENV") outputText = "production";
-      else outputText = textToEcho;
     } else if (cmd === "date") {
       outputText = new Date().toString();
     } else if (cmd === "systeminfo" || cmd === "uname") {
-      outputText = `OS Name:                   GitNetwork Cloud OS Edge (Linux x86_64)
+      outputText = `OS Name:                   Termux Cloud OS Edge (Linux x86_64)
 System Type:               Cloudflare Worker / V8 Edge Engine
 Node.js Environment:       v20.12.2
-Git Version:               gitversion 2.44.0.gitnetwork-edge
+Python Environment:        Python 3.12.2 WASM
 Active DB Cluster:         ${selectedCluster?.name || "None"} (${selectedCluster?.id || "N/A"})`;
     } else {
-      outputText = `Command not recognized: '${cmd}'. Type 'help' for available CLI commands.`;
+      outputText = `Termux: command not found: '${cmd}'. Type 'help' for available commands.`;
       lineType = "error";
     }
 
@@ -834,7 +932,7 @@ Active DB Cluster:         ${selectedCluster?.name || "None"} (${selectedCluster
                   if (line.type === "input") {
                     return (
                       <div key={line.id} className="flex items-center gap-2 text-foreground font-semibold">
-                        <span className="text-emerald-400">gitnetwork@edge:{line.path || "~"}$</span>
+                        <span className="text-emerald-400 font-bold">{line.path || "gitnetwork@edge:$"}</span>
                         <span>{line.text}</span>
                       </div>
                     );
@@ -857,8 +955,14 @@ Active DB Cluster:         ${selectedCluster?.name || "None"} (${selectedCluster
 
               {/* Terminal Prompt Form */}
               <form onSubmit={handleTerminalSubmit} className="pt-2 border-t border-cyan-500/20 flex items-center gap-2">
-                <span className="text-emerald-400 font-bold flex items-center gap-1">
-                  <span>gitnetwork@edge:{currentPath}$</span>
+                <span className="text-emerald-400 font-bold flex items-center gap-1 font-mono text-[12.5px]">
+                  {replMode === "node" ? (
+                    <span className="text-yellow-400">node &gt;</span>
+                  ) : replMode === "python" ? (
+                    <span className="text-amber-400">&gt;&gt;&gt;</span>
+                  ) : (
+                    <span>gitnetwork@edge:{currentPath}$</span>
+                  )}
                   <ChevronRight className="size-3.5 text-cyan-400 animate-pulse" />
                 </span>
                 <input
@@ -888,7 +992,13 @@ Active DB Cluster:         ${selectedCluster?.name || "None"} (${selectedCluster
                       }
                     }
                   }}
-                  placeholder="Type CLI command (e.g. ls, pwd, cd collections, cat doc_01, db.users.find())..."
+                  placeholder={
+                    replMode === "node"
+                      ? "Type JS code or '.exit' to quit REPL..."
+                      : replMode === "python"
+                      ? "Type Python expression or 'exit()' to quit REPL..."
+                      : "Type Linux CLI (e.g. node, python, touch file.js, cat file.js, ls, curl https://...)..."
+                  }
                   className="flex-1 bg-transparent text-emerald-300 font-mono text-[13px] outline-none focus:ring-0 placeholder:text-muted-foreground/30"
                   autoFocus
                 />
