@@ -18,6 +18,10 @@ import {
   Layers,
   Sparkles,
   Server,
+  Folder,
+  FileText,
+  ChevronRight,
+  CornerDownLeft,
 } from "lucide-react";
 
 interface GitNetworkCluster {
@@ -31,6 +35,13 @@ interface GitNetworkCluster {
   };
 }
 
+interface TerminalLine {
+  id: string;
+  type: "input" | "output" | "error" | "system";
+  text: string;
+  path?: string;
+}
+
 function GitNetworkPage() {
   const [clusters, setClusters] = useState<GitNetworkCluster[]>([]);
   const [loading, setLoading] = useState(false);
@@ -40,7 +51,8 @@ function GitNetworkPage() {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
-  // ── Playground State ──
+  // ── Mode Switcher & Playground State ──
+  const [mode, setMode] = useState<"gui" | "terminal">("gui");
   const [selectedCluster, setSelectedCluster] = useState<GitNetworkCluster | null>(null);
   const [collection, setCollection] = useState("users");
   const [action, setAction] = useState<"find" | "insert" | "update" | "delete">("find");
@@ -50,6 +62,27 @@ function GitNetworkPage() {
   const [queryLoading, setQueryLoading] = useState(false);
   const [queryResult, setQueryResult] = useState<any>(null);
   const [execTime, setExecTime] = useState<number | null>(null);
+
+  // ── Terminal CLI State ──
+  const [currentPath, setCurrentPath] = useState<string>("/");
+  const [termInput, setTermInput] = useState<string>("");
+  const [termHistory, setTermHistory] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState<number>(-1);
+  const [termLines, setTermLines] = useState<TerminalLine[]>([
+    {
+      id: "sys_1",
+      type: "system",
+      text: "GitNetwork OS Edge Terminal Shell v2.4 (x86_64-cloudflare-worker)",
+    },
+    {
+      id: "sys_2",
+      type: "system",
+      text: "Type 'help' or 'commands' for available CLI commands. Type 'pwd', 'ls', 'cd', 'cat', or Mongo syntax 'db.<col>.find()'.",
+    },
+  ]);
+
+  const termEndRef = useRef<HTMLDivElement>(null);
+  const termInputRef = useRef<HTMLInputElement>(null);
 
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
 
@@ -201,6 +234,227 @@ function GitNetworkPage() {
       setError("Query execution failed: " + err.message);
     }
     setQueryLoading(false);
+  };
+
+  // ── Terminal CLI Submit & Interpreter ──
+  useEffect(() => {
+    if (mode === "terminal") {
+      termEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [termLines, mode]);
+
+  const handleTerminalSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cmdText = termInput.trim();
+    if (!cmdText) return;
+
+    const inputLine: TerminalLine = {
+      id: "line_" + Date.now() + "_" + Math.random(),
+      type: "input",
+      text: cmdText,
+      path: currentPath,
+    };
+
+    setTermHistory((prev) => [...prev, cmdText]);
+    setHistoryIndex(-1);
+    setTermInput("");
+
+    const parts = cmdText.split(/\s+/);
+    const cmd = parts[0].toLowerCase();
+    const args = parts.slice(1);
+
+    let outputText = "";
+    let lineType: "output" | "error" | "system" = "output";
+
+    if (cmd === "clear" || cmd === "cls") {
+      setTermLines([]);
+      return;
+    }
+
+    if (cmd === "pwd") {
+      outputText = currentPath;
+    } else if (cmd === "whoami") {
+      outputText = `User: ${userId || "Guest"} | Active Cluster: ${selectedCluster?.name || "None"} (${selectedCluster?.id || "N/A"})`;
+    } else if (cmd === "help" || cmd === "commands") {
+      outputText = `Available Commands:
+  pwd                            - Print working directory
+  cd <dir>                       - Change working directory (e.g. cd /, cd collections, cd users, cd ..)
+  ls / dir                       - List directory contents (collections or documents)
+  cat <doc_id>                   - Display JSON content of a document
+  mkdir <col_name>               - Create a new collection
+  connect <uri>                  - Connect using gitnetwork+srv://... URI
+  db.<collection>.find()         - Run Mongo find query
+  db.<collection>.insertOne(doc) - Run Mongo insert query
+  clear / cls                    - Clear terminal output
+  whoami                         - Print user and cluster info`;
+    } else if (cmd === "cd") {
+      const target = args[0] || "/";
+      if (target === "/" || target === "~") {
+        setCurrentPath("/");
+        outputText = "Directory changed to /";
+      } else if (target === ".." || target === "../") {
+        if (currentPath.startsWith("/collections/")) {
+          setCurrentPath("/collections");
+          outputText = "Directory changed to /collections";
+        } else {
+          setCurrentPath("/");
+          outputText = "Directory changed to /";
+        }
+      } else if (target === "collections" || target === "/collections") {
+        setCurrentPath("/collections");
+        outputText = "Directory changed to /collections";
+      } else {
+        const cleanName = target.replace(/^\//, "").replace(/\/$/, "");
+        setCurrentPath(`/collections/${cleanName}`);
+        outputText = `Directory changed to /collections/${cleanName}`;
+      }
+    } else if (cmd === "ls" || cmd === "dir") {
+      if (currentPath === "/") {
+        outputText = "collections/    clusters/    system.log    config.json";
+      } else if (currentPath === "/collections") {
+        if (!selectedCluster) {
+          outputText = "No active database cluster connected. Connect or select a cluster first.";
+          lineType = "error";
+        } else {
+          const cols = selectedCluster.collections ? Object.keys(selectedCluster.collections) : [];
+          outputText = cols.length > 0 ? cols.map((c) => c + "/").join("    ") : "(Empty collections list)";
+        }
+      } else if (currentPath.startsWith("/collections/")) {
+        const colName = currentPath.replace("/collections/", "");
+        if (!selectedCluster || !selectedCluster.collections?.[colName]) {
+          outputText = `Collection '${colName}' not found or empty.`;
+        } else {
+          const docs = selectedCluster.collections[colName];
+          outputText = docs.length > 0 ? docs.map((d) => d._id || "doc").join("\n") : "(No documents in collection)";
+        }
+      }
+    } else if (cmd === "cat") {
+      const docId = args[0];
+      if (!docId) {
+        outputText = "Usage: cat <doc_id>";
+        lineType = "error";
+      } else if (!selectedCluster) {
+        outputText = "No active DB cluster selected.";
+        lineType = "error";
+      } else {
+        let foundDoc: any = null;
+        if (selectedCluster.collections) {
+          for (const col in selectedCluster.collections) {
+            const match = selectedCluster.collections[col].find((d) => d._id === docId);
+            if (match) {
+              foundDoc = match;
+              break;
+            }
+          }
+        }
+        if (foundDoc) {
+          outputText = JSON.stringify(foundDoc, null, 2);
+        } else {
+          outputText = `Document '${docId}' not found.`;
+          lineType = "error";
+        }
+      }
+    } else if (cmd === "mkdir") {
+      const colName = args[0];
+      if (!colName) {
+        outputText = "Usage: mkdir <collection_name>";
+        lineType = "error";
+      } else if (!selectedCluster) {
+        outputText = "No active cluster selected.";
+        lineType = "error";
+      } else {
+        if (!selectedCluster.collections) selectedCluster.collections = {};
+        if (!selectedCluster.collections[colName]) {
+          selectedCluster.collections[colName] = [];
+          outputText = `Created new collection '${colName}'`;
+        } else {
+          outputText = `Collection '${colName}' already exists.`;
+        }
+      }
+    } else if (cmd.startsWith("db.")) {
+      if (!selectedCluster) {
+        outputText = "No active DB cluster connected.";
+        lineType = "error";
+      } else {
+        try {
+          const match = cmdText.match(/^db\.([a-zA-Z0-9_-]+)\.([a-zA-Z0-9]+)\((.*)\)$/s);
+          if (match) {
+            const targetCol = match[1];
+            const op = match[2].toLowerCase();
+            const paramStr = match[3].trim();
+            let paramObj = paramStr ? JSON.parse(paramStr) : {};
+
+            let normAction: "find" | "insert" | "update" | "delete" = "find";
+            let payload: any = {};
+
+            if (op === "find") {
+              normAction = "find";
+              payload = { filter: paramObj };
+            } else if (op === "insertone" || op === "insert") {
+              normAction = "insert";
+              payload = { doc: paramObj };
+            } else if (op === "deleteone" || op === "delete") {
+              normAction = "delete";
+              payload = { filter: paramObj };
+            }
+
+            const res = await fetch("/api/gitnetwork/v1", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                db: selectedCluster.id,
+                key: selectedCluster.apiKey,
+                collection: targetCol,
+                action: normAction,
+                payload,
+              }),
+            });
+            const data = await res.json();
+            outputText = JSON.stringify(data, null, 2);
+          } else {
+            outputText = "Syntax error. Example: db.users.find() or db.users.insertOne({\"name\":\"John\"})";
+            lineType = "error";
+          }
+        } catch (err: any) {
+          outputText = "Mongo Query Error: " + err.message;
+          lineType = "error";
+        }
+      }
+    } else if (cmd === "connect") {
+      const uri = args[0];
+      if (!uri) {
+        outputText = "Usage: connect gitnetwork+srv://<id>:<key>@edge.gitnetwork.cloud/<name>";
+        lineType = "error";
+      } else {
+        const match = uri.match(/gitnetwork\+srv:\/\/([^:]+):([^@]+)@/);
+        if (match) {
+          const targetId = match[1];
+          const targetKey = match[2];
+          const found = clusters.find((c) => c.id === targetId && c.apiKey === targetKey);
+          if (found) {
+            setSelectedCluster(found);
+            outputText = `Connected successfully to cluster '${found.name}' (${found.id})`;
+          } else {
+            outputText = `Cluster credential mismatch for ID ${targetId}`;
+            lineType = "error";
+          }
+        } else {
+          outputText = "Invalid connection URI format.";
+          lineType = "error";
+        }
+      }
+    } else {
+      outputText = `Command not recognized: '${cmd}'. Type 'help' for available CLI commands.`;
+      lineType = "error";
+    }
+
+    const outputLine: TerminalLine = {
+      id: "out_" + Date.now() + "_" + Math.random(),
+      type: lineType,
+      text: outputText,
+    };
+
+    setTermLines((prev) => [...prev, inputLine, outputLine]);
   };
 
   return (
@@ -387,7 +641,7 @@ function GitNetworkPage() {
           </div>
         </div>
 
-        {/* Interactive Playground Section */}
+        {/* Interactive Playground & Terminal Section */}
         <div className="p-6 rounded-[28px] bg-secondary/10 border border-border/40 ios-glass space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/30">
             <div className="flex items-center gap-2.5">
@@ -395,20 +649,147 @@ function GitNetworkPage() {
                 <Terminal className="size-5" />
               </div>
               <div>
-                <h3 className="text-[17px] font-black text-foreground">Interactive Database Playground</h3>
+                <h3 className="text-[17px] font-black text-foreground">GitNetwork Terminal & Playground</h3>
                 <p className="text-[11.5px] text-muted-foreground">
-                  Execute live JSON queries against your GitNetwork cluster
+                  Query your database via visual GUI or interactive CLI Terminal with local path navigation
                 </p>
               </div>
             </div>
 
-            {selectedCluster && (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-[11.5px] font-bold">
-                <Database className="size-3.5" />
-                <span>Active DB: {selectedCluster.name}</span>
-              </div>
-            )}
+            {/* Mode Switcher Tabs */}
+            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-background/80 border border-border/40">
+              <button
+                type="button"
+                onClick={() => setMode("gui")}
+                className={`px-3 py-1.5 rounded-lg text-[11.5px] font-bold transition-all flex items-center gap-1.5 ${
+                  mode === "gui"
+                    ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Code2 className="size-3.5" />
+                <span>GUI Playground</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("terminal")}
+                className={`px-3 py-1.5 rounded-lg text-[11.5px] font-bold transition-all flex items-center gap-1.5 ${
+                  mode === "terminal"
+                    ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Terminal className="size-3.5" />
+                <span>Terminal CLI</span>
+              </button>
+            </div>
           </div>
+
+          {/* MODE: TERMINAL CLI */}
+          {mode === "terminal" ? (
+            <div
+              onClick={() => termInputRef.current?.focus()}
+              className="w-full h-[450px] p-4 rounded-2xl bg-[#090d16] border border-cyan-500/30 text-emerald-400 font-mono text-[12.5px] flex flex-col justify-between overflow-hidden shadow-2xl relative select-text"
+            >
+              {/* Terminal Window Header Bar */}
+              <div className="flex items-center justify-between pb-3 border-b border-cyan-500/20 select-none text-[11px] text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <span className="size-3 rounded-full bg-red-500/80 inline-block" />
+                  <span className="size-3 rounded-full bg-yellow-500/80 inline-block" />
+                  <span className="size-3 rounded-full bg-green-500/80 inline-block" />
+                  <span className="ml-2 font-bold text-cyan-300">gitnetwork-shell@edge:~</span>
+                </div>
+                <div className="flex items-center gap-2 text-[10px] font-semibold text-cyan-400/70">
+                  <span className="px-2 py-0.5 rounded bg-cyan-500/10 border border-cyan-500/20">
+                    PATH: {currentPath}
+                  </span>
+                  {selectedCluster && (
+                    <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
+                      DB: {selectedCluster.name}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Terminal Lines Output */}
+              <div className="flex-1 overflow-y-auto py-3 space-y-1.5 scrollbar-thin">
+                {termLines.map((line) => {
+                  if (line.type === "system") {
+                    return (
+                      <div key={line.id} className="text-cyan-400/80 italic text-[11.5px]">
+                        # {line.text}
+                      </div>
+                    );
+                  }
+                  if (line.type === "input") {
+                    return (
+                      <div key={line.id} className="flex items-center gap-2 text-foreground font-semibold">
+                        <span className="text-emerald-400">gitnetwork@edge:{line.path || "~"}$</span>
+                        <span>{line.text}</span>
+                      </div>
+                    );
+                  }
+                  if (line.type === "error") {
+                    return (
+                      <pre key={line.id} className="text-red-400 text-[11.5px] whitespace-pre-wrap pl-4">
+                        {line.text}
+                      </pre>
+                    );
+                  }
+                  return (
+                    <pre key={line.id} className="text-sky-300/90 text-[12px] whitespace-pre-wrap pl-4 font-mono">
+                      {line.text}
+                    </pre>
+                  );
+                })}
+                <div ref={termEndRef} />
+              </div>
+
+              {/* Terminal Prompt Form */}
+              <form onSubmit={handleTerminalSubmit} className="pt-2 border-t border-cyan-500/20 flex items-center gap-2">
+                <span className="text-emerald-400 font-bold flex items-center gap-1">
+                  <span>gitnetwork@edge:{currentPath}$</span>
+                  <ChevronRight className="size-3.5 text-cyan-400 animate-pulse" />
+                </span>
+                <input
+                  ref={termInputRef}
+                  type="text"
+                  value={termInput}
+                  onChange={(e) => setTermInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowUp") {
+                      e.preventDefault();
+                      if (termHistory.length > 0) {
+                        const nextIdx = historyIndex === -1 ? termHistory.length - 1 : Math.max(0, historyIndex - 1);
+                        setHistoryIndex(nextIdx);
+                        setTermInput(termHistory[nextIdx]);
+                      }
+                    } else if (e.key === "ArrowDown") {
+                      e.preventDefault();
+                      if (historyIndex !== -1) {
+                        const nextIdx = historyIndex + 1;
+                        if (nextIdx >= termHistory.length) {
+                          setHistoryIndex(-1);
+                          setTermInput("");
+                        } else {
+                          setHistoryIndex(nextIdx);
+                          setTermInput(termHistory[nextIdx]);
+                        }
+                      }
+                    }
+                  }}
+                  placeholder="Type CLI command (e.g. ls, pwd, cd collections, cat doc_01, db.users.find())..."
+                  className="flex-1 bg-transparent text-emerald-300 font-mono text-[13px] outline-none focus:ring-0 placeholder:text-muted-foreground/30"
+                  autoFocus
+                />
+                <button type="submit" className="text-cyan-400 hover:text-cyan-300">
+                  <CornerDownLeft className="size-4" />
+                </button>
+              </form>
+            </div>
+          ) : (
+            /* MODE: GUI PLAYGROUND */
+            <>
 
           {/* Playground Controls Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -562,6 +943,8 @@ function GitNetworkPage() {
             {queryLoading ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4 fill-current" />}
             <span>{queryLoading ? "Executing Query..." : "Run Query on GitNetwork"}</span>
           </button>
+          </>
+        )}
         </div>
       </div>
     </main>
