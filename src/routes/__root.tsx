@@ -43,29 +43,35 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 font-sans select-none">
+      <div className="max-w-md text-center space-y-4 p-8 rounded-[28px] border border-border/40 bg-secondary/10 ios-glass shadow-2xl">
+        <div className="size-16 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mx-auto text-purple-400 font-black text-xl">
+          !
+        </div>
+        <h1 className="text-xl font-black tracking-tight text-foreground">
+          Temporary Connection Refresh
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          The edge network route updated. Click below to reload or return to the main dashboard.
         </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
+        <div className="pt-2 flex items-center justify-center gap-3">
           <button
             onClick={() => {
-              router.invalidate();
-              reset();
+              if (typeof window !== "undefined") window.location.reload();
+              else {
+                router.invalidate();
+                reset();
+              }
             }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition-all shadow-lg shadow-purple-600/20"
           >
-            Try again
+            Reload Page
           </button>
           <a
             href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            className="px-5 py-2.5 rounded-xl border border-border bg-secondary/30 hover:bg-secondary/60 text-foreground font-bold text-xs transition-all"
           >
-            Go home
+            Go Home
           </a>
         </div>
       </div>

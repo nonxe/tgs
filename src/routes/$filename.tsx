@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { lookupLink, incrementClicks } from "../lib/github-links";
 
 const FILE_CORS = {
@@ -106,9 +107,71 @@ async function handleRequest(filename: string, method: "GET" | "HEAD", request: 
   return new Response("Not found", { status: 404, headers: FILE_CORS });
 }
 
+function FilenameClientComponent() {
+  const { filename } = Route.useParams();
+  const [error, setError] = useState(false);
+  const [targetUrl, setTargetUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !filename) return;
+    const slug = filename.trim().toLowerCase();
+
+    // If it's a file link (contains a dot), let browser navigate directly
+    if (filename.includes(".")) {
+      window.location.href = `/${filename}`;
+      return;
+    }
+
+    // Lookup short link for client-side navigation
+    lookupLink(slug)
+      .then((link) => {
+        if (link && link.url) {
+          setTargetUrl(link.url);
+          incrementClicks(slug).catch(() => {});
+          window.location.href = link.url;
+        } else {
+          setError(true);
+        }
+      })
+      .catch(() => setError(true));
+  }, [filename]);
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4 font-sans select-none">
+        <div className="text-center space-y-4 max-w-sm">
+          <div className="size-16 rounded-3xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto text-red-400 font-black text-xl">
+            404
+          </div>
+          <h2 className="text-xl font-black text-foreground">Link Not Found</h2>
+          <p className="text-xs text-muted-foreground">The short link or file path you are trying to access does not exist or has expired.</p>
+          <a
+            href="/"
+            className="inline-block px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition-colors shadow-lg shadow-purple-600/20"
+          >
+            Back to Dashboard
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center p-4 font-sans select-none">
+      <div className="text-center space-y-3">
+        <div className="size-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto" />
+        <p className="text-xs text-muted-foreground font-semibold">
+          {targetUrl ? `Redirecting to ${targetUrl}...` : "Loading short link..."}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // Public masked file URL: /{filename}.{ext} — proxies the upstream provider.
 // Also handles short link redirects for slugs without dots.
 export const Route = createFileRoute("/$filename")({
+  component: FilenameClientComponent,
   server: {
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: FILE_CORS }),
