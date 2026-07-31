@@ -285,8 +285,14 @@ function GitNetworkPage() {
   connect <uri>                  - Connect using gitnetwork+srv://... URI
   db.<collection>.find()         - Run Mongo find query
   db.<collection>.insertOne(doc) - Run Mongo insert query
-  clear / cls                    - Clear terminal output
-  whoami                         - Print user and cluster info`;
+  node -v / node -e "<code>"     - Node.js runtime environment & JS code execution
+  git status / log / clone / ... - Git version control CLI commands
+  npm -v / install / run         - Node package manager commands
+  python -v / -c "<code>"        - Python interpreter CLI
+  curl <url> / fetch <url>       - Fetch HTTP endpoint content directly in shell
+  systeminfo / uname             - Display Cloud OS environment specifications
+  echo / date / whoami           - Print system variables, time, and user info
+  clear / cls                    - Clear terminal screen`;
     } else if (cmd === "cd") {
       const target = args[0] || "/";
       if (target === "/" || target === "~") {
@@ -443,6 +449,110 @@ function GitNetworkPage() {
           lineType = "error";
         }
       }
+    } else if (cmd === "node") {
+      const sub = args[0];
+      if (sub === "-v" || sub === "--version") {
+        outputText = "v20.12.2 (GitNetwork Cloud Worker Runtime)";
+      } else if (sub === "-e" || sub === "--eval") {
+        const jsCode = args.slice(1).join(" ").replace(/^["']|["']$/g, "");
+        if (!jsCode) {
+          outputText = "Usage: node -e \"console.log(1 + 1)\"";
+          lineType = "error";
+        } else {
+          try {
+            const logs: string[] = [];
+            const customConsole = {
+              log: (...a: any[]) => logs.push(a.map(x => typeof x === 'object' ? JSON.stringify(x) : String(x)).join(" ")),
+              error: (...a: any[]) => logs.push("[ERROR] " + a.join(" ")),
+              warn: (...a: any[]) => logs.push("[WARN] " + a.join(" ")),
+            };
+            const runFn = new Function("console", jsCode);
+            const resVal = runFn(customConsole);
+            outputText = logs.length > 0 ? logs.join("\n") : (resVal !== undefined ? String(resVal) : "[OK]");
+          } catch (err: any) {
+            outputText = "Node Evaluation Error: " + err.message;
+            lineType = "error";
+          }
+        }
+      } else {
+        outputText = "Welcome to Node.js v20.12.2.\nType 'node -e \"code\"' to evaluate JavaScript code or 'node -v' for version.";
+      }
+    } else if (cmd === "git") {
+      const sub = args[0] || "";
+      if (sub === "-v" || sub === "--version" || sub === "version") {
+        outputText = "git version 2.44.0.gitnetwork-edge";
+      } else if (sub === "status") {
+        outputText = `On branch main
+Your branch is up to date with 'origin/main'.
+
+nothing to commit, working tree clean`;
+      } else if (sub === "log") {
+        outputText = `commit db9dc5e7a9b0c1e82f (HEAD -> main, origin/main)
+Author: Cloud Developer <skycho@proton.me>
+Date:   ${new Date().toDateString()}
+
+    feat: integrate interactive GitNetwork Cloud OS Terminal`;
+      } else if (sub === "branch") {
+        outputText = "* main";
+      } else if (sub === "clone") {
+        const repoUrl = args[1] || "https://github.com/nonxe/database.git";
+        outputText = `Cloning into '${repoUrl.split("/").pop()?.replace(".git", "") || "repo"}'...\nremote: Enumerating objects: 42, done.\nremote: Total 42 (delta 18), reused 42\nUnpacking objects: 100% (42/42), done.`;
+      } else if (sub === "commit") {
+        outputText = `[main 4f2a1b9] ${args.slice(1).join(" ") || "update database files"}\n 1 file changed, 12 insertions(+)`;
+      } else {
+        outputText = "usage: git [--version] [status | log | branch | clone <url> | commit -m <msg>]";
+      }
+    } else if (cmd === "npm") {
+      const sub = args[0] || "";
+      if (sub === "-v" || sub === "--version") {
+        outputText = "10.5.0";
+      } else if (sub === "i" || sub === "install") {
+        const pkg = args[1] || "gitnetwork-db";
+        outputText = `added 1 package, and audited 42 packages in 320ms\nfound 0 vulnerabilities`;
+      } else if (sub === "run" || sub === "start") {
+        outputText = `> gitnetwork-app@1.0.0 ${args[1] || "start"}\n> vite dev --port 3000\nReady in 140ms on http://localhost:3000`;
+      } else {
+        outputText = "Usage: npm [-v | install <package> | run <script>]";
+      }
+    } else if (cmd === "python" || cmd === "python3") {
+      const sub = args[0];
+      if (sub === "-v" || sub === "--version" || sub === "-V") {
+        outputText = "Python 3.12.2 (main, GitNetwork WASM Runtime)";
+      } else if (sub === "-c") {
+        const pyCode = args.slice(1).join(" ").replace(/^["']|["']$/g, "");
+        outputText = `Python 3.12 Exec: ${pyCode}\n[Output]: Execution finished cleanly (0 exit code).`;
+      } else {
+        outputText = "Python 3.12.2 (main, GitNetwork WASM)\nType 'python -c \"print(1+1)\"' or 'python -v'.";
+      }
+    } else if (cmd === "curl" || cmd === "fetch" || cmd === "wget") {
+      const targetUrl = args[0];
+      if (!targetUrl) {
+        outputText = "Usage: curl <http_url>";
+        lineType = "error";
+      } else {
+        try {
+          const res = await fetch(targetUrl);
+          const txt = await res.text();
+          outputText = txt.length > 800 ? txt.slice(0, 800) + "\n...[Truncated]" : txt;
+        } catch (err: any) {
+          outputText = "HTTP Fetch Failed: " + err.message;
+          lineType = "error";
+        }
+      }
+    } else if (cmd === "echo") {
+      const textToEcho = args.join(" ");
+      if (textToEcho === "$USER") outputText = userId || "Guest";
+      else if (textToEcho === "$PATH") outputText = "/usr/local/bin:/usr/bin:/bin";
+      else if (textToEcho === "$NODE_ENV") outputText = "production";
+      else outputText = textToEcho;
+    } else if (cmd === "date") {
+      outputText = new Date().toString();
+    } else if (cmd === "systeminfo" || cmd === "uname") {
+      outputText = `OS Name:                   GitNetwork Cloud OS Edge (Linux x86_64)
+System Type:               Cloudflare Worker / V8 Edge Engine
+Node.js Environment:       v20.12.2
+Git Version:               gitversion 2.44.0.gitnetwork-edge
+Active DB Cluster:         ${selectedCluster?.name || "None"} (${selectedCluster?.id || "N/A"})`;
     } else {
       outputText = `Command not recognized: '${cmd}'. Type 'help' for available CLI commands.`;
       lineType = "error";
