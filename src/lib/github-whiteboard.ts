@@ -15,7 +15,7 @@ function getGithubToken(): string {
 
 export interface WhiteboardElement {
   id: string;
-  type: "pen" | "eraser" | "text" | "rect" | "circle" | "line" | "arrow" | "code";
+  type: "pen" | "eraser" | "text" | "rect" | "circle" | "line" | "arrow" | "code" | "sticky";
   points?: Array<{ x: number; y: number }>;
   x?: number;
   y?: number;
@@ -23,6 +23,7 @@ export interface WhiteboardElement {
   height?: number;
   text?: string;
   color: string;
+  bgColor?: string;
   strokeWidth: number;
   fontSize?: number;
 }
