@@ -33,7 +33,8 @@ import {
   Loader2,
   History,
   Link2,
-  MessageCircle
+  MessageCircle,
+  Network
 } from "lucide-react";
 
 function StarOfDavidIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -357,6 +358,14 @@ function DashboardHome() {
       icon: MessageCircle, 
       link: "/tempchat",
       color: "text-teal-400 border-teal-500/20 bg-teal-500/5 hover:border-teal-500/40"
+    },
+    { 
+      id: "gitnetwork", 
+      title: "GitNetwork DB", 
+      desc: "Serverless edge JSON DB system. Mongo-style connection URLs & live Playground.", 
+      icon: Network, 
+      link: "/gitnetwork",
+      color: "text-cyan-400 border-cyan-500/20 bg-cyan-500/5 hover:border-cyan-500/40"
     },
     { 
       id: "shsdb", 

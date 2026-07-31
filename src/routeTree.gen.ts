@@ -21,6 +21,7 @@ import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as MainRouteImport } from './routes/main'
 import { Route as LinksRouteImport } from './routes/links'
 import { Route as IsraelRouteImport } from './routes/israel'
+import { Route as GitnetworkRouteImport } from './routes/gitnetwork'
 import { Route as DbConsoleRouteImport } from './routes/db-console'
 import { Route as ConvertRouteImport } from './routes/convert'
 import { Route as CloudifyRouteImport } from './routes/cloudify'
@@ -47,6 +48,8 @@ import { Route as ApiMessagesListRouteImport } from './routes/api/messages/list'
 import { Route as ApiMessagesFeedRouteImport } from './routes/api/messages/feed'
 import { Route as ApiMessagesActionRouteImport } from './routes/api/messages/action'
 import { Route as ApiLinksManageRouteImport } from './routes/api/links/manage'
+import { Route as ApiGitnetworkV1RouteImport } from './routes/api/gitnetwork/v1'
+import { Route as ApiGitnetworkManageRouteImport } from './routes/api/gitnetwork/manage'
 import { Route as ApiCloudifyUpdateRouteImport } from './routes/api/cloudify/update'
 import { Route as ApiCloudifySongsRouteImport } from './routes/api/cloudify/songs'
 import { Route as ApiCloudifySearchRouteImport } from './routes/api/cloudify/search'
@@ -118,6 +121,11 @@ const LinksRoute = LinksRouteImport.update({
 const IsraelRoute = IsraelRouteImport.update({
   id: '/israel',
   path: '/israel',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GitnetworkRoute = GitnetworkRouteImport.update({
+  id: '/gitnetwork',
+  path: '/gitnetwork',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DbConsoleRoute = DbConsoleRouteImport.update({
@@ -251,6 +259,16 @@ const ApiLinksManageRoute = ApiLinksManageRouteImport.update({
   path: '/api/links/manage',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGitnetworkV1Route = ApiGitnetworkV1RouteImport.update({
+  id: '/api/gitnetwork/v1',
+  path: '/api/gitnetwork/v1',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGitnetworkManageRoute = ApiGitnetworkManageRouteImport.update({
+  id: '/api/gitnetwork/manage',
+  path: '/api/gitnetwork/manage',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCloudifyUpdateRoute = ApiCloudifyUpdateRouteImport.update({
   id: '/api/cloudify/update',
   path: '/api/cloudify/update',
@@ -318,6 +336,7 @@ export interface FileRoutesByFullPath {
   '/cloudify': typeof CloudifyRoute
   '/convert': typeof ConvertRoute
   '/db-console': typeof DbConsoleRoute
+  '/gitnetwork': typeof GitnetworkRoute
   '/israel': typeof IsraelRoute
   '/links': typeof LinksRoute
   '/main': typeof MainRoute
@@ -346,6 +365,8 @@ export interface FileRoutesByFullPath {
   '/api/cloudify/search': typeof ApiCloudifySearchRoute
   '/api/cloudify/songs': typeof ApiCloudifySongsRoute
   '/api/cloudify/update': typeof ApiCloudifyUpdateRoute
+  '/api/gitnetwork/manage': typeof ApiGitnetworkManageRoute
+  '/api/gitnetwork/v1': typeof ApiGitnetworkV1Route
   '/api/links/manage': typeof ApiLinksManageRoute
   '/api/messages/action': typeof ApiMessagesActionRoute
   '/api/messages/feed': typeof ApiMessagesFeedRouteWithChildren
@@ -370,6 +391,7 @@ export interface FileRoutesByTo {
   '/cloudify': typeof CloudifyRoute
   '/convert': typeof ConvertRoute
   '/db-console': typeof DbConsoleRoute
+  '/gitnetwork': typeof GitnetworkRoute
   '/israel': typeof IsraelRoute
   '/links': typeof LinksRoute
   '/main': typeof MainRoute
@@ -397,6 +419,8 @@ export interface FileRoutesByTo {
   '/api/cloudify/search': typeof ApiCloudifySearchRoute
   '/api/cloudify/songs': typeof ApiCloudifySongsRoute
   '/api/cloudify/update': typeof ApiCloudifyUpdateRoute
+  '/api/gitnetwork/manage': typeof ApiGitnetworkManageRoute
+  '/api/gitnetwork/v1': typeof ApiGitnetworkV1Route
   '/api/links/manage': typeof ApiLinksManageRoute
   '/api/messages/action': typeof ApiMessagesActionRoute
   '/api/messages/feed': typeof ApiMessagesFeedRouteWithChildren
@@ -422,6 +446,7 @@ export interface FileRoutesById {
   '/cloudify': typeof CloudifyRoute
   '/convert': typeof ConvertRoute
   '/db-console': typeof DbConsoleRoute
+  '/gitnetwork': typeof GitnetworkRoute
   '/israel': typeof IsraelRoute
   '/links': typeof LinksRoute
   '/main': typeof MainRoute
@@ -450,6 +475,8 @@ export interface FileRoutesById {
   '/api/cloudify/search': typeof ApiCloudifySearchRoute
   '/api/cloudify/songs': typeof ApiCloudifySongsRoute
   '/api/cloudify/update': typeof ApiCloudifyUpdateRoute
+  '/api/gitnetwork/manage': typeof ApiGitnetworkManageRoute
+  '/api/gitnetwork/v1': typeof ApiGitnetworkV1Route
   '/api/links/manage': typeof ApiLinksManageRoute
   '/api/messages/action': typeof ApiMessagesActionRoute
   '/api/messages/feed': typeof ApiMessagesFeedRouteWithChildren
@@ -476,6 +503,7 @@ export interface FileRouteTypes {
     | '/cloudify'
     | '/convert'
     | '/db-console'
+    | '/gitnetwork'
     | '/israel'
     | '/links'
     | '/main'
@@ -504,6 +532,8 @@ export interface FileRouteTypes {
     | '/api/cloudify/search'
     | '/api/cloudify/songs'
     | '/api/cloudify/update'
+    | '/api/gitnetwork/manage'
+    | '/api/gitnetwork/v1'
     | '/api/links/manage'
     | '/api/messages/action'
     | '/api/messages/feed'
@@ -528,6 +558,7 @@ export interface FileRouteTypes {
     | '/cloudify'
     | '/convert'
     | '/db-console'
+    | '/gitnetwork'
     | '/israel'
     | '/links'
     | '/main'
@@ -555,6 +586,8 @@ export interface FileRouteTypes {
     | '/api/cloudify/search'
     | '/api/cloudify/songs'
     | '/api/cloudify/update'
+    | '/api/gitnetwork/manage'
+    | '/api/gitnetwork/v1'
     | '/api/links/manage'
     | '/api/messages/action'
     | '/api/messages/feed'
@@ -579,6 +612,7 @@ export interface FileRouteTypes {
     | '/cloudify'
     | '/convert'
     | '/db-console'
+    | '/gitnetwork'
     | '/israel'
     | '/links'
     | '/main'
@@ -607,6 +641,8 @@ export interface FileRouteTypes {
     | '/api/cloudify/search'
     | '/api/cloudify/songs'
     | '/api/cloudify/update'
+    | '/api/gitnetwork/manage'
+    | '/api/gitnetwork/v1'
     | '/api/links/manage'
     | '/api/messages/action'
     | '/api/messages/feed'
@@ -632,6 +668,7 @@ export interface RootRouteChildren {
   CloudifyRoute: typeof CloudifyRoute
   ConvertRoute: typeof ConvertRoute
   DbConsoleRoute: typeof DbConsoleRoute
+  GitnetworkRoute: typeof GitnetworkRoute
   IsraelRoute: typeof IsraelRoute
   LinksRoute: typeof LinksRoute
   MainRoute: typeof MainRoute
@@ -658,6 +695,8 @@ export interface RootRouteChildren {
   ApiCloudifySearchRoute: typeof ApiCloudifySearchRoute
   ApiCloudifySongsRoute: typeof ApiCloudifySongsRoute
   ApiCloudifyUpdateRoute: typeof ApiCloudifyUpdateRoute
+  ApiGitnetworkManageRoute: typeof ApiGitnetworkManageRoute
+  ApiGitnetworkV1Route: typeof ApiGitnetworkV1Route
   ApiLinksManageRoute: typeof ApiLinksManageRoute
   ApiMessagesActionRoute: typeof ApiMessagesActionRoute
   ApiMessagesFeedRoute: typeof ApiMessagesFeedRouteWithChildren
@@ -759,6 +798,13 @@ declare module '@tanstack/react-router' {
       path: '/israel'
       fullPath: '/israel'
       preLoaderRoute: typeof IsraelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gitnetwork': {
+      id: '/gitnetwork'
+      path: '/gitnetwork'
+      fullPath: '/gitnetwork'
+      preLoaderRoute: typeof GitnetworkRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/db-console': {
@@ -943,6 +989,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiLinksManageRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/gitnetwork/v1': {
+      id: '/api/gitnetwork/v1'
+      path: '/api/gitnetwork/v1'
+      fullPath: '/api/gitnetwork/v1'
+      preLoaderRoute: typeof ApiGitnetworkV1RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/gitnetwork/manage': {
+      id: '/api/gitnetwork/manage'
+      path: '/api/gitnetwork/manage'
+      fullPath: '/api/gitnetwork/manage'
+      preLoaderRoute: typeof ApiGitnetworkManageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/cloudify/update': {
       id: '/api/cloudify/update'
       path: '/api/cloudify/update'
@@ -1062,6 +1122,7 @@ const rootRouteChildren: RootRouteChildren = {
   CloudifyRoute: CloudifyRoute,
   ConvertRoute: ConvertRoute,
   DbConsoleRoute: DbConsoleRoute,
+  GitnetworkRoute: GitnetworkRoute,
   IsraelRoute: IsraelRoute,
   LinksRoute: LinksRoute,
   MainRoute: MainRoute,
@@ -1088,6 +1149,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCloudifySearchRoute: ApiCloudifySearchRoute,
   ApiCloudifySongsRoute: ApiCloudifySongsRoute,
   ApiCloudifyUpdateRoute: ApiCloudifyUpdateRoute,
+  ApiGitnetworkManageRoute: ApiGitnetworkManageRoute,
+  ApiGitnetworkV1Route: ApiGitnetworkV1Route,
   ApiLinksManageRoute: ApiLinksManageRoute,
   ApiMessagesActionRoute: ApiMessagesActionRoute,
   ApiMessagesFeedRoute: ApiMessagesFeedRouteWithChildren,
