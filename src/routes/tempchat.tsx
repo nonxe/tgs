@@ -69,6 +69,31 @@ function TempChatPage() {
     scrollToBottom();
   }, [room?.messages?.length, scrollToBottom]);
 
+  // ── Restore active session on mount / refresh ──
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const saved = localStorage.getItem("cloud_tempchat_session");
+      if (saved) {
+        const { roomId, username: savedUser } = JSON.parse(saved);
+        if (roomId && savedUser) {
+          setUsername(savedUser);
+          fetch(`/api/chat/room?roomId=${encodeURIComponent(roomId)}`)
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.success && data.room) {
+                setRoom(data.room);
+                setView("chat");
+              } else {
+                localStorage.removeItem("cloud_tempchat_session");
+              }
+            })
+            .catch(() => {});
+        }
+      }
+    } catch {}
+  }, []);
+
   // ── Polling for new messages ──
   const pollRoom = useCallback(async () => {
     if (!room) return;
@@ -80,6 +105,7 @@ function TempChatPage() {
       } else if (!data.success && data.error?.includes("not found")) {
         // Room was deleted (admin left)
         setRoomDeleted(true);
+        try { localStorage.removeItem("cloud_tempchat_session"); } catch {}
         if (pollRef.current) clearInterval(pollRef.current);
       }
     } catch {}
@@ -112,6 +138,12 @@ function TempChatPage() {
       if (data.success && data.room) {
         setRoom(data.room);
         setView("chat");
+        try {
+          localStorage.setItem(
+            "cloud_tempchat_session",
+            JSON.stringify({ roomId: data.room.id, username: username.trim() })
+          );
+        } catch {}
       } else {
         setLobbyError(data.error || "Failed to create room.");
       }
@@ -138,6 +170,12 @@ function TempChatPage() {
       if (data.success && data.room) {
         setRoom(data.room);
         setView("chat");
+        try {
+          localStorage.setItem(
+            "cloud_tempchat_session",
+            JSON.stringify({ roomId: data.room.id, username: username.trim() })
+          );
+        } catch {}
       } else {
         setLobbyError(data.error || "Failed to join.");
       }
@@ -204,6 +242,7 @@ function TempChatPage() {
         body: JSON.stringify({ action: "leave", roomId: room.id, username: username.trim() }),
       });
     } catch {}
+    try { localStorage.removeItem("cloud_tempchat_session"); } catch {}
     if (pollRef.current) clearInterval(pollRef.current);
     setRoom(null);
     setView("lobby");

@@ -19,17 +19,18 @@ async function handleUpload(request: Request) {
       });
     }
 
-    // Forward to catbox
-    const catboxForm = new FormData();
-    catboxForm.append("reqtype", "fileupload");
-    catboxForm.append("fileToUpload", file);
+    // Forward upload
+    const upForm = new FormData();
+    upForm.append("reqtype", "fileupload");
+    upForm.append("time", "24h");
+    upForm.append("fileToUpload", file);
 
-    const catboxRes = await fetch("https://catbox.moe/user/api.php", {
+    const upRes = await fetch("https://litterbox.catbox.moe/resources/internals/api.php", {
       method: "POST",
-      body: catboxForm,
+      body: upForm,
     });
 
-    const url = (await catboxRes.text()).trim();
+    const url = (await upRes.text()).trim();
 
     if (url.startsWith("https://")) {
       return new Response(JSON.stringify({ success: true, url }), {
