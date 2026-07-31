@@ -13,7 +13,10 @@ import {
   UserPlus,
   X,
   Crown,
-  Terminal
+  Terminal,
+  FileCheck,
+  ShieldCheck,
+  Lock
 } from "lucide-react";
 
 export const Route = createFileRoute("/owner")({
@@ -25,6 +28,7 @@ export function OwnerPage({ embed = false }: { embed?: boolean }) {
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [usernameInput, setUsernameInput] = useState("");
   const [showQueenPopup, setShowQueenPopup] = useState(false);
+  const [showPolicyModal, setShowPolicyModal] = useState(false);
 
   useEffect(() => {
     if (embed) return;
@@ -246,6 +250,14 @@ export function OwnerPage({ embed = false }: { embed?: boolean }) {
               <span>Create Private Account</span>
             </button>
 
+            <button
+              onClick={() => setShowPolicyModal(true)}
+              className="inline-flex items-center gap-2 h-11 px-5 rounded-full border border-sky-500/30 bg-sky-500/10 text-sky-400 font-bold text-[13px] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md w-full sm:w-auto justify-center"
+            >
+              <FileCheck className="size-4" />
+              <span>Privacy & Terms Policy</span>
+            </button>
+
             <Link
               to="/db-console"
               className="inline-flex items-center gap-2 h-11 px-5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-bold text-[13px] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md w-full sm:w-auto justify-center"
@@ -344,6 +356,149 @@ export function OwnerPage({ embed = false }: { embed?: boolean }) {
               >
                 Accept Majesty
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Privacy & Terms Policy */}
+        {showPolicyModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md animate-fade-in">
+            <div className="w-full max-w-2xl max-h-[85vh] rounded-[24px] border border-border bg-secondary/95 p-6 shadow-2xl relative flex flex-col ios-glass animate-spring-scale select-text overflow-hidden">
+              
+              {/* Header */}
+              <div className="flex items-center justify-between pb-4 border-b border-border/40 flex-shrink-0">
+                <div className="flex items-center gap-2.5">
+                  <div className="size-10 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400">
+                    <ShieldCheck className="size-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-[18px] font-black tracking-tight text-foreground">Privacy & Terms Policy</h3>
+                    <p className="text-[11px] text-muted-foreground">Official System Guidelines & Security Architecture</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowPolicyModal(false)}
+                  className="size-8 rounded-full bg-background/50 border border-border/40 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="size-4" />
+                </button>
+              </div>
+
+              {/* Policy Document Content */}
+              <div className="flex-1 overflow-y-auto py-5 px-1 space-y-6 text-[13px] text-muted-foreground leading-relaxed scrollbar-thin">
+                
+                {/* Effective Date & Notice */}
+                <div className="p-3.5 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-300 text-[11.5px] font-medium flex items-start gap-2.5">
+                  <Lock className="size-4 text-sky-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <strong>Last Updated: July 2026</strong> — This policy outlines the security standards, data handling procedures, and terms of service governing the Cloud OS Space platform and its edge utilities.
+                  </div>
+                </div>
+
+                {/* Section 1 */}
+                <div className="space-y-2">
+                  <h4 className="text-[14px] font-black text-foreground flex items-center gap-2">
+                    <span className="size-5 rounded-md bg-purple-500/20 text-purple-400 text-[10px] font-bold flex items-center justify-center">1</span>
+                    Core Privacy Philosophy & Zero-Tracking Commitment
+                  </h4>
+                  <p>
+                    Cloud OS Space is architected under a strict privacy-first directive. We do not track users across the web, sell data to third-party ad brokers, or deploy invasive analytics tracking scripts. Access to all public services—including File Cloud, Quick Notes, Media Convert, YT Downloader, and TempChat—is granted anonymously by default without requiring personal information or mandatory registration.
+                  </p>
+                </div>
+
+                {/* Section 2 */}
+                <div className="space-y-2">
+                  <h4 className="text-[14px] font-black text-foreground flex items-center gap-2">
+                    <span className="size-5 rounded-md bg-purple-500/20 text-purple-400 text-[10px] font-bold flex items-center justify-center">2</span>
+                    Data Logging, IP Records & Cloud Account Persistence
+                  </h4>
+                  <p>
+                    To maintain network security, prevent automated abuse, and enable cross-session activity history for registered users:
+                  </p>
+                  <ul className="list-disc pl-5 space-y-1 text-[12.5px]">
+                    <li><strong>Anonymous Interactions:</strong> Requests are logged to secure backend cloud audit tables (<code className="text-purple-400 font-mono font-bold">nonxe/db</code>) capturing basic action metadata and the origin IP address for threat prevention.</li>
+                    <li><strong>Registered Cloud Accounts:</strong> Users who create a private Cloud Account will have their user ID associated with their action history and IP address to allow activity synchronization across mobile and desktop devices.</li>
+                    <li><strong>Data Retention:</strong> Audit histories are trimmed periodically and maintained strictly for operational security and personal dashboard syncing.</li>
+                  </ul>
+                </div>
+
+                {/* Section 3 */}
+                <div className="space-y-2">
+                  <h4 className="text-[14px] font-black text-foreground flex items-center gap-2">
+                    <span className="size-5 rounded-md bg-purple-500/20 text-purple-400 text-[10px] font-bold flex items-center justify-center">3</span>
+                    File Cloud & Media Conversion Standards
+                  </h4>
+                  <p>
+                    Files uploaded via the File Cloud utility are processed through secure CDN endpoints. Media conversions (audio/video transcode) execute locally within client browser web assembly instances whenever possible, minimizing server storage overhead. Uploaded public assets are assigned randomly generated slugs and are subject to CDN expiration policies.
+                  </p>
+                </div>
+
+                {/* Section 4 */}
+                <div className="space-y-2">
+                  <h4 className="text-[14px] font-black text-foreground flex items-center gap-2">
+                    <span className="size-5 rounded-md bg-purple-500/20 text-purple-400 text-[10px] font-bold flex items-center justify-center">4</span>
+                    TempChat Ephemeral Messaging & Room Auto-Destruction
+                  </h4>
+                  <p>
+                    TempChat operates on an ephemeral room lifecycle:
+                  </p>
+                  <ul className="list-disc pl-5 space-y-1 text-[12.5px]">
+                    <li><strong>Admin Room Lifetime:</strong> The room administrator controls room existence. When the room admin leaves, the entire room, member list, and all associated messages are permanently purged.</li>
+                    <li><strong>Media Attachments:</strong> Media sent in TempChat rooms is stored temporarily in isolated storage buffers to facilitate seamless streaming between room participants.</li>
+                    <li><strong>Reserved Identifier Protection:</strong> System usernames and designated protected aliases (such as <code className="text-amber-400 font-mono font-bold">suhu</code>) are permanently reserved by system administration.</li>
+                  </ul>
+                </div>
+
+                {/* Section 5 */}
+                <div className="space-y-2">
+                  <h4 className="text-[14px] font-black text-foreground flex items-center gap-2">
+                    <span className="size-5 rounded-md bg-purple-500/20 text-purple-400 text-[10px] font-bold flex items-center justify-center">5</span>
+                    Custom Link Shortener & Redirection Policies
+                  </h4>
+                  <p>
+                    The Link Shortener permits users to generate custom short aliases pointing to external URLs. Short links pointing to malicious software, phishing pages, or illegal content are strictly prohibited and will be deactivated immediately upon discovery. Reserved core application routes cannot be claimed as short link slugs.
+                  </p>
+                </div>
+
+                {/* Section 6 */}
+                <div className="space-y-2">
+                  <h4 className="text-[14px] font-black text-foreground flex items-center gap-2">
+                    <span className="size-5 rounded-md bg-purple-500/20 text-purple-400 text-[10px] font-bold flex items-center justify-center">6</span>
+                    Acceptable Use & Terms of Service
+                  </h4>
+                  <p>
+                    By accessing or using Cloud OS Space services, you agree not to:
+                  </p>
+                  <ul className="list-disc pl-5 space-y-1 text-[12.5px]">
+                    <li>Use the platform for distribution of malware, ransomware, or unauthorized exploits.</li>
+                    <li>Attempt denial-of-service (DoS/DDoS) attacks against edge routing nodes.</li>
+                    <li>Engage in automated scraping or spamming of temporary communication channels.</li>
+                  </ul>
+                </div>
+
+                {/* Section 7 */}
+                <div className="space-y-2">
+                  <h4 className="text-[14px] font-black text-foreground flex items-center gap-2">
+                    <span className="size-5 rounded-md bg-purple-500/20 text-purple-400 text-[10px] font-bold flex items-center justify-center">7</span>
+                    Contact & Administrative Inquiries
+                  </h4>
+                  <p>
+                    For privacy inquiries, security reports, or private cloud node requests, contact system administration directly at <code className="text-purple-400 font-bold">skycho@proton.me</code>.
+                  </p>
+                </div>
+
+              </div>
+
+              {/* Footer */}
+              <div className="pt-4 border-t border-border/40 flex justify-end flex-shrink-0">
+                <button
+                  onClick={() => setShowPolicyModal(false)}
+                  className="px-5 py-2.5 rounded-xl bg-foreground text-background font-black text-[12.5px] hover:opacity-90 transition-opacity"
+                >
+                  I Understand & Accept
+                </button>
+              </div>
+
             </div>
           </div>
         )}
