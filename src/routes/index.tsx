@@ -298,11 +298,11 @@ function DashboardHome() {
     },
     { 
       id: "whiteboard", 
-      title: "Cloud Whiteboard", 
-      desc: "Interactive hand/cursor drawing & code canvas. Saved as code in nonxe/database repo.", 
+      title: "LetMeSketch", 
+      desc: "Hand-drawn sketch diagrams & pressure drawing powered by Rough.js & Perfect-Freehand.", 
       icon: Palette, 
       link: "/whiteboard",
-      badge: "NEW FEATURE",
+      badge: "LETMESKETCH",
       color: "text-pink-400 border-pink-500/20 bg-pink-500/5 hover:border-pink-500/40"
     },
     { 
