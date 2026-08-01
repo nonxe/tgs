@@ -122,7 +122,7 @@ function FilenameClientComponent() {
       return;
     }
 
-    // Lookup short link first, then check hosted static site in nonxe/aslink
+    // Lookup short link for client-side navigation
     lookupLink(slug)
       .then((link) => {
         if (link && link.url) {
@@ -130,17 +130,7 @@ function FilenameClientComponent() {
           incrementClicks(slug).catch(() => {});
           window.location.href = link.url;
         } else {
-          // Fallback: Check static host deployment in nonxe/aslink
-          fetch(`/api/aslink/manage?slug=${encodeURIComponent(slug)}`)
-            .then((res) => res.json())
-            .then((data) => {
-              if (data.success && data.site) {
-                window.location.href = `/s/${slug}`;
-              } else {
-                setError(true);
-              }
-            })
-            .catch(() => setError(true));
+          setError(true);
         }
       })
       .catch(() => setError(true));
