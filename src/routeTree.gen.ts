@@ -11,10 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as YtdlRouteImport } from './routes/ytdl'
 import { Route as XRouteImport } from './routes/x'
-import { Route as WhiteboardRouteImport } from './routes/whiteboard'
 import { Route as TempmailRouteImport } from './routes/tempmail'
 import { Route as TempchatRouteImport } from './routes/tempchat'
-import { Route as TdesktopRouteImport } from './routes/tdesktop'
 import { Route as ShsdbConsoleRouteImport } from './routes/shsdb-console'
 import { Route as OwnerRouteImport } from './routes/owner'
 import { Route as NoteRouteImport } from './routes/note'
@@ -39,7 +37,6 @@ import { Route as ApiYtdlDownloadRouteImport } from './routes/api/ytdl/download'
 import { Route as ApiXUserRouteImport } from './routes/api/x/user'
 import { Route as ApiXTweetsRouteImport } from './routes/api/x/tweets'
 import { Route as ApiXDownloadRouteImport } from './routes/api/x/download'
-import { Route as ApiWhiteboardManageRouteImport } from './routes/api/whiteboard/manage'
 import { Route as ApiPublicUploadRouteImport } from './routes/api/public/upload'
 import { Route as ApiMessagesUpdateprofileRouteImport } from './routes/api/messages/updateprofile'
 import { Route as ApiMessagesUpdatepfpRouteImport } from './routes/api/messages/updatepfp'
@@ -76,11 +73,6 @@ const XRoute = XRouteImport.update({
   path: '/x',
   getParentRoute: () => rootRouteImport,
 } as any)
-const WhiteboardRoute = WhiteboardRouteImport.update({
-  id: '/whiteboard',
-  path: '/whiteboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const TempmailRoute = TempmailRouteImport.update({
   id: '/tempmail',
   path: '/tempmail',
@@ -89,11 +81,6 @@ const TempmailRoute = TempmailRouteImport.update({
 const TempchatRoute = TempchatRouteImport.update({
   id: '/tempchat',
   path: '/tempchat',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TdesktopRoute = TdesktopRouteImport.update({
-  id: '/tdesktop',
-  path: '/tdesktop',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ShsdbConsoleRoute = ShsdbConsoleRouteImport.update({
@@ -214,11 +201,6 @@ const ApiXTweetsRoute = ApiXTweetsRouteImport.update({
 const ApiXDownloadRoute = ApiXDownloadRouteImport.update({
   id: '/api/x/download',
   path: '/api/x/download',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiWhiteboardManageRoute = ApiWhiteboardManageRouteImport.update({
-  id: '/api/whiteboard/manage',
-  path: '/api/whiteboard/manage',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicUploadRoute = ApiPublicUploadRouteImport.update({
@@ -363,10 +345,8 @@ export interface FileRoutesByFullPath {
   '/note': typeof NoteRouteWithChildren
   '/owner': typeof OwnerRoute
   '/shsdb-console': typeof ShsdbConsoleRoute
-  '/tdesktop': typeof TdesktopRoute
   '/tempchat': typeof TempchatRoute
   '/tempmail': typeof TempmailRoute
-  '/whiteboard': typeof WhiteboardRoute
   '/x': typeof XRoute
   '/ytdl': typeof YtdlRoute
   '/db/$id': typeof DbIdRoute
@@ -398,7 +378,6 @@ export interface FileRoutesByFullPath {
   '/api/messages/updatepfp': typeof ApiMessagesUpdatepfpRoute
   '/api/messages/updateprofile': typeof ApiMessagesUpdateprofileRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
-  '/api/whiteboard/manage': typeof ApiWhiteboardManageRoute
   '/api/x/download': typeof ApiXDownloadRoute
   '/api/x/tweets': typeof ApiXTweetsRoute
   '/api/x/user': typeof ApiXUserRoute
@@ -420,10 +399,8 @@ export interface FileRoutesByTo {
   '/more': typeof MoreRoute
   '/owner': typeof OwnerRoute
   '/shsdb-console': typeof ShsdbConsoleRoute
-  '/tdesktop': typeof TdesktopRoute
   '/tempchat': typeof TempchatRoute
   '/tempmail': typeof TempmailRoute
-  '/whiteboard': typeof WhiteboardRoute
   '/x': typeof XRoute
   '/ytdl': typeof YtdlRoute
   '/db/$id': typeof DbIdRoute
@@ -455,7 +432,6 @@ export interface FileRoutesByTo {
   '/api/messages/updatepfp': typeof ApiMessagesUpdatepfpRoute
   '/api/messages/updateprofile': typeof ApiMessagesUpdateprofileRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
-  '/api/whiteboard/manage': typeof ApiWhiteboardManageRoute
   '/api/x/download': typeof ApiXDownloadRoute
   '/api/x/tweets': typeof ApiXTweetsRoute
   '/api/x/user': typeof ApiXUserRoute
@@ -479,10 +455,8 @@ export interface FileRoutesById {
   '/note': typeof NoteRouteWithChildren
   '/owner': typeof OwnerRoute
   '/shsdb-console': typeof ShsdbConsoleRoute
-  '/tdesktop': typeof TdesktopRoute
   '/tempchat': typeof TempchatRoute
   '/tempmail': typeof TempmailRoute
-  '/whiteboard': typeof WhiteboardRoute
   '/x': typeof XRoute
   '/ytdl': typeof YtdlRoute
   '/db/$id': typeof DbIdRoute
@@ -514,7 +488,6 @@ export interface FileRoutesById {
   '/api/messages/updatepfp': typeof ApiMessagesUpdatepfpRoute
   '/api/messages/updateprofile': typeof ApiMessagesUpdateprofileRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
-  '/api/whiteboard/manage': typeof ApiWhiteboardManageRoute
   '/api/x/download': typeof ApiXDownloadRoute
   '/api/x/tweets': typeof ApiXTweetsRoute
   '/api/x/user': typeof ApiXUserRoute
@@ -539,10 +512,8 @@ export interface FileRouteTypes {
     | '/note'
     | '/owner'
     | '/shsdb-console'
-    | '/tdesktop'
     | '/tempchat'
     | '/tempmail'
-    | '/whiteboard'
     | '/x'
     | '/ytdl'
     | '/db/$id'
@@ -574,7 +545,6 @@ export interface FileRouteTypes {
     | '/api/messages/updatepfp'
     | '/api/messages/updateprofile'
     | '/api/public/upload'
-    | '/api/whiteboard/manage'
     | '/api/x/download'
     | '/api/x/tweets'
     | '/api/x/user'
@@ -596,10 +566,8 @@ export interface FileRouteTypes {
     | '/more'
     | '/owner'
     | '/shsdb-console'
-    | '/tdesktop'
     | '/tempchat'
     | '/tempmail'
-    | '/whiteboard'
     | '/x'
     | '/ytdl'
     | '/db/$id'
@@ -631,7 +599,6 @@ export interface FileRouteTypes {
     | '/api/messages/updatepfp'
     | '/api/messages/updateprofile'
     | '/api/public/upload'
-    | '/api/whiteboard/manage'
     | '/api/x/download'
     | '/api/x/tweets'
     | '/api/x/user'
@@ -654,10 +621,8 @@ export interface FileRouteTypes {
     | '/note'
     | '/owner'
     | '/shsdb-console'
-    | '/tdesktop'
     | '/tempchat'
     | '/tempmail'
-    | '/whiteboard'
     | '/x'
     | '/ytdl'
     | '/db/$id'
@@ -689,7 +654,6 @@ export interface FileRouteTypes {
     | '/api/messages/updatepfp'
     | '/api/messages/updateprofile'
     | '/api/public/upload'
-    | '/api/whiteboard/manage'
     | '/api/x/download'
     | '/api/x/tweets'
     | '/api/x/user'
@@ -713,10 +677,8 @@ export interface RootRouteChildren {
   NoteRoute: typeof NoteRouteWithChildren
   OwnerRoute: typeof OwnerRoute
   ShsdbConsoleRoute: typeof ShsdbConsoleRoute
-  TdesktopRoute: typeof TdesktopRoute
   TempchatRoute: typeof TempchatRoute
   TempmailRoute: typeof TempmailRoute
-  WhiteboardRoute: typeof WhiteboardRoute
   XRoute: typeof XRoute
   YtdlRoute: typeof YtdlRoute
   DbIdRoute: typeof DbIdRoute
@@ -746,7 +708,6 @@ export interface RootRouteChildren {
   ApiMessagesUpdatepfpRoute: typeof ApiMessagesUpdatepfpRoute
   ApiMessagesUpdateprofileRoute: typeof ApiMessagesUpdateprofileRoute
   ApiPublicUploadRoute: typeof ApiPublicUploadRoute
-  ApiWhiteboardManageRoute: typeof ApiWhiteboardManageRoute
   ApiXDownloadRoute: typeof ApiXDownloadRoute
   ApiXTweetsRoute: typeof ApiXTweetsRoute
   ApiXUserRoute: typeof ApiXUserRoute
@@ -769,13 +730,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof XRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/whiteboard': {
-      id: '/whiteboard'
-      path: '/whiteboard'
-      fullPath: '/whiteboard'
-      preLoaderRoute: typeof WhiteboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/tempmail': {
       id: '/tempmail'
       path: '/tempmail'
@@ -788,13 +742,6 @@ declare module '@tanstack/react-router' {
       path: '/tempchat'
       fullPath: '/tempchat'
       preLoaderRoute: typeof TempchatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/tdesktop': {
-      id: '/tdesktop'
-      path: '/tdesktop'
-      fullPath: '/tdesktop'
-      preLoaderRoute: typeof TdesktopRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/shsdb-console': {
@@ -963,13 +910,6 @@ declare module '@tanstack/react-router' {
       path: '/api/x/download'
       fullPath: '/api/x/download'
       preLoaderRoute: typeof ApiXDownloadRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/whiteboard/manage': {
-      id: '/api/whiteboard/manage'
-      path: '/api/whiteboard/manage'
-      fullPath: '/api/whiteboard/manage'
-      preLoaderRoute: typeof ApiWhiteboardManageRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/upload': {
@@ -1191,10 +1131,8 @@ const rootRouteChildren: RootRouteChildren = {
   NoteRoute: NoteRouteWithChildren,
   OwnerRoute: OwnerRoute,
   ShsdbConsoleRoute: ShsdbConsoleRoute,
-  TdesktopRoute: TdesktopRoute,
   TempchatRoute: TempchatRoute,
   TempmailRoute: TempmailRoute,
-  WhiteboardRoute: WhiteboardRoute,
   XRoute: XRoute,
   YtdlRoute: YtdlRoute,
   DbIdRoute: DbIdRoute,
@@ -1224,7 +1162,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMessagesUpdatepfpRoute: ApiMessagesUpdatepfpRoute,
   ApiMessagesUpdateprofileRoute: ApiMessagesUpdateprofileRoute,
   ApiPublicUploadRoute: ApiPublicUploadRoute,
-  ApiWhiteboardManageRoute: ApiWhiteboardManageRoute,
   ApiXDownloadRoute: ApiXDownloadRoute,
   ApiXTweetsRoute: ApiXTweetsRoute,
   ApiXUserRoute: ApiXUserRoute,
