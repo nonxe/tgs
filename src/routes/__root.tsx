@@ -52,7 +52,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
           Temporary Connection Refresh
         </h1>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          The edge network route updated. Click below to reload or return to the main dashboard.
+          {error?.message ? `Error details: ${error.message}` : "The edge network route updated. Click below to reload or return to the main dashboard."}
         </p>
         <div className="pt-2 flex items-center justify-center gap-3">
           <button

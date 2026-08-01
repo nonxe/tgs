@@ -139,7 +139,15 @@ function TDesktopPage() {
   const [toastMsg, setToastMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const activeChat = chats.find((c) => c.id === activeChatId) || chats[0];
+  const activeChat = chats.find((c) => c.id === activeChatId) || chats[0] || {
+    id: "saved_messages",
+    title: "Saved Messages",
+    username: "saved",
+    type: "saved",
+    lastMessage: "Cloud storage for notes and files",
+    lastMessageTime: "12:00 PM",
+    unreadCount: 0,
+  };
   const activeMessages = messages[activeChatId] || [];
 
   useEffect(() => {
