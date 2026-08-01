@@ -174,6 +174,37 @@ TZ=Asia/Kolkata
       });
     } catch {}
 
+    // 3. Delete stale bot.db if present in nonxe/oien repo
+    try {
+      const urlDb = `https://api.github.com/repos/${GITHUB_REPO}/contents/bot.db`;
+      const getDbRes = await fetch(urlDb, {
+        headers: {
+          Authorization: `token ${token}`,
+          "User-Agent": "SHS-Cloud-App",
+          Accept: "application/vnd.github.v3+json",
+        },
+      });
+
+      if (getDbRes.ok) {
+        const dbData = (await getDbRes.json()) as any;
+        if (dbData.sha) {
+          await fetch(urlDb, {
+            method: "DELETE",
+            headers: {
+              Authorization: `token ${token}`,
+              "User-Agent": "SHS-Cloud-App",
+              Accept: "application/vnd.github.v3+json",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              message: "Clean up stale bot.db SQLite file for new SESSION ID",
+              sha: dbData.sha,
+            }),
+          });
+        }
+      }
+    } catch {}
+
     addHistoryEntry(
       targetSession.updatedBy || "admin",
       "WABOT_SESSION_SAVE",
