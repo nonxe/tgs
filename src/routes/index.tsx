@@ -297,6 +297,15 @@ function DashboardHome() {
       color: "text-blue-400 border-blue-500/20 bg-blue-500/5 hover:border-blue-500/40"
     },
     { 
+      id: "tdesktop", 
+      title: "Telegram Desktop", 
+      desc: "Official-style tdesktop web client. Synced to nonxe/aslink database with bot support.", 
+      icon: ShieldCheck, 
+      link: "/tdesktop",
+      badge: "TDESKTOP",
+      color: "text-cyan-400 border-cyan-500/20 bg-cyan-500/5 hover:border-cyan-500/40"
+    },
+    { 
       id: "whiteboard", 
       title: "LetMeSketch", 
       desc: "Hand-drawn sketch diagrams & pressure drawing powered by Rough.js & Perfect-Freehand.", 
@@ -436,6 +445,9 @@ function DashboardHome() {
           </Link>
           <Link to="/tempchat" className="text-[14px] sm:text-[16px] md:text-[18px] font-black tracking-tighter select-none opacity-50 hover:opacity-100 transition-opacity flex-shrink-0">
             CHAT
+          </Link>
+          <Link to="/tdesktop" className="text-[14px] sm:text-[16px] md:text-[18px] font-black tracking-tighter select-none opacity-50 hover:opacity-100 transition-opacity flex-shrink-0 text-cyan-400">
+            TDESKTOP
           </Link>
           <Link to="/whiteboard" className="text-[14px] sm:text-[16px] md:text-[18px] font-black tracking-tighter select-none opacity-50 hover:opacity-100 transition-opacity flex-shrink-0 text-pink-400">
             BOARD

@@ -14,6 +14,7 @@ import { Route as XRouteImport } from './routes/x'
 import { Route as WhiteboardRouteImport } from './routes/whiteboard'
 import { Route as TempmailRouteImport } from './routes/tempmail'
 import { Route as TempchatRouteImport } from './routes/tempchat'
+import { Route as TdesktopRouteImport } from './routes/tdesktop'
 import { Route as ShsdbConsoleRouteImport } from './routes/shsdb-console'
 import { Route as OwnerRouteImport } from './routes/owner'
 import { Route as NoteRouteImport } from './routes/note'
@@ -88,6 +89,11 @@ const TempmailRoute = TempmailRouteImport.update({
 const TempchatRoute = TempchatRouteImport.update({
   id: '/tempchat',
   path: '/tempchat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TdesktopRoute = TdesktopRouteImport.update({
+  id: '/tdesktop',
+  path: '/tdesktop',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ShsdbConsoleRoute = ShsdbConsoleRouteImport.update({
@@ -357,6 +363,7 @@ export interface FileRoutesByFullPath {
   '/note': typeof NoteRouteWithChildren
   '/owner': typeof OwnerRoute
   '/shsdb-console': typeof ShsdbConsoleRoute
+  '/tdesktop': typeof TdesktopRoute
   '/tempchat': typeof TempchatRoute
   '/tempmail': typeof TempmailRoute
   '/whiteboard': typeof WhiteboardRoute
@@ -413,6 +420,7 @@ export interface FileRoutesByTo {
   '/more': typeof MoreRoute
   '/owner': typeof OwnerRoute
   '/shsdb-console': typeof ShsdbConsoleRoute
+  '/tdesktop': typeof TdesktopRoute
   '/tempchat': typeof TempchatRoute
   '/tempmail': typeof TempmailRoute
   '/whiteboard': typeof WhiteboardRoute
@@ -471,6 +479,7 @@ export interface FileRoutesById {
   '/note': typeof NoteRouteWithChildren
   '/owner': typeof OwnerRoute
   '/shsdb-console': typeof ShsdbConsoleRoute
+  '/tdesktop': typeof TdesktopRoute
   '/tempchat': typeof TempchatRoute
   '/tempmail': typeof TempmailRoute
   '/whiteboard': typeof WhiteboardRoute
@@ -530,6 +539,7 @@ export interface FileRouteTypes {
     | '/note'
     | '/owner'
     | '/shsdb-console'
+    | '/tdesktop'
     | '/tempchat'
     | '/tempmail'
     | '/whiteboard'
@@ -586,6 +596,7 @@ export interface FileRouteTypes {
     | '/more'
     | '/owner'
     | '/shsdb-console'
+    | '/tdesktop'
     | '/tempchat'
     | '/tempmail'
     | '/whiteboard'
@@ -643,6 +654,7 @@ export interface FileRouteTypes {
     | '/note'
     | '/owner'
     | '/shsdb-console'
+    | '/tdesktop'
     | '/tempchat'
     | '/tempmail'
     | '/whiteboard'
@@ -701,6 +713,7 @@ export interface RootRouteChildren {
   NoteRoute: typeof NoteRouteWithChildren
   OwnerRoute: typeof OwnerRoute
   ShsdbConsoleRoute: typeof ShsdbConsoleRoute
+  TdesktopRoute: typeof TdesktopRoute
   TempchatRoute: typeof TempchatRoute
   TempmailRoute: typeof TempmailRoute
   WhiteboardRoute: typeof WhiteboardRoute
@@ -775,6 +788,13 @@ declare module '@tanstack/react-router' {
       path: '/tempchat'
       fullPath: '/tempchat'
       preLoaderRoute: typeof TempchatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tdesktop': {
+      id: '/tdesktop'
+      path: '/tdesktop'
+      fullPath: '/tdesktop'
+      preLoaderRoute: typeof TdesktopRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/shsdb-console': {
@@ -1171,6 +1191,7 @@ const rootRouteChildren: RootRouteChildren = {
   NoteRoute: NoteRouteWithChildren,
   OwnerRoute: OwnerRoute,
   ShsdbConsoleRoute: ShsdbConsoleRoute,
+  TdesktopRoute: TdesktopRoute,
   TempchatRoute: TempchatRoute,
   TempmailRoute: TempmailRoute,
   WhiteboardRoute: WhiteboardRoute,
