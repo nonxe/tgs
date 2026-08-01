@@ -3,6 +3,7 @@ import {
   fetchWabotSession,
   saveWabotSession,
   triggerWorkflowDispatch,
+  stopActiveWorkflows,
   fetchWorkflowRuns,
   WabotSession,
 } from "../../../lib/github-wabot";
@@ -24,11 +25,14 @@ async function handleGet() {
       fetchWorkflowRuns(),
     ]);
 
+    const isRunning = runs.some((r) => r.status === "in_progress" || r.status === "queued" || r.status === "requested");
+
     return new Response(
       JSON.stringify({
         success: true,
         session,
         runs,
+        isRunning,
       }),
       { status: 200, headers: CORS_HEADERS }
     );
@@ -95,9 +99,18 @@ async function handlePost(request: Request) {
       });
     }
 
-    // Action: Trigger GitHub Action Workflow Dispatch
-    if (action === "trigger_workflow" || action === "restart_bot") {
+    // Action: Start / Trigger Workflow Dispatch
+    if (action === "trigger_workflow" || action === "start_bot" || action === "restart_bot") {
       const res = await triggerWorkflowDispatch();
+      return new Response(JSON.stringify(res), {
+        status: res.success ? 200 : 400,
+        headers: CORS_HEADERS,
+      });
+    }
+
+    // Action: Stop / Cancel Active Workflow Runs
+    if (action === "stop_workflow" || action === "stop_bot") {
+      const res = await stopActiveWorkflows();
       return new Response(JSON.stringify(res), {
         status: res.success ? 200 : 400,
         headers: CORS_HEADERS,

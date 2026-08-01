@@ -28,7 +28,7 @@ export interface WabotSession {
 export interface WorkflowRun {
   id: number;
   name: string;
-  status: "completed" | "in_progress" | "queued";
+  status: "completed" | "in_progress" | "queued" | "requested" | "waiting";
   conclusion: "success" | "failure" | "cancelled" | null;
   createdAt: string;
   updatedAt: string;
@@ -217,7 +217,7 @@ TZ=Asia/Kolkata
   }
 }
 
-/** Trigger GitHub Action Workflow Dispatch in nonxe/oien */
+/** Trigger GitHub Action Workflow Dispatch in nonxe/oien (Start Workflow) */
 export async function triggerWorkflowDispatch(): Promise<{ success: boolean; error?: string }> {
   try {
     const url = `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/${WORKFLOW_ID}/dispatches`;
@@ -235,7 +235,7 @@ export async function triggerWorkflowDispatch(): Promise<{ success: boolean; err
     });
 
     if (res.status === 204 || res.ok) {
-      addHistoryEntry("admin", "WABOT_WORKFLOW_DISPATCH", "Triggered GitHub Action Bot Workflow in nonxe/oien").catch(() => {});
+      addHistoryEntry("admin", "WABOT_WORKFLOW_START", "Started GitHub Action Bot Workflow in nonxe/oien").catch(() => {});
       return { success: true };
     }
 
@@ -246,10 +246,62 @@ export async function triggerWorkflowDispatch(): Promise<{ success: boolean; err
   }
 }
 
+/** Stop/Cancel all running/queued GitHub Action Workflows in nonxe/oien (Stop Workflow) */
+export async function stopActiveWorkflows(): Promise<{ success: boolean; cancelledCount: number; error?: string }> {
+  try {
+    const token = getGithubToken();
+    const listUrl = `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/${WORKFLOW_ID}/runs?per_page=10`;
+
+    const res = await fetch(listUrl, {
+      headers: {
+        Authorization: `token ${token}`,
+        "User-Agent": "SHS-Cloud-App",
+        Accept: "application/vnd.github.v3+json",
+      },
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      return { success: false, cancelledCount: 0, error: "Failed to list active workflow runs." };
+    }
+
+    const data = (await res.json()) as any;
+    if (!data.workflow_runs || !Array.isArray(data.workflow_runs)) {
+      return { success: true, cancelledCount: 0 };
+    }
+
+    const activeRuns = data.workflow_runs.filter(
+      (r: any) => r.status === "in_progress" || r.status === "queued" || r.status === "requested" || r.status === "waiting"
+    );
+
+    let cancelledCount = 0;
+    for (const run of activeRuns) {
+      const cancelUrl = `https://api.github.com/repos/${GITHUB_REPO}/actions/runs/${run.id}/cancel`;
+      const cancelRes = await fetch(cancelUrl, {
+        method: "POST",
+        headers: {
+          Authorization: `token ${token}`,
+          "User-Agent": "SHS-Cloud-App",
+          Accept: "application/vnd.github.v3+json",
+        },
+      });
+
+      if (cancelRes.status === 202 || cancelRes.ok) {
+        cancelledCount++;
+      }
+    }
+
+    addHistoryEntry("admin", "WABOT_WORKFLOW_STOP", `Cancelled ${cancelledCount} running bot workflows in nonxe/oien`).catch(() => {});
+    return { success: true, cancelledCount };
+  } catch (err: any) {
+    return { success: false, cancelledCount: 0, error: err.message || "Stop workflow error." };
+  }
+}
+
 /** Fetch recent workflow runs from nonxe/oien */
 export async function fetchWorkflowRuns(): Promise<WorkflowRun[]> {
   try {
-    const url = `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/${WORKFLOW_ID}/runs?per_page=5`;
+    const url = `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/${WORKFLOW_ID}/runs?per_page=6`;
     const token = getGithubToken();
 
     const res = await fetch(url, {

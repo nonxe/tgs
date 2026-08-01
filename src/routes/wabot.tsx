@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import {
   Bot,
+  Play,
+  Square,
   Zap,
   Lock,
   KeyRound,
@@ -20,6 +22,10 @@ import {
   LogOut,
   AlertCircle,
   Sparkles,
+  Radio,
+  Power,
+  Sliders,
+  Terminal,
 } from "lucide-react";
 import { WabotSession, WorkflowRun } from "../lib/github-wabot";
 
@@ -34,9 +40,11 @@ function WabotDashboardPage() {
   // Wabot State
   const [session, setSession] = useState<WabotSession | null>(null);
   const [runs, setRuns] = useState<WorkflowRun[]>([]);
+  const [isRunning, setIsRunning] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [triggering, setTriggering] = useState(false);
+  const [starting, setStarting] = useState(false);
+  const [stopping, setStopping] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // Form State
@@ -52,7 +60,6 @@ function WabotDashboardPage() {
     setTimeout(() => setToastMsg(null), 4000);
   };
 
-  // Check saved admin session
   useEffect(() => {
     const token = localStorage.getItem("wabot_admin_auth");
     if (token === "wabot_admin_authenticated") {
@@ -69,6 +76,7 @@ function WabotDashboardPage() {
         if (data.success) {
           setSession(data.session || null);
           setRuns(data.runs || []);
+          setIsRunning(!!data.isRunning);
           if (data.session) {
             setInputSessionId(data.session.sessionId || "");
             setInputBotName(data.session.botName || "OIEN BOT");
@@ -85,7 +93,7 @@ function WabotDashboardPage() {
   useEffect(() => {
     if (isAdmin) {
       loadData();
-      const interval = setInterval(() => loadData(), 30000);
+      const interval = setInterval(() => loadData(), 20000);
       return () => clearInterval(interval);
     }
   }, [isAdmin]);
@@ -111,7 +119,7 @@ function WabotDashboardPage() {
       if (data.success && data.adminToken) {
         localStorage.setItem("wabot_admin_auth", data.adminToken);
         setIsAdmin(true);
-        showToast("Welcome Admin! Access granted.");
+        showToast("Welcome Admin! iOS Session Authenticated.");
       } else {
         setAuthError(data.error || "Invalid Admin username or password.");
       }
@@ -128,7 +136,7 @@ function WabotDashboardPage() {
     setAdminPass("");
   };
 
-  // Handle Save Session ID
+  // Save Session ID
   const handleSaveSession = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputSessionId.trim()) {
@@ -154,7 +162,7 @@ function WabotDashboardPage() {
 
       const data = await res.json();
       if (data.success) {
-        showToast("WhatsApp Session ID saved to nonxe/oien database repository!");
+        showToast("WhatsApp Session ID saved to nonxe/oien repo!");
         loadData();
       } else {
         showToast(data.error || "Failed to save session.", "error");
@@ -165,30 +173,56 @@ function WabotDashboardPage() {
     setSaving(false);
   };
 
-  // Handle Trigger Workflow Dispatch
-  const handleTriggerWorkflow = async () => {
-    setTriggering(true);
+  // Start Workflow
+  const handleStartWorkflow = async () => {
+    setStarting(true);
     try {
       const res = await fetch("/api/wabot/manage", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: "trigger_workflow",
+          action: "start_bot",
           auth: { adminToken: "wabot_admin_authenticated" },
         }),
       });
 
       const data = await res.json();
       if (data.success) {
-        showToast("GitHub Action workflow dispatched in nonxe/oien! Bot is running now.");
+        showToast("GitHub Action Workflow STARTED! Bot is launching...");
         setTimeout(() => loadData(), 3000);
       } else {
-        showToast(data.error || "Failed to dispatch workflow.", "error");
+        showToast(data.error || "Failed to start workflow.", "error");
       }
     } catch (err: any) {
-      showToast("Workflow trigger error: " + err.message, "error");
+      showToast("Start error: " + err.message, "error");
     }
-    setTriggering(false);
+    setStarting(false);
+  };
+
+  // Stop Workflow
+  const handleStopWorkflow = async () => {
+    setStopping(true);
+    try {
+      const res = await fetch("/api/wabot/manage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "stop_bot",
+          auth: { adminToken: "wabot_admin_authenticated" },
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        showToast(`Stopped ${data.cancelledCount || 1} active bot workflow run(s)!`);
+        setTimeout(() => loadData(), 3000);
+      } else {
+        showToast(data.error || "Failed to stop workflow.", "error");
+      }
+    } catch (err: any) {
+      showToast("Stop error: " + err.message, "error");
+    }
+    setStopping(false);
   };
 
   const copyToClipboard = (text: string) => {
@@ -199,72 +233,72 @@ function WabotDashboardPage() {
 
   const latestRun = runs[0];
 
-  // Render Admin Login Screen if not authenticated
+  // Render iOS Admin Login Modal
   if (!isAdmin) {
     return (
-      <main className="min-h-screen bg-background text-foreground flex items-center justify-center p-4 font-sans selection:bg-emerald-500/30 select-none">
-        <div className="max-w-md w-full p-6 sm:p-8 rounded-3xl border border-emerald-500/30 bg-secondary/10 ios-glass space-y-6 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-8 opacity-10 text-emerald-400">
-            <Bot className="size-32" />
-          </div>
+      <main className="min-h-screen bg-[#050811] text-foreground flex items-center justify-center p-4 font-sans selection:bg-emerald-500/30 select-none relative overflow-hidden">
+        {/* iOS Neon Mesh Background Orbs */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 size-96 rounded-full bg-emerald-500/10 blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-1/4 left-1/3 size-80 rounded-full bg-teal-500/10 blur-[100px] pointer-events-none" />
 
+        <div className="max-w-md w-full p-7 sm:p-9 rounded-[32px] border border-emerald-500/20 bg-[#0c1424]/80 backdrop-blur-3xl space-y-6 shadow-2xl relative z-10">
           <div className="flex items-center justify-between">
             <a
               href="/"
-              className="size-9 rounded-xl bg-secondary/40 hover:bg-secondary/80 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all"
+              className="size-9 rounded-2xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all border border-white/5"
               title="Back to Home"
             >
               <ArrowLeft className="size-4" />
             </a>
-            <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-black uppercase font-mono">
-              Admin Only
+            <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-black uppercase font-mono tracking-wider">
+              iOS Admin Access
             </span>
           </div>
 
           <div className="space-y-2">
-            <div className="size-12 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold">
+            <div className="size-14 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold shadow-lg shadow-emerald-500/10">
               <Lock className="size-6" />
             </div>
-            <h1 className="text-xl font-black text-foreground">WhatsApp Bot Admin</h1>
+            <h1 className="text-2xl font-black text-white tracking-tight">WA Bot Manager</h1>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Login to manage single WhatsApp Session ID and GitHub Action bot runner in <span className="font-mono text-emerald-300">nonxe/oien</span>.
+              Authenticate with Admin credentials (<span className="font-mono text-emerald-400 font-bold">as:as123</span>) to control <span className="font-mono text-white">nonxe/oien</span>.
             </p>
           </div>
 
           {authError && (
-            <div className="p-3.5 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs font-bold flex items-center gap-2">
-              <AlertCircle className="size-4 flex-shrink-0 text-red-400" />
+            <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-bold flex items-center gap-2 animate-shake">
+              <AlertCircle className="size-4 flex-shrink-0 text-rose-400" />
               <span>{authError}</span>
             </div>
           )}
 
           <form onSubmit={handleAdminLogin} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-muted-foreground uppercase font-mono flex items-center gap-1">
+              <label className="text-[11px] font-bold text-muted-foreground uppercase font-mono flex items-center gap-1.5">
                 <User className="size-3.5 text-emerald-400" />
-                <span>Username</span>
+                <span>Admin Username</span>
               </label>
               <input
                 type="text"
                 value={adminUser}
                 onChange={(e) => setAdminUser(e.target.value)}
-                placeholder="Admin username"
-                className="w-full px-4 py-2.5 rounded-xl bg-background/80 border border-border/40 text-xs font-bold text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-emerald-500 transition-all"
+                placeholder="Username (as)"
+                className="w-full px-4 py-3 rounded-2xl bg-[#050811]/90 border border-white/10 text-xs font-bold text-white placeholder:text-muted-foreground/30 outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 transition-all font-sans"
                 required
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-muted-foreground uppercase font-mono flex items-center gap-1">
+              <label className="text-[11px] font-bold text-muted-foreground uppercase font-mono flex items-center gap-1.5">
                 <KeyRound className="size-3.5 text-emerald-400" />
-                <span>Password</span>
+                <span>Admin Password</span>
               </label>
               <input
                 type="password"
                 value={adminPass}
                 onChange={(e) => setAdminPass(e.target.value)}
-                placeholder="Admin password"
-                className="w-full px-4 py-2.5 rounded-xl bg-background/80 border border-border/40 text-xs font-bold text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-emerald-500 transition-all"
+                placeholder="Password (as123)"
+                className="w-full px-4 py-3 rounded-2xl bg-[#050811]/90 border border-white/10 text-xs font-bold text-white placeholder:text-muted-foreground/30 outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 transition-all font-sans"
                 required
               />
             </div>
@@ -272,10 +306,10 @@ function WabotDashboardPage() {
             <button
               type="submit"
               disabled={authenticating}
-              className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black text-xs transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 disabled:opacity-50 mt-2"
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs transition-all shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 mt-2"
             >
               {authenticating ? <Loader2 className="size-4 animate-spin" /> : <ShieldCheck className="size-4" />}
-              <span>Authenticate Admin</span>
+              <span>Authenticate Session</span>
             </button>
           </form>
         </div>
@@ -284,32 +318,36 @@ function WabotDashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background text-foreground font-sans selection:bg-emerald-500/30">
+    <main className="min-h-screen bg-[#050811] text-foreground font-sans selection:bg-emerald-500/30 relative">
+      {/* Background Neon Ambient Glows */}
+      <div className="fixed top-0 left-1/3 size-96 rounded-full bg-emerald-500/5 blur-[140px] pointer-events-none z-0" />
+      <div className="fixed bottom-10 right-1/4 size-96 rounded-full bg-teal-500/5 blur-[140px] pointer-events-none z-0" />
+
       {/* Header Banner */}
-      <header className="px-4 sm:px-6 md:px-8 py-5 border-b border-border/40 backdrop-blur-md sticky top-0 z-40 bg-background/85">
+      <header className="px-4 sm:px-6 md:px-8 py-4 border-b border-white/10 backdrop-blur-2xl sticky top-0 z-40 bg-[#050811]/85">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <a
               href="/"
-              className="size-9 rounded-xl bg-secondary/40 hover:bg-secondary/80 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all"
+              className="size-9 rounded-2xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all border border-white/5"
               title="Back to Home"
             >
               <ArrowLeft className="size-4" />
             </a>
             <div>
               <div className="flex items-center gap-2">
-                <span className="p-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  <Bot className="size-4" />
+                <span className="p-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <Bot className="size-4.5" />
                 </span>
-                <h1 className="text-lg sm:text-xl font-black tracking-tight text-foreground">
-                  WhatsApp Bot Manager
+                <h1 className="text-lg sm:text-xl font-black tracking-tight text-white">
+                  WA Bot Manager
                 </h1>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-black uppercase font-mono">
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-black uppercase font-mono">
                   nonxe/oien
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Single Session Runner • Auto rerun every 5 hours • Admin Authenticated
+              <p className="text-xs text-muted-foreground mt-0.5 font-mono">
+                iOS Dark Edition • Auto rerun every 5 hours • Admin Authorized
               </p>
             </div>
           </div>
@@ -318,67 +356,119 @@ function WabotDashboardPage() {
             <button
               onClick={() => loadData(true)}
               disabled={refreshing}
-              className="p-2.5 rounded-xl border border-border/40 bg-secondary/30 hover:bg-secondary/60 text-muted-foreground hover:text-foreground transition-all text-xs font-bold flex items-center gap-1.5"
+              className="p-2.5 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all text-xs font-bold flex items-center gap-1.5"
               title="Refresh status"
             >
-              <RefreshCw className={`size-3.5 ${refreshing ? "animate-spin text-emerald-400" : ""}`} />
-            </button>
-
-            <button
-              onClick={handleTriggerWorkflow}
-              disabled={triggering}
-              className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black text-xs transition-all shadow-lg shadow-emerald-600/20 flex items-center gap-1.5 disabled:opacity-50"
-            >
-              {triggering ? <Loader2 className="size-3.5 animate-spin" /> : <Zap className="size-3.5" />}
-              <span>Restart Workflow</span>
+              <RefreshCw className={`size-4 ${refreshing ? "animate-spin text-emerald-400" : ""}`} />
             </button>
 
             <button
               onClick={handleAdminLogout}
-              className="p-2.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all text-xs font-bold"
+              className="p-2.5 rounded-2xl border border-rose-500/30 bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-all text-xs font-bold"
               title="Logout Admin"
             >
-              <LogOut className="size-3.5" />
+              <LogOut className="size-4" />
             </button>
           </div>
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-6 space-y-6">
-        {/* Status Metrics Bar */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-7 space-y-7 relative z-10">
+        {/* iOS Workflow Action Control Center Banner */}
+        <div className="p-6 rounded-[32px] border border-white/10 bg-[#0c1424]/80 backdrop-blur-3xl shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div
+                className={`size-14 rounded-2xl border flex items-center justify-center font-bold text-xl shadow-xl ${
+                  isRunning
+                    ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400 shadow-emerald-500/20"
+                    : "bg-slate-800/50 border-white/10 text-slate-400"
+                }`}
+              >
+                <Power className="size-7" />
+              </div>
+              <span
+                className={`absolute -top-1 -right-1 size-4 rounded-full border-2 border-[#050811] ${
+                  isRunning ? "bg-emerald-400 animate-ping" : "bg-rose-500"
+                }`}
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-black text-white">Bot Runner Control Center</h2>
+                <span
+                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase font-mono border ${
+                    isRunning
+                      ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30"
+                      : "bg-rose-500/10 text-rose-300 border-rose-500/30"
+                  }`}
+                >
+                  {isRunning ? "🟢 WORKFLOW RUNNING" : "🔴 WORKFLOW STOPPED"}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Start or Stop GitHub Action execution in <span className="font-mono text-emerald-400">nonxe/oien</span>. Auto reruns every 5 hours.
+              </p>
+            </div>
+          </div>
+
+          {/* Start & Stop Action Buttons */}
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <button
+              onClick={handleStartWorkflow}
+              disabled={starting}
+              className="flex-1 md:flex-initial px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs transition-all shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+            >
+              {starting ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4 fill-current" />}
+              <span>Start Workflow</span>
+            </button>
+
+            <button
+              onClick={handleStopWorkflow}
+              disabled={stopping}
+              className="flex-1 md:flex-initial px-5 py-3 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-black text-xs transition-all shadow-xl shadow-rose-600/20 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+            >
+              {stopping ? <Loader2 className="size-4 animate-spin" /> : <Square className="size-4 fill-current" />}
+              <span>Stop Workflow</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Status Metrics Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="p-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 flex items-center gap-3">
-            <div className="size-11 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
-              <Activity className="size-5" />
+          <div className="p-5 rounded-3xl border border-white/10 bg-[#0c1424]/60 backdrop-blur-2xl flex items-center gap-4">
+            <div className="size-12 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center font-bold">
+              <Bot className="size-6" />
             </div>
             <div>
-              <div className="text-xs text-muted-foreground font-mono">Current Active Bot</div>
-              <div className="text-sm font-black text-foreground mt-0.5 truncate max-w-[180px]">
+              <div className="text-[11px] text-muted-foreground font-mono uppercase">Current Configured Bot</div>
+              <div className="text-sm font-black text-white mt-0.5 truncate max-w-[170px]">
                 {session ? session.botName || "OIEN BOT" : "No Session Set"}
               </div>
             </div>
           </div>
 
-          <div className="p-4 rounded-2xl border border-blue-500/20 bg-blue-500/5 flex items-center gap-3">
-            <div className="size-11 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold">
-              <Clock className="size-5" />
+          <div className="p-5 rounded-3xl border border-white/10 bg-[#0c1424]/60 backdrop-blur-2xl flex items-center gap-4">
+            <div className="size-12 rounded-2xl bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center font-bold">
+              <Clock className="size-6" />
             </div>
             <div>
-              <div className="text-xs text-muted-foreground font-mono">Auto Schedule</div>
-              <div className="text-sm font-black text-foreground mt-0.5 flex items-center gap-1">
+              <div className="text-[11px] text-muted-foreground font-mono uppercase">Auto Schedule</div>
+              <div className="text-sm font-black text-white mt-0.5 flex items-center gap-1.5">
                 <span className="size-2 rounded-full bg-blue-400 animate-pulse" />
                 <span>Every 5 Hours</span>
               </div>
             </div>
           </div>
 
-          <div className="p-4 rounded-2xl border border-purple-500/20 bg-purple-500/5 flex items-center gap-3">
-            <div className="size-11 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold">
-              <Server className="size-5" />
+          <div className="p-5 rounded-3xl border border-white/10 bg-[#0c1424]/60 backdrop-blur-2xl flex items-center gap-4">
+            <div className="size-12 rounded-2xl bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center justify-center font-bold">
+              <Server className="size-6" />
             </div>
             <div>
-              <div className="text-xs text-muted-foreground font-mono">Latest GitHub Run</div>
-              <div className="text-xs font-bold text-foreground mt-0.5 capitalize flex items-center gap-1">
+              <div className="text-[11px] text-muted-foreground font-mono uppercase">Latest GitHub Run</div>
+              <div className="text-xs font-black text-white mt-0.5 capitalize flex items-center gap-1.5">
                 {latestRun ? (
                   <>
                     <span
@@ -387,7 +477,7 @@ function WabotDashboardPage() {
                           ? "bg-amber-400 animate-ping"
                           : latestRun.conclusion === "success"
                           ? "bg-emerald-400"
-                          : "bg-purple-400"
+                          : "bg-rose-400"
                       }`}
                     />
                     <span>{latestRun.status === "in_progress" ? "Running" : latestRun.conclusion || latestRun.status}</span>
@@ -400,24 +490,24 @@ function WabotDashboardPage() {
           </div>
         </div>
 
-        {/* Main Section: Current Active Session Card & Edit Form */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Column: Update Single Session ID Form */}
+        {/* Main Content Grid: Config Form + Active Session Details */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-7">
+          {/* Left Column: Configure WhatsApp Session ID Form */}
           <div className="lg:col-span-6 space-y-4">
-            <div className="p-5 sm:p-6 rounded-3xl border border-border/40 bg-secondary/10 ios-glass space-y-4 shadow-xl">
-              <div className="flex items-center justify-between border-b border-border/30 pb-3">
-                <div className="flex items-center gap-2">
-                  <Save className="size-4 text-emerald-400" />
-                  <h2 className="text-sm font-black text-foreground">Configure WhatsApp Session ID</h2>
+            <div className="p-6 sm:p-7 rounded-[32px] border border-white/10 bg-[#0c1424]/80 backdrop-blur-3xl space-y-5 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                <div className="flex items-center gap-2.5">
+                  <Sliders className="size-5 text-emerald-400" />
+                  <h2 className="text-base font-black text-white">Session Configuration</h2>
                 </div>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 text-[10px] font-mono font-bold">
+                <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-300 text-[10px] font-mono font-bold border border-emerald-500/20">
                   Single Session
                 </span>
               </div>
 
-              <form onSubmit={handleSaveSession} className="space-y-3.5">
+              <form onSubmit={handleSaveSession} className="space-y-4">
                 {/* Session ID */}
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   <label className="text-[11px] font-bold text-muted-foreground uppercase font-mono flex items-center justify-between">
                     <span>WhatsApp Session ID / String</span>
                     <span className="text-emerald-400 text-[10px]">Required</span>
@@ -425,48 +515,48 @@ function WabotDashboardPage() {
                   <textarea
                     value={inputSessionId}
                     onChange={(e) => setInputSessionId(e.target.value)}
-                    placeholder="Paste Session ID (e.g. RGNK~4IqF0mP6...)"
+                    placeholder="Paste WhatsApp Session ID (e.g. RGNK~4IqF0mP6...)"
                     rows={4}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-background/80 border border-border/40 text-xs font-mono text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-emerald-500 transition-all resize-none"
+                    className="w-full px-4 py-3 rounded-2xl bg-[#050811]/90 border border-white/10 text-xs font-mono text-white placeholder:text-muted-foreground/30 outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 transition-all resize-none font-mono leading-relaxed"
                     required
                   />
                 </div>
 
                 {/* Bot Name */}
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   <label className="text-[11px] font-bold text-muted-foreground uppercase font-mono">Bot Name / Label</label>
                   <input
                     type="text"
                     value={inputBotName}
                     onChange={(e) => setInputBotName(e.target.value)}
                     placeholder="e.g. OIEN BOT"
-                    className="w-full px-3.5 py-2 rounded-xl bg-background/80 border border-border/40 text-xs font-bold text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-emerald-500 transition-all"
+                    className="w-full px-4 py-2.5 rounded-2xl bg-[#050811]/90 border border-white/10 text-xs font-bold text-white placeholder:text-muted-foreground/30 outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 transition-all"
                   />
                 </div>
 
                 {/* Sudo / Owner Number */}
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   <label className="text-[11px] font-bold text-muted-foreground uppercase font-mono">Owner Phone / Sudo (Optional)</label>
                   <input
                     type="text"
                     value={inputSudo}
                     onChange={(e) => setInputSudo(e.target.value)}
                     placeholder="e.g. 919876543210"
-                    className="w-full px-3.5 py-2 rounded-xl bg-background/80 border border-border/40 text-xs font-mono text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-emerald-500 transition-all"
+                    className="w-full px-4 py-2.5 rounded-2xl bg-[#050811]/90 border border-white/10 text-xs font-mono text-white placeholder:text-muted-foreground/30 outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 transition-all"
                   />
                 </div>
 
                 {/* Mode Selector */}
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   <label className="text-[11px] font-bold text-muted-foreground uppercase font-mono">Bot Access Mode</label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
                       onClick={() => setInputMode("public")}
-                      className={`py-2 rounded-xl text-xs font-bold transition-all border ${
+                      className={`py-2.5 rounded-2xl text-xs font-bold transition-all border ${
                         inputMode === "public"
-                          ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300"
-                          : "border-border/30 bg-background/50 text-muted-foreground hover:text-foreground"
+                          ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300 shadow-lg shadow-emerald-500/10"
+                          : "border-white/10 bg-white/5 text-muted-foreground hover:text-white"
                       }`}
                     >
                       Public
@@ -474,10 +564,10 @@ function WabotDashboardPage() {
                     <button
                       type="button"
                       onClick={() => setInputMode("private")}
-                      className={`py-2 rounded-xl text-xs font-bold transition-all border ${
+                      className={`py-2.5 rounded-2xl text-xs font-bold transition-all border ${
                         inputMode === "private"
-                          ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300"
-                          : "border-border/30 bg-background/50 text-muted-foreground hover:text-foreground"
+                          ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300 shadow-lg shadow-emerald-500/10"
+                          : "border-white/10 bg-white/5 text-muted-foreground hover:text-white"
                       }`}
                     >
                       Private
@@ -488,7 +578,7 @@ function WabotDashboardPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black text-xs transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-1.5 disabled:opacity-50 mt-2"
+                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs transition-all shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 mt-3"
                 >
                   {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
                   <span>Save Session to nonxe/oien</span>
@@ -497,38 +587,38 @@ function WabotDashboardPage() {
             </div>
           </div>
 
-          {/* Right Column: Active Session Overview & Recent Workflow Runs */}
+          {/* Right Column: Active Session Overview & Execution Logs */}
           <div className="lg:col-span-6 space-y-4">
-            <h2 className="text-sm font-black text-foreground flex items-center gap-2">
-              <Bot className="size-4 text-emerald-400" />
+            <h2 className="text-sm font-black text-white flex items-center gap-2">
+              <Bot className="size-4.5 text-emerald-400" />
               <span>Active Session Details</span>
             </h2>
 
             {loading ? (
-              <div className="py-12 text-center text-muted-foreground space-y-2">
-                <Loader2 className="size-6 animate-spin mx-auto text-emerald-400" />
-                <p className="text-xs">Loading active session from nonxe/oien...</p>
+              <div className="py-14 text-center text-muted-foreground space-y-3">
+                <Loader2 className="size-7 animate-spin mx-auto text-emerald-400" />
+                <p className="text-xs font-mono">Fetching active session from nonxe/oien...</p>
               </div>
             ) : !session ? (
-              <div className="p-8 rounded-3xl border border-dashed border-border/40 text-center space-y-3">
-                <div className="size-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto text-emerald-400 font-bold">
-                  <Bot className="size-6" />
+              <div className="p-8 rounded-[32px] border border-dashed border-white/10 text-center space-y-3 bg-[#0c1424]/40">
+                <div className="size-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto text-emerald-400 font-bold">
+                  <Bot className="size-7" />
                 </div>
-                <h3 className="text-sm font-bold text-foreground">No Session Configured</h3>
-                <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                  Paste your WhatsApp Session ID on the left to activate automated execution on nonxe/oien!
+                <h3 className="text-sm font-bold text-white">No Session Configured</h3>
+                <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
+                  Paste your WhatsApp Session ID on the left to configure automated execution on <span className="font-mono text-emerald-400">nonxe/oien</span>!
                 </p>
               </div>
             ) : (
-              <div className="p-5 rounded-3xl border border-emerald-500/30 bg-secondary/10 ios-glass space-y-4 shadow-xl">
+              <div className="p-6 rounded-[32px] border border-emerald-500/20 bg-[#0c1424]/80 backdrop-blur-3xl space-y-4 shadow-2xl relative overflow-hidden">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="size-10 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold">
+                  <div className="flex items-center gap-3.5">
+                    <div className="size-12 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold shadow-lg shadow-emerald-500/10">
                       <Bot className="size-6" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-black text-foreground">{session.botName || "OIEN BOT"}</h3>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 text-[9.5px] font-black uppercase font-mono">
+                      <h3 className="text-base font-black text-white">{session.botName || "OIEN BOT"}</h3>
+                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 text-[9.5px] font-black uppercase font-mono">
                         {session.status} • {session.mode || "public"}
                       </span>
                     </div>
@@ -536,7 +626,7 @@ function WabotDashboardPage() {
 
                   <button
                     onClick={() => copyToClipboard(session.sessionId)}
-                    className="px-3 py-1.5 rounded-xl border border-border/40 bg-secondary/30 hover:bg-secondary/60 text-muted-foreground hover:text-foreground text-xs font-bold transition-all flex items-center gap-1.5"
+                    className="px-3.5 py-2 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-white text-xs font-bold transition-all flex items-center gap-1.5"
                     title="Copy Session ID"
                   >
                     {copied ? <Check className="size-3.5 text-emerald-400" /> : <Copy className="size-3.5" />}
@@ -544,15 +634,15 @@ function WabotDashboardPage() {
                   </button>
                 </div>
 
-                <div className="p-3 rounded-2xl bg-background/80 border border-border/30 space-y-1.5 font-mono text-xs">
+                <div className="p-4 rounded-2xl bg-[#050811]/90 border border-white/10 space-y-2 font-mono text-xs">
                   <div className="text-muted-foreground text-[11px]">Session ID Snippet:</div>
                   <div className="text-emerald-300 font-bold break-all">
-                    {session.sessionId.slice(0, 24)}...{session.sessionId.slice(-8)}
+                    {session.sessionId.slice(0, 26)}...{session.sessionId.slice(-8)}
                   </div>
                   {session.sudo && (
-                    <div className="flex items-center justify-between text-[11px] pt-1 border-t border-border/20 text-muted-foreground">
+                    <div className="flex items-center justify-between text-[11px] pt-2 border-t border-white/10 text-muted-foreground">
                       <span>Owner / Sudo:</span>
-                      <span className="text-foreground">{session.sudo}</span>
+                      <span className="text-white font-bold">{session.sudo}</span>
                     </div>
                   )}
                   {session.updatedAt && (
@@ -565,25 +655,28 @@ function WabotDashboardPage() {
               </div>
             )}
 
-            {/* Workflow Runs Log Table */}
+            {/* Workflow Execution Runs Log Table */}
             {runs.length > 0 && (
               <div className="pt-2 space-y-3">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase font-mono">Recent GitHub Action Runs</h3>
-                <div className="rounded-2xl border border-border/40 overflow-hidden bg-background/60">
-                  <div className="divide-y divide-border/20">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase font-mono flex items-center gap-1.5">
+                  <Terminal className="size-3.5 text-emerald-400" />
+                  <span>Recent GitHub Action Runs Log</span>
+                </h3>
+                <div className="rounded-3xl border border-white/10 overflow-hidden bg-[#0c1424]/60 backdrop-blur-2xl">
+                  <div className="divide-y divide-white/5">
                     {runs.map((r) => (
-                      <div key={r.id} className="p-3 flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-2">
+                      <div key={r.id} className="p-3.5 flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2.5">
                           <span
-                            className={`size-2 rounded-full ${
+                            className={`size-2.5 rounded-full ${
                               r.status === "in_progress"
                                 ? "bg-amber-400 animate-ping"
                                 : r.conclusion === "success"
                                 ? "bg-emerald-400"
-                                : "bg-red-400"
+                                : "bg-rose-400"
                             }`}
                           />
-                          <span className="font-mono text-foreground">{r.name}</span>
+                          <span className="font-mono font-bold text-white">{r.name}</span>
                         </div>
                         <div className="flex items-center gap-3">
                           <span className="text-[10px] text-muted-foreground font-mono">
@@ -593,7 +686,7 @@ function WabotDashboardPage() {
                             href={r.htmlUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-emerald-400 hover:underline text-[11px] flex items-center gap-1 font-mono"
+                            className="text-emerald-400 hover:underline text-[11px] flex items-center gap-1 font-mono font-bold"
                           >
                             <span>Log</span>
                             <ExternalLink className="size-2.5" />
@@ -612,10 +705,10 @@ function WabotDashboardPage() {
       {/* Toast Feedback */}
       {toastMsg && (
         <div
-          className={`fixed top-20 right-6 z-50 px-4 py-2.5 rounded-2xl border text-xs font-bold shadow-2xl backdrop-blur-xl animate-spring-scale ${
+          className={`fixed top-20 right-6 z-50 px-5 py-3 rounded-2xl border text-xs font-bold shadow-2xl backdrop-blur-2xl animate-spring-scale ${
             toastMsg.type === "success"
               ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-300"
-              : "bg-red-500/20 border-red-500/40 text-red-300"
+              : "bg-rose-500/20 border-rose-500/40 text-rose-300"
           }`}
         >
           {toastMsg.text}
@@ -630,7 +723,7 @@ export const Route = createFileRoute("/wabot")({
   head: () => ({
     meta: [
       { title: "WhatsApp Bot Admin • nonxe/oien" },
-      { name: "description", content: "Single WhatsApp Session ID manager and auto-restart runner for nonxe/oien." },
+      { name: "description", content: "iOS Dark WA Bot Manager with Start and Stop Workflow controls for nonxe/oien." },
     ],
   }),
 });
