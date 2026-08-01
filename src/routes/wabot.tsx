@@ -2,47 +2,49 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import {
   Bot,
-  Play,
-  RotateCw,
-  Plus,
-  Trash2,
-  Copy,
-  Check,
-  CheckCircle2,
-  AlertCircle,
-  Clock,
-  ShieldCheck,
   Zap,
-  ArrowLeft,
-  Server,
-  Activity,
-  Layers,
+  Lock,
   KeyRound,
   User,
-  Settings,
-  Globe,
-  Lock,
-  ExternalLink,
-  Loader2,
-  Sparkles,
+  ShieldCheck,
+  Check,
+  Copy,
+  Clock,
+  Activity,
+  Server,
+  ArrowLeft,
   RefreshCw,
+  Loader2,
+  ExternalLink,
+  Save,
+  LogOut,
+  AlertCircle,
+  Sparkles,
 } from "lucide-react";
 import { WabotSession, WorkflowRun } from "../lib/github-wabot";
 
 function WabotDashboardPage() {
-  const [sessions, setSessions] = useState<WabotSession[]>([]);
+  // Admin Auth State
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminUser, setAdminUser] = useState("");
+  const [adminPass, setAdminPass] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [authenticating, setAuthenticating] = useState(false);
+
+  // Wabot State
+  const [session, setSession] = useState<WabotSession | null>(null);
   const [runs, setRuns] = useState<WorkflowRun[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [triggering, setTriggering] = useState(false);
-  const [savingSession, setSavingSession] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   // Form State
   const [inputSessionId, setInputSessionId] = useState("");
   const [inputBotName, setInputBotName] = useState("");
   const [inputSudo, setInputSudo] = useState("");
   const [inputMode, setInputMode] = useState<"public" | "private">("public");
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const [toastMsg, setToastMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const showToast = (text: string, type: "success" | "error" = "success") => {
@@ -50,14 +52,30 @@ function WabotDashboardPage() {
     setTimeout(() => setToastMsg(null), 4000);
   };
 
+  // Check saved admin session
+  useEffect(() => {
+    const token = localStorage.getItem("wabot_admin_auth");
+    if (token === "wabot_admin_authenticated") {
+      setIsAdmin(true);
+    }
+  }, []);
+
   const loadData = async (isManual = false) => {
     if (isManual) setRefreshing(true);
     try {
       const res = await fetch("/api/wabot/manage");
-      const data = await res.json();
-      if (data.success) {
-        setSessions(data.sessions || []);
-        setRuns(data.runs || []);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setSession(data.session || null);
+          setRuns(data.runs || []);
+          if (data.session) {
+            setInputSessionId(data.session.sessionId || "");
+            setInputBotName(data.session.botName || "OIEN BOT");
+            setInputSudo(data.session.sudo || "");
+            setInputMode(data.session.mode || "public");
+          }
+        }
       }
     } catch {}
     setLoading(false);
@@ -65,44 +83,78 @@ function WabotDashboardPage() {
   };
 
   useEffect(() => {
-    loadData();
-    const interval = setInterval(() => loadData(), 30000);
-    return () => clearInterval(interval);
-  }, []);
+    if (isAdmin) {
+      loadData();
+      const interval = setInterval(() => loadData(), 30000);
+      return () => clearInterval(interval);
+    }
+  }, [isAdmin]);
 
-  // Handle Add Session ID
-  const handleAddSession = async (e: React.FormEvent) => {
+  // Admin Login Handler
+  const handleAdminLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError("");
+    setAuthenticating(true);
+
+    try {
+      const res = await fetch("/api/wabot/manage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "admin_login",
+          username: adminUser.trim(),
+          password: adminPass.trim(),
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success && data.adminToken) {
+        localStorage.setItem("wabot_admin_auth", data.adminToken);
+        setIsAdmin(true);
+        showToast("Welcome Admin! Access granted.");
+      } else {
+        setAuthError(data.error || "Invalid Admin username or password.");
+      }
+    } catch (err: any) {
+      setAuthError("Authentication error: " + err.message);
+    }
+    setAuthenticating(false);
+  };
+
+  const handleAdminLogout = () => {
+    localStorage.removeItem("wabot_admin_auth");
+    setIsAdmin(false);
+    setAdminUser("");
+    setAdminPass("");
+  };
+
+  // Handle Save Session ID
+  const handleSaveSession = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputSessionId.trim()) {
       showToast("WhatsApp Session ID is required.", "error");
       return;
     }
 
-    setSavingSession(true);
+    setSaving(true);
     try {
-      const storedUser = localStorage.getItem("cloud_user_account");
-      const addedBy = storedUser ? JSON.parse(storedUser).id : "guest";
-
       const res = await fetch("/api/wabot/manage", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: "add_session",
+          action: "save_session",
+          auth: { adminToken: "wabot_admin_authenticated" },
           sessionId: inputSessionId.trim(),
           botName: inputBotName.trim() || "OIEN BOT",
           sudo: inputSudo.trim(),
           mode: inputMode,
           status: "active",
-          addedBy,
         }),
       });
 
       const data = await res.json();
       if (data.success) {
         showToast("WhatsApp Session ID saved to nonxe/oien database repository!");
-        setInputSessionId("");
-        setInputBotName("");
-        setInputSudo("");
         loadData();
       } else {
         showToast(data.error || "Failed to save session.", "error");
@@ -110,30 +162,7 @@ function WabotDashboardPage() {
     } catch (err: any) {
       showToast("Save error: " + err.message, "error");
     }
-    setSavingSession(false);
-  };
-
-  // Handle Delete Session
-  const handleDeleteSession = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete session for "${name}"?`)) return;
-
-    try {
-      const res = await fetch("/api/wabot/manage", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "delete_session", id }),
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        showToast(`Deleted session "${name}" from nonxe/oien.`);
-        loadData();
-      } else {
-        showToast(data.error || "Failed to delete session.", "error");
-      }
-    } catch (err: any) {
-      showToast("Delete error: " + err.message, "error");
-    }
+    setSaving(false);
   };
 
   // Handle Trigger Workflow Dispatch
@@ -143,12 +172,15 @@ function WabotDashboardPage() {
       const res = await fetch("/api/wabot/manage", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "trigger_workflow" }),
+        body: JSON.stringify({
+          action: "trigger_workflow",
+          auth: { adminToken: "wabot_admin_authenticated" },
+        }),
       });
 
       const data = await res.json();
       if (data.success) {
-        showToast("GitHub Action workflow dispatched in nonxe/oien! Bot will start running now.");
+        showToast("GitHub Action workflow dispatched in nonxe/oien! Bot is running now.");
         setTimeout(() => loadData(), 3000);
       } else {
         showToast(data.error || "Failed to dispatch workflow.", "error");
@@ -159,14 +191,97 @@ function WabotDashboardPage() {
     setTriggering(false);
   };
 
-  const copyToClipboard = (text: string, id: string) => {
+  const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
-  const activeSessionsCount = sessions.filter((s) => s.status === "active").length;
   const latestRun = runs[0];
+
+  // Render Admin Login Screen if not authenticated
+  if (!isAdmin) {
+    return (
+      <main className="min-h-screen bg-background text-foreground flex items-center justify-center p-4 font-sans selection:bg-emerald-500/30 select-none">
+        <div className="max-w-md w-full p-6 sm:p-8 rounded-3xl border border-emerald-500/30 bg-secondary/10 ios-glass space-y-6 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-8 opacity-10 text-emerald-400">
+            <Bot className="size-32" />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <a
+              href="/"
+              className="size-9 rounded-xl bg-secondary/40 hover:bg-secondary/80 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all"
+              title="Back to Home"
+            >
+              <ArrowLeft className="size-4" />
+            </a>
+            <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-black uppercase font-mono">
+              Admin Only
+            </span>
+          </div>
+
+          <div className="space-y-2">
+            <div className="size-12 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold">
+              <Lock className="size-6" />
+            </div>
+            <h1 className="text-xl font-black text-foreground">WhatsApp Bot Admin</h1>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Login to manage single WhatsApp Session ID and GitHub Action bot runner in <span className="font-mono text-emerald-300">nonxe/oien</span>.
+            </p>
+          </div>
+
+          {authError && (
+            <div className="p-3.5 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs font-bold flex items-center gap-2">
+              <AlertCircle className="size-4 flex-shrink-0 text-red-400" />
+              <span>{authError}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleAdminLogin} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground uppercase font-mono flex items-center gap-1">
+                <User className="size-3.5 text-emerald-400" />
+                <span>Username</span>
+              </label>
+              <input
+                type="text"
+                value={adminUser}
+                onChange={(e) => setAdminUser(e.target.value)}
+                placeholder="Admin username"
+                className="w-full px-4 py-2.5 rounded-xl bg-background/80 border border-border/40 text-xs font-bold text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-emerald-500 transition-all"
+                required
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground uppercase font-mono flex items-center gap-1">
+                <KeyRound className="size-3.5 text-emerald-400" />
+                <span>Password</span>
+              </label>
+              <input
+                type="password"
+                value={adminPass}
+                onChange={(e) => setAdminPass(e.target.value)}
+                placeholder="Admin password"
+                className="w-full px-4 py-2.5 rounded-xl bg-background/80 border border-border/40 text-xs font-bold text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-emerald-500 transition-all"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={authenticating}
+              className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black text-xs transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2 disabled:opacity-50 mt-2"
+            >
+              {authenticating ? <Loader2 className="size-4 animate-spin" /> : <ShieldCheck className="size-4" />}
+              <span>Authenticate Admin</span>
+            </button>
+          </form>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-background text-foreground font-sans selection:bg-emerald-500/30">
@@ -194,7 +309,7 @@ function WabotDashboardPage() {
                 </span>
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">
-                GitHub Action multi-session runner • Auto rerun every 5 hours
+                Single Session Runner • Auto rerun every 5 hours • Admin Authenticated
               </p>
             </div>
           </div>
@@ -217,6 +332,14 @@ function WabotDashboardPage() {
               {triggering ? <Loader2 className="size-3.5 animate-spin" /> : <Zap className="size-3.5" />}
               <span>Restart Workflow</span>
             </button>
+
+            <button
+              onClick={handleAdminLogout}
+              className="p-2.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all text-xs font-bold"
+              title="Logout Admin"
+            >
+              <LogOut className="size-3.5" />
+            </button>
           </div>
         </div>
       </header>
@@ -229,9 +352,9 @@ function WabotDashboardPage() {
               <Activity className="size-5" />
             </div>
             <div>
-              <div className="text-xs text-muted-foreground font-mono">Active Sessions</div>
-              <div className="text-xl font-black text-foreground mt-0.5">
-                {activeSessionsCount} / {sessions.length}
+              <div className="text-xs text-muted-foreground font-mono">Current Active Bot</div>
+              <div className="text-sm font-black text-foreground mt-0.5 truncate max-w-[180px]">
+                {session ? session.botName || "OIEN BOT" : "No Session Set"}
               </div>
             </div>
           </div>
@@ -277,28 +400,33 @@ function WabotDashboardPage() {
           </div>
         </div>
 
-        {/* Main Content Grid: Form + Sessions List */}
+        {/* Main Section: Current Active Session Card & Edit Form */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Column: Submit Session ID Form */}
-          <div className="lg:col-span-5 space-y-4">
+          {/* Left Column: Update Single Session ID Form */}
+          <div className="lg:col-span-6 space-y-4">
             <div className="p-5 sm:p-6 rounded-3xl border border-border/40 bg-secondary/10 ios-glass space-y-4 shadow-xl">
-              <div className="flex items-center gap-2 border-b border-border/30 pb-3">
-                <Plus className="size-4 text-emerald-400" />
-                <h2 className="text-sm font-black text-foreground">Add WhatsApp Session ID</h2>
+              <div className="flex items-center justify-between border-b border-border/30 pb-3">
+                <div className="flex items-center gap-2">
+                  <Save className="size-4 text-emerald-400" />
+                  <h2 className="text-sm font-black text-foreground">Configure WhatsApp Session ID</h2>
+                </div>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 text-[10px] font-mono font-bold">
+                  Single Session
+                </span>
               </div>
 
-              <form onSubmit={handleAddSession} className="space-y-3.5">
+              <form onSubmit={handleSaveSession} className="space-y-3.5">
                 {/* Session ID */}
                 <div className="space-y-1">
                   <label className="text-[11px] font-bold text-muted-foreground uppercase font-mono flex items-center justify-between">
-                    <span>Session ID / String</span>
+                    <span>WhatsApp Session ID / String</span>
                     <span className="text-emerald-400 text-[10px]">Required</span>
                   </label>
                   <textarea
                     value={inputSessionId}
                     onChange={(e) => setInputSessionId(e.target.value)}
                     placeholder="Paste Session ID (e.g. RGNK~4IqF0mP6...)"
-                    rows={3}
+                    rows={4}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-background/80 border border-border/40 text-xs font-mono text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-emerald-500 transition-all resize-none"
                     required
                   />
@@ -311,7 +439,7 @@ function WabotDashboardPage() {
                     type="text"
                     value={inputBotName}
                     onChange={(e) => setInputBotName(e.target.value)}
-                    placeholder="e.g. OIEN BOT 1"
+                    placeholder="e.g. OIEN BOT"
                     className="w-full px-3.5 py-2 rounded-xl bg-background/80 border border-border/40 text-xs font-bold text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-emerald-500 transition-all"
                   />
                 </div>
@@ -359,137 +487,88 @@ function WabotDashboardPage() {
 
                 <button
                   type="submit"
-                  disabled={savingSession}
+                  disabled={saving}
                   className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black text-xs transition-all shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-1.5 disabled:opacity-50 mt-2"
                 >
-                  {savingSession ? <Loader2 className="size-4 animate-spin" /> : <SaveIcon className="size-4" />}
+                  {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
                   <span>Save Session to nonxe/oien</span>
                 </button>
               </form>
             </div>
-
-            {/* Info Card */}
-            <div className="p-4 rounded-2xl border border-border/30 bg-secondary/5 text-xs space-y-2 leading-relaxed text-muted-foreground">
-              <div className="font-bold text-foreground flex items-center gap-1.5">
-                <Sparkles className="size-3.5 text-emerald-400" />
-                <span>How Multi-Session Runner Works</span>
-              </div>
-              <p>
-                When you save a session ID, it is written directly to <span className="font-mono text-emerald-300">nonxe/oien/sessions.json</span>.
-              </p>
-              <p>
-                GitHub Actions executes <span className="font-mono text-foreground">multi-runner.js</span> every 5 hours or on manual workflow trigger, starting all added active WhatsApp Bot sessions concurrently!
-              </p>
-            </div>
           </div>
 
-          {/* Right Column: Sessions List */}
-          <div className="lg:col-span-7 space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-black text-foreground flex items-center gap-2">
-                <Layers className="size-4 text-emerald-400" />
-                <span>Active WhatsApp Bot Sessions ({sessions.length})</span>
-              </h2>
-
-              <a
-                href="https://github.com/nonxe/oien"
-                target="_blank"
-                rel="noreferrer"
-                className="text-xs font-mono text-emerald-400 hover:underline flex items-center gap-1"
-              >
-                <span>nonxe/oien repo</span>
-                <ExternalLink className="size-3" />
-              </a>
-            </div>
+          {/* Right Column: Active Session Overview & Recent Workflow Runs */}
+          <div className="lg:col-span-6 space-y-4">
+            <h2 className="text-sm font-black text-foreground flex items-center gap-2">
+              <Bot className="size-4 text-emerald-400" />
+              <span>Active Session Details</span>
+            </h2>
 
             {loading ? (
               <div className="py-12 text-center text-muted-foreground space-y-2">
                 <Loader2 className="size-6 animate-spin mx-auto text-emerald-400" />
-                <p className="text-xs">Loading sessions from nonxe/oien...</p>
+                <p className="text-xs">Loading active session from nonxe/oien...</p>
               </div>
-            ) : sessions.length === 0 ? (
+            ) : !session ? (
               <div className="p-8 rounded-3xl border border-dashed border-border/40 text-center space-y-3">
                 <div className="size-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto text-emerald-400 font-bold">
                   <Bot className="size-6" />
                 </div>
-                <h3 className="text-sm font-bold text-foreground">No Session IDs Found</h3>
+                <h3 className="text-sm font-bold text-foreground">No Session Configured</h3>
                 <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                  Add your first WhatsApp Bot Session ID on the left to start automated execution on nonxe/oien!
+                  Paste your WhatsApp Session ID on the left to activate automated execution on nonxe/oien!
                 </p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {sessions.map((s) => (
-                  <div
-                    key={s.id}
-                    className="p-4 rounded-2xl border border-border/40 bg-secondary/10 ios-glass space-y-3 transition-all hover:border-emerald-500/30"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-2.5">
-                        <div className="size-9 rounded-xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold">
-                          <Bot className="size-5" />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="text-xs font-black text-foreground">{s.botName || "OIEN BOT"}</h3>
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-[9.5px] font-black uppercase font-mono border ${
-                                s.status === "active"
-                                  ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30"
-                                  : "bg-red-500/10 text-red-300 border-red-500/30"
-                              }`}
-                            >
-                              {s.status}
-                            </span>
-                          </div>
-                          <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
-                            Added {new Date(s.addedAt).toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => copyToClipboard(s.sessionId, s.id)}
-                          className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground transition-all"
-                          title="Copy Session ID"
-                        >
-                          {copiedId === s.id ? <Check className="size-3.5 text-emerald-400" /> : <Copy className="size-3.5" />}
-                        </button>
-                        <button
-                          onClick={() => handleDeleteSession(s.id, s.botName || s.id)}
-                          className="p-1.5 rounded-lg text-muted-foreground hover:text-red-400 transition-all"
-                          title="Delete Session"
-                        >
-                          <Trash2 className="size-3.5" />
-                        </button>
-                      </div>
+              <div className="p-5 rounded-3xl border border-emerald-500/30 bg-secondary/10 ios-glass space-y-4 shadow-xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="size-10 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold">
+                      <Bot className="size-6" />
                     </div>
-
-                    {/* Session Details */}
-                    <div className="p-2.5 rounded-xl bg-background/80 border border-border/30 space-y-1 font-mono text-[11px]">
-                      <div className="flex items-center justify-between text-muted-foreground">
-                        <span>Session Snippet:</span>
-                        <span className="text-emerald-400 font-bold">
-                          {s.sessionId.slice(0, 16)}...{s.sessionId.slice(-6)}
-                        </span>
-                      </div>
-                      {s.sudo && (
-                        <div className="flex items-center justify-between text-muted-foreground">
-                          <span>Sudo Owner:</span>
-                          <span className="text-foreground">{s.sudo}</span>
-                        </div>
-                      )}
+                    <div>
+                      <h3 className="text-sm font-black text-foreground">{session.botName || "OIEN BOT"}</h3>
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 text-[9.5px] font-black uppercase font-mono">
+                        {session.status} • {session.mode || "public"}
+                      </span>
                     </div>
                   </div>
-                ))}
+
+                  <button
+                    onClick={() => copyToClipboard(session.sessionId)}
+                    className="px-3 py-1.5 rounded-xl border border-border/40 bg-secondary/30 hover:bg-secondary/60 text-muted-foreground hover:text-foreground text-xs font-bold transition-all flex items-center gap-1.5"
+                    title="Copy Session ID"
+                  >
+                    {copied ? <Check className="size-3.5 text-emerald-400" /> : <Copy className="size-3.5" />}
+                    <span>{copied ? "Copied" : "Copy ID"}</span>
+                  </button>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-background/80 border border-border/30 space-y-1.5 font-mono text-xs">
+                  <div className="text-muted-foreground text-[11px]">Session ID Snippet:</div>
+                  <div className="text-emerald-300 font-bold break-all">
+                    {session.sessionId.slice(0, 24)}...{session.sessionId.slice(-8)}
+                  </div>
+                  {session.sudo && (
+                    <div className="flex items-center justify-between text-[11px] pt-1 border-t border-border/20 text-muted-foreground">
+                      <span>Owner / Sudo:</span>
+                      <span className="text-foreground">{session.sudo}</span>
+                    </div>
+                  )}
+                  {session.updatedAt && (
+                    <div className="flex items-center justify-between text-[10px] text-muted-foreground/60 pt-1">
+                      <span>Last Updated:</span>
+                      <span>{new Date(session.updatedAt).toLocaleString()}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
             {/* Workflow Runs Log Table */}
             {runs.length > 0 && (
-              <div className="pt-4 space-y-3">
-                <h3 className="text-xs font-bold text-muted-foreground uppercase font-mono">Recent GitHub Action Executions</h3>
+              <div className="pt-2 space-y-3">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase font-mono">Recent GitHub Action Runs</h3>
                 <div className="rounded-2xl border border-border/40 overflow-hidden bg-background/60">
                   <div className="divide-y divide-border/20">
                     {runs.map((r) => (
@@ -546,22 +625,12 @@ function WabotDashboardPage() {
   );
 }
 
-function SaveIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-      <polyline points="17 21 17 13 7 13 7 21" />
-      <polyline points="7 3 7 8 15 8" />
-    </svg>
-  );
-}
-
 export const Route = createFileRoute("/wabot")({
   component: WabotDashboardPage,
   head: () => ({
     meta: [
-      { title: "WhatsApp Bot Manager • nonxe/oien" },
-      { name: "description", content: "Manage WhatsApp bot session IDs and auto-restart GitHub Action runners in nonxe/oien." },
+      { title: "WhatsApp Bot Admin • nonxe/oien" },
+      { name: "description", content: "Single WhatsApp Session ID manager and auto-restart runner for nonxe/oien." },
     ],
   }),
 });

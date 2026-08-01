@@ -1,9 +1,10 @@
+import { createFileRoute } from "@tanstack/react-router";
 import {
-  fetchWabotSessions,
+  fetchWabotSession,
   saveWabotSession,
-  deleteWabotSession,
   triggerWorkflowDispatch,
   fetchWorkflowRuns,
+  WabotSession,
 } from "../../../lib/github-wabot";
 
 const CORS_HEADERS = {
@@ -13,74 +14,83 @@ const CORS_HEADERS = {
   "Content-Type": "application/json",
 };
 
-export async function GET() {
+const ADMIN_USER = "as";
+const ADMIN_PASS = "as123";
+
+async function handleGet() {
   try {
-    const [{ sessions }, runs] = await Promise.all([
-      fetchWabotSessions(),
+    const [{ session }, runs] = await Promise.all([
+      fetchWabotSession(),
       fetchWorkflowRuns(),
     ]);
 
     return new Response(
       JSON.stringify({
         success: true,
-        sessions,
+        session,
         runs,
-        totalActive: sessions.filter((s) => s.status === "active").length,
       }),
       { status: 200, headers: CORS_HEADERS }
     );
   } catch (err: any) {
     return new Response(
-      JSON.stringify({ success: false, error: err.message || "Failed to fetch wabot sessions." }),
+      JSON.stringify({ success: false, error: err.message || "Failed to fetch wabot session." }),
       { status: 500, headers: CORS_HEADERS }
     );
   }
 }
 
-export async function POST(request: Request) {
+async function handlePost(request: Request) {
   try {
     const body = (await request.json()) as any;
-    const { action, session, id, sessionId, botName, sudo, mode, status, addedBy } = body;
+    const { action, auth, sessionId, botName, sudo, mode, status } = body;
 
-    // Action: Save / Add Session
-    if (action === "save_session" || action === "add_session") {
-      const dataToSave = session || {
-        id,
-        sessionId,
-        botName: botName || "OIEN BOT",
-        sudo,
-        mode: mode || "public",
-        status: status || "active",
-        addedBy: addedBy || "anonymous",
-      };
+    // Action: Login Admin Check
+    if (action === "admin_login") {
+      if (body.username === ADMIN_USER && body.password === ADMIN_PASS) {
+        return new Response(
+          JSON.stringify({ success: true, adminToken: "wabot_admin_authenticated" }),
+          { status: 200, headers: CORS_HEADERS }
+        );
+      }
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid Admin username or password." }),
+        { status: 401, headers: CORS_HEADERS }
+      );
+    }
 
-      if (!dataToSave.sessionId) {
+    // Protect sensitive actions with Admin Auth check
+    if (auth?.username !== ADMIN_USER || auth?.password !== ADMIN_PASS) {
+      if (auth?.adminToken !== "wabot_admin_authenticated") {
+        return new Response(
+          JSON.stringify({ success: false, error: "Unauthorized. Admin authentication required." }),
+          { status: 403, headers: CORS_HEADERS }
+        );
+      }
+    }
+
+    // Action: Save / Update Single Session ID
+    if (action === "save_session") {
+      if (!sessionId) {
         return new Response(
           JSON.stringify({ success: false, error: "WhatsApp Session ID is required." }),
           { status: 400, headers: CORS_HEADERS }
         );
       }
 
-      const res = await saveWabotSession(dataToSave);
+      const sessionToSave: WabotSession = {
+        sessionId: sessionId.trim(),
+        botName: botName ? botName.trim() : "OIEN BOT",
+        sudo: sudo ? sudo.trim() : "",
+        mode: mode || "public",
+        status: status || "active",
+        updatedBy: "admin (as)",
+        updatedAt: new Date().toISOString(),
+      };
+
+      const res = await saveWabotSession(sessionToSave);
       return new Response(JSON.stringify(res), {
         status: res.success ? 200 : 400,
-        headers: CORS_HEADERS,
-      });
-    }
-
-    // Action: Delete Session
-    if (action === "delete_session") {
-      const targetId = id || sessionId;
-      if (!targetId) {
-        return new Response(
-          JSON.stringify({ success: false, error: "Session ID required for deletion." }),
-          { status: 400, headers: CORS_HEADERS }
-        );
-      }
-
-      const ok = await deleteWabotSession(targetId);
-      return new Response(JSON.stringify({ success: ok }), {
-        status: ok ? 200 : 400,
         headers: CORS_HEADERS,
       });
     }
@@ -106,6 +116,12 @@ export async function POST(request: Request) {
   }
 }
 
-export async function OPTIONS() {
-  return new Response(null, { status: 204, headers: CORS_HEADERS });
-}
+export const Route = createFileRoute("/api/wabot/manage")({
+  server: {
+    handlers: {
+      OPTIONS: async () => new Response(null, { status: 204, headers: CORS_HEADERS }),
+      GET: async () => handleGet(),
+      POST: async ({ request }) => handlePost(request),
+    },
+  },
+});

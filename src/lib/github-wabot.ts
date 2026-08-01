@@ -1,4 +1,4 @@
-import { logHistoryActivity } from "./github-history";
+import { addHistoryEntry } from "./github-history";
 
 const GITHUB_REPO = "nonxe/oien";
 const SESSIONS_FILE = "sessions.json";
@@ -15,15 +15,13 @@ function getGithubToken(): string {
 }
 
 export interface WabotSession {
-  id: string;
   sessionId: string;
   botName: string;
   sudo?: string;
   mode?: "public" | "private";
   status: "active" | "inactive";
-  addedBy?: string;
-  addedAt: string;
-  updatedAt?: string;
+  updatedBy?: string;
+  updatedAt: string;
 }
 
 export interface WorkflowRun {
@@ -43,7 +41,7 @@ function b64decode(s: string): string {
       Uint8Array.from(atob(clean), (c) => c.charCodeAt(0))
     );
   } catch {
-    return "[]";
+    return "{}";
   }
 }
 
@@ -55,8 +53,8 @@ function b64encode(s: string): string {
   );
 }
 
-/** Fetch all sessions from nonxe/oien/sessions.json */
-export async function fetchWabotSessions(): Promise<{ sha: string | null; sessions: WabotSession[] }> {
+/** Fetch active single session config from nonxe/oien/sessions.json */
+export async function fetchWabotSession(): Promise<{ sha: string | null; session: WabotSession | null }> {
   try {
     const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${SESSIONS_FILE}`;
     const token = getGithubToken();
@@ -69,57 +67,44 @@ export async function fetchWabotSessions(): Promise<{ sha: string | null; sessio
       cache: "no-store",
     });
 
-    if (!res.ok) return { sha: null, sessions: [] };
+    if (!res.ok) return { sha: null, session: null };
 
     const data = (await res.json()) as any;
     const sha = data.sha || null;
-    const raw = data.content ? b64decode(data.content) : "[]";
+    const raw = data.content ? b64decode(data.content) : "{}";
 
-    let sessions: WabotSession[] = [];
-    try {
-      sessions = JSON.parse(raw);
-      if (!Array.isArray(sessions)) sessions = [];
-    } catch {
-      sessions = [];
+    let parsed = JSON.parse(raw);
+    let session: WabotSession | null = null;
+
+    if (Array.isArray(parsed)) {
+      session = parsed[0] || null;
+    } else if (parsed && parsed.sessionId) {
+      session = parsed;
     }
-    return { sha, sessions };
+
+    return { sha, session };
   } catch {
-    return { sha: null, sessions: [] };
+    return { sha: null, session: null };
   }
 }
 
-/** Save or update session in nonxe/oien/sessions.json */
-export async function saveWabotSession(sessionData: Omit<WabotSession, "id" | "addedAt"> & { id?: string }): Promise<{ success: boolean; session?: WabotSession; error?: string }> {
+/** Save or update single session in nonxe/oien/sessions.json */
+export async function saveWabotSession(sessionData: WabotSession): Promise<{ success: boolean; session?: WabotSession; error?: string }> {
   try {
-    const { sha, sessions } = await fetchWabotSessions();
+    const { sha } = await fetchWabotSession();
     const now = new Date().toISOString();
 
-    let targetSession: WabotSession;
-
-    if (sessionData.id) {
-      const idx = sessions.findIndex((s) => s.id === sessionData.id);
-      if (idx !== -1) {
-        sessions[idx] = { ...sessions[idx], ...sessionData, updatedAt: now };
-        targetSession = sessions[idx];
-      } else {
-        targetSession = { ...sessionData, id: sessionData.id, addedAt: now };
-        sessions.push(targetSession);
-      }
-    } else {
-      targetSession = {
-        id: "sess_" + Math.random().toString(36).substring(2, 10),
-        ...sessionData,
-        addedAt: now,
-      };
-      sessions.push(targetSession);
-    }
+    const targetSession: WabotSession = {
+      ...sessionData,
+      updatedAt: now,
+    };
 
     const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${SESSIONS_FILE}`;
     const token = getGithubToken();
-    const encoded = b64encode(JSON.stringify(sessions, null, 2));
+    const encoded = b64encode(JSON.stringify(targetSession, null, 2));
 
     const body: any = {
-      message: `Update WhatsApp Bot session for ${targetSession.botName || targetSession.id}`,
+      message: `Update WhatsApp Bot session ID: ${targetSession.botName || "OIEN BOT"}`,
       content: encoded,
     };
     if (sha) body.sha = sha;
@@ -136,52 +121,18 @@ export async function saveWabotSession(sessionData: Omit<WabotSession, "id" | "a
     });
 
     if (putRes.ok) {
-      logHistoryActivity({
-        type: "WABOT_SESSION_SAVE",
-        detail: `Added/Updated WhatsApp Bot Session: ${targetSession.botName}`,
-        username: targetSession.addedBy || "anonymous",
-        ip: "0.0.0.0",
-      });
+      addHistoryEntry(
+        targetSession.updatedBy || "admin",
+        "WABOT_SESSION_SAVE",
+        `Saved single WhatsApp Session ID: ${targetSession.botName}`
+      ).catch(() => {});
       return { success: true, session: targetSession };
     }
 
-    const errData = await putRes.json() as any;
+    const errData = (await putRes.json()) as any;
     return { success: false, error: errData.message || "Failed to save session to nonxe/oien." };
   } catch (err: any) {
     return { success: false, error: err.message || "Server error while saving session." };
-  }
-}
-
-/** Delete session from nonxe/oien/sessions.json */
-export async function deleteWabotSession(sessionId: string): Promise<boolean> {
-  try {
-    const { sha, sessions } = await fetchWabotSessions();
-    const updated = sessions.filter((s) => s.id !== sessionId);
-
-    const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${SESSIONS_FILE}`;
-    const token = getGithubToken();
-    const encoded = b64encode(JSON.stringify(updated, null, 2));
-
-    const body: any = {
-      message: `Delete WhatsApp Bot session ${sessionId}`,
-      content: encoded,
-    };
-    if (sha) body.sha = sha;
-
-    const putRes = await fetch(url, {
-      method: "PUT",
-      headers: {
-        Authorization: `token ${token}`,
-        "User-Agent": "SHS-Cloud-App",
-        Accept: "application/vnd.github.v3+json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
-
-    return putRes.ok;
-  } catch {
-    return false;
   }
 }
 
@@ -203,16 +154,11 @@ export async function triggerWorkflowDispatch(): Promise<{ success: boolean; err
     });
 
     if (res.status === 204 || res.ok) {
-      logHistoryActivity({
-        type: "WABOT_WORKFLOW_DISPATCH",
-        detail: "Triggered GitHub Action Bot Workflow in nonxe/oien",
-        username: "web_user",
-        ip: "0.0.0.0",
-      });
+      addHistoryEntry("admin", "WABOT_WORKFLOW_DISPATCH", "Triggered GitHub Action Bot Workflow in nonxe/oien").catch(() => {});
       return { success: true };
     }
 
-    const errData = await res.json() as any;
+    const errData = (await res.json()) as any;
     return { success: false, error: errData.message || "Failed to dispatch workflow." };
   } catch (err: any) {
     return { success: false, error: err.message || "Dispatch network error." };
@@ -236,7 +182,7 @@ export async function fetchWorkflowRuns(): Promise<WorkflowRun[]> {
 
     if (!res.ok) return [];
 
-    const data = await res.json() as any;
+    const data = (await res.json()) as any;
     if (!data.workflow_runs || !Array.isArray(data.workflow_runs)) return [];
 
     return data.workflow_runs.map((r: any) => ({
