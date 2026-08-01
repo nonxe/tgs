@@ -44,9 +44,14 @@ export interface WhiteboardBoard {
 }
 
 function b64decode(s: string): string {
-  return new TextDecoder().decode(
-    Uint8Array.from(atob(s.replace(/\n/g, "")), (c) => c.charCodeAt(0))
-  );
+  try {
+    const clean = s.replace(/[\n\r\s]/g, "");
+    return new TextDecoder().decode(
+      Uint8Array.from(atob(clean), (c) => c.charCodeAt(0))
+    );
+  } catch {
+    return "[]";
+  }
 }
 
 function b64encode(s: string): string {

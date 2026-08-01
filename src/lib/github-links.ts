@@ -37,9 +37,15 @@ export async function fetchAllLinks(): Promise<{ sha: string | null; links: Shor
 
     const data = (await res.json()) as any;
     const sha = data.sha || null;
-    const raw = data.content
-      ? new TextDecoder().decode(Uint8Array.from(atob(data.content.replace(/\n/g, "")), (c) => c.charCodeAt(0)))
-      : "[]";
+    let raw = "[]";
+    if (data.content) {
+      try {
+        const clean = data.content.replace(/[\n\r\s]/g, "");
+        raw = new TextDecoder().decode(Uint8Array.from(atob(clean), (c) => c.charCodeAt(0)));
+      } catch {
+        raw = "[]";
+      }
+    }
 
     let links: ShortLink[] = [];
     try {
