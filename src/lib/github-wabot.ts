@@ -2,6 +2,7 @@ import { addHistoryEntry } from "./github-history";
 
 const GITHUB_REPO = "nonxe/oien";
 const SESSIONS_FILE = "sessions.json";
+const ENV_FILE = "config.env";
 const WORKFLOW_ID = "main.yml";
 
 function getGithubToken(): string {
@@ -88,7 +89,7 @@ export async function fetchWabotSession(): Promise<{ sha: string | null; session
   }
 }
 
-/** Save or update single session in nonxe/oien/sessions.json */
+/** Save or update single session in nonxe/oien (writes both sessions.json & config.env) */
 export async function saveWabotSession(sessionData: WabotSession): Promise<{ success: boolean; session?: WabotSession; error?: string }> {
   try {
     const { sha } = await fetchWabotSession();
@@ -99,17 +100,19 @@ export async function saveWabotSession(sessionData: WabotSession): Promise<{ suc
       updatedAt: now,
     };
 
-    const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${SESSIONS_FILE}`;
     const token = getGithubToken();
-    const encoded = b64encode(JSON.stringify(targetSession, null, 2));
 
-    const body: any = {
+    // 1. Save sessions.json in nonxe/oien
+    const urlSessions = `https://api.github.com/repos/${GITHUB_REPO}/contents/${SESSIONS_FILE}`;
+    const encodedSessions = b64encode(JSON.stringify(targetSession, null, 2));
+
+    const bodySessions: any = {
       message: `Update WhatsApp Bot session ID: ${targetSession.botName || "OIEN BOT"}`,
-      content: encoded,
+      content: encodedSessions,
     };
-    if (sha) body.sha = sha;
+    if (sha) bodySessions.sha = sha;
 
-    const putRes = await fetch(url, {
+    const putRes = await fetch(urlSessions, {
       method: "PUT",
       headers: {
         Authorization: `token ${token}`,
@@ -117,20 +120,67 @@ export async function saveWabotSession(sessionData: WabotSession): Promise<{ suc
         Accept: "application/vnd.github.v3+json",
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(bodySessions),
     });
 
-    if (putRes.ok) {
-      addHistoryEntry(
-        targetSession.updatedBy || "admin",
-        "WABOT_SESSION_SAVE",
-        `Saved single WhatsApp Session ID: ${targetSession.botName}`
-      ).catch(() => {});
-      return { success: true, session: targetSession };
+    if (!putRes.ok) {
+      const errData = (await putRes.json()) as any;
+      return { success: false, error: errData.message || "Failed to save sessions.json to nonxe/oien." };
     }
 
-    const errData = (await putRes.json()) as any;
-    return { success: false, error: errData.message || "Failed to save session to nonxe/oien." };
+    // 2. Also update config.env in nonxe/oien so index.js reads SESSION directly
+    try {
+      const urlEnv = `https://api.github.com/repos/${GITHUB_REPO}/contents/${ENV_FILE}`;
+      let shaEnv: string | null = null;
+
+      const getEnvRes = await fetch(urlEnv, {
+        headers: {
+          Authorization: `token ${token}`,
+          "User-Agent": "SHS-Cloud-App",
+          Accept: "application/vnd.github.v3+json",
+        },
+      });
+
+      if (getEnvRes.ok) {
+        const envData = (await getEnvRes.json()) as any;
+        shaEnv = envData.sha || null;
+      }
+
+      const envContent = `SESSION=${targetSession.sessionId}
+BOT_NAME=${targetSession.botName || "OIEN BOT"}
+MODE=${targetSession.mode || "public"}
+SUDO=${targetSession.sudo || ""}
+PORT=3000
+LOG_LEVEL=silent
+TZ=Asia/Kolkata
+`;
+
+      const encodedEnv = b64encode(envContent);
+      const bodyEnv: any = {
+        message: `Update config.env for ${targetSession.botName || "OIEN BOT"}`,
+        content: encodedEnv,
+      };
+      if (shaEnv) bodyEnv.sha = shaEnv;
+
+      await fetch(urlEnv, {
+        method: "PUT",
+        headers: {
+          Authorization: `token ${token}`,
+          "User-Agent": "SHS-Cloud-App",
+          Accept: "application/vnd.github.v3+json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(bodyEnv),
+      });
+    } catch {}
+
+    addHistoryEntry(
+      targetSession.updatedBy || "admin",
+      "WABOT_SESSION_SAVE",
+      `Saved single WhatsApp Session ID: ${targetSession.botName}`
+    ).catch(() => {});
+
+    return { success: true, session: targetSession };
   } catch (err: any) {
     return { success: false, error: err.message || "Server error while saving session." };
   }
