@@ -35,7 +35,8 @@ import {
   Link2,
   MessageCircle,
   Network,
-  Palette
+  Palette,
+  ShieldCheck
 } from "lucide-react";
 
 function StarOfDavidIcon(props: React.SVGProps<SVGSVGElement>) {
