@@ -56,23 +56,23 @@ export async function POST(request: Request) {
       );
     }
 
-    // Test GitHub repo accessibility (check branch & entry file)
+    // Test GitHub repo branch & entry file (non-blocking fallback)
     const testBranch = (branch || "main").trim();
     const testPath = (entryPath || "index.html").trim().replace(/^\//, "");
-
-    const testUrl = `https://raw.githubusercontent.com/${parsed.owner}/${parsed.repo}/${testBranch}/${testPath}`;
-    const checkRes = await fetch(testUrl, { method: "HEAD" });
-
     let finalBranch = testBranch;
 
-    // Fallback: If 'main' branch HEAD check fails, try 'master'
-    if (!checkRes.ok && testBranch === "main") {
-      const fallbackUrl = `https://raw.githubusercontent.com/${parsed.owner}/${parsed.repo}/master/${testPath}`;
-      const fallbackRes = await fetch(fallbackUrl, { method: "HEAD" });
-      if (fallbackRes.ok) {
-        finalBranch = "master";
+    try {
+      const testUrl = `https://raw.githubusercontent.com/${parsed.owner}/${parsed.repo}/${testBranch}/${testPath}`;
+      const checkRes = await fetch(testUrl, { method: "GET", headers: { Range: "bytes=0-100" } });
+
+      if (!checkRes.ok && testBranch === "main") {
+        const fallbackUrl = `https://raw.githubusercontent.com/${parsed.owner}/${parsed.repo}/master/${testPath}`;
+        const fallbackRes = await fetch(fallbackUrl, { method: "GET", headers: { Range: "bytes=0-100" } });
+        if (fallbackRes.ok) {
+          finalBranch = "master";
+        }
       }
-    }
+    } catch {}
 
     const result = await createOrUpdateHostedSite({
       repoUrl,
