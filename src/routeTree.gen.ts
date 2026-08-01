@@ -22,6 +22,7 @@ import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as MainRouteImport } from './routes/main'
 import { Route as LinksRouteImport } from './routes/links'
 import { Route as IsraelRouteImport } from './routes/israel'
+import { Route as HostRouteImport } from './routes/host'
 import { Route as GitnetworkRouteImport } from './routes/gitnetwork'
 import { Route as DbConsoleRouteImport } from './routes/db-console'
 import { Route as ConvertRouteImport } from './routes/convert'
@@ -31,6 +32,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as NoteIndexRouteImport } from './routes/note.index'
 import { Route as ShsdbCreateRouteImport } from './routes/shsdb.create'
 import { Route as ShsdbIdRouteImport } from './routes/shsdb.$id'
+import { Route as SSlugRouteImport } from './routes/s/$slug'
 import { Route as NoteNoteIdRouteImport } from './routes/note.$noteId'
 import { Route as DbCreateRouteImport } from './routes/db.create'
 import { Route as DbIdRouteImport } from './routes/db.$id'
@@ -130,6 +132,11 @@ const IsraelRoute = IsraelRouteImport.update({
   path: '/israel',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HostRoute = HostRouteImport.update({
+  id: '/host',
+  path: '/host',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GitnetworkRoute = GitnetworkRouteImport.update({
   id: '/gitnetwork',
   path: '/gitnetwork',
@@ -173,6 +180,11 @@ const ShsdbCreateRoute = ShsdbCreateRouteImport.update({
 const ShsdbIdRoute = ShsdbIdRouteImport.update({
   id: '/shsdb/$id',
   path: '/shsdb/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SSlugRoute = SSlugRouteImport.update({
+  id: '/s/$slug',
+  path: '/s/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NoteNoteIdRoute = NoteNoteIdRouteImport.update({
@@ -349,6 +361,7 @@ export interface FileRoutesByFullPath {
   '/convert': typeof ConvertRoute
   '/db-console': typeof DbConsoleRoute
   '/gitnetwork': typeof GitnetworkRoute
+  '/host': typeof HostRoute
   '/israel': typeof IsraelRoute
   '/links': typeof LinksRoute
   '/main': typeof MainRoute
@@ -365,6 +378,7 @@ export interface FileRoutesByFullPath {
   '/db/$id': typeof DbIdRoute
   '/db/create': typeof DbCreateRoute
   '/note/$noteId': typeof NoteNoteIdRoute
+  '/s/$slug': typeof SSlugRoute
   '/shsdb/$id': typeof ShsdbIdRoute
   '/shsdb/create': typeof ShsdbCreateRoute
   '/note/': typeof NoteIndexRoute
@@ -406,6 +420,7 @@ export interface FileRoutesByTo {
   '/convert': typeof ConvertRoute
   '/db-console': typeof DbConsoleRoute
   '/gitnetwork': typeof GitnetworkRoute
+  '/host': typeof HostRoute
   '/israel': typeof IsraelRoute
   '/links': typeof LinksRoute
   '/main': typeof MainRoute
@@ -421,6 +436,7 @@ export interface FileRoutesByTo {
   '/db/$id': typeof DbIdRoute
   '/db/create': typeof DbCreateRoute
   '/note/$noteId': typeof NoteNoteIdRoute
+  '/s/$slug': typeof SSlugRoute
   '/shsdb/$id': typeof ShsdbIdRoute
   '/shsdb/create': typeof ShsdbCreateRoute
   '/note': typeof NoteIndexRoute
@@ -463,6 +479,7 @@ export interface FileRoutesById {
   '/convert': typeof ConvertRoute
   '/db-console': typeof DbConsoleRoute
   '/gitnetwork': typeof GitnetworkRoute
+  '/host': typeof HostRoute
   '/israel': typeof IsraelRoute
   '/links': typeof LinksRoute
   '/main': typeof MainRoute
@@ -479,6 +496,7 @@ export interface FileRoutesById {
   '/db/$id': typeof DbIdRoute
   '/db/create': typeof DbCreateRoute
   '/note/$noteId': typeof NoteNoteIdRoute
+  '/s/$slug': typeof SSlugRoute
   '/shsdb/$id': typeof ShsdbIdRoute
   '/shsdb/create': typeof ShsdbCreateRoute
   '/note/': typeof NoteIndexRoute
@@ -522,6 +540,7 @@ export interface FileRouteTypes {
     | '/convert'
     | '/db-console'
     | '/gitnetwork'
+    | '/host'
     | '/israel'
     | '/links'
     | '/main'
@@ -538,6 +557,7 @@ export interface FileRouteTypes {
     | '/db/$id'
     | '/db/create'
     | '/note/$noteId'
+    | '/s/$slug'
     | '/shsdb/$id'
     | '/shsdb/create'
     | '/note/'
@@ -579,6 +599,7 @@ export interface FileRouteTypes {
     | '/convert'
     | '/db-console'
     | '/gitnetwork'
+    | '/host'
     | '/israel'
     | '/links'
     | '/main'
@@ -594,6 +615,7 @@ export interface FileRouteTypes {
     | '/db/$id'
     | '/db/create'
     | '/note/$noteId'
+    | '/s/$slug'
     | '/shsdb/$id'
     | '/shsdb/create'
     | '/note'
@@ -635,6 +657,7 @@ export interface FileRouteTypes {
     | '/convert'
     | '/db-console'
     | '/gitnetwork'
+    | '/host'
     | '/israel'
     | '/links'
     | '/main'
@@ -651,6 +674,7 @@ export interface FileRouteTypes {
     | '/db/$id'
     | '/db/create'
     | '/note/$noteId'
+    | '/s/$slug'
     | '/shsdb/$id'
     | '/shsdb/create'
     | '/note/'
@@ -693,6 +717,7 @@ export interface RootRouteChildren {
   ConvertRoute: typeof ConvertRoute
   DbConsoleRoute: typeof DbConsoleRoute
   GitnetworkRoute: typeof GitnetworkRoute
+  HostRoute: typeof HostRoute
   IsraelRoute: typeof IsraelRoute
   LinksRoute: typeof LinksRoute
   MainRoute: typeof MainRoute
@@ -708,6 +733,7 @@ export interface RootRouteChildren {
   YtdlRoute: typeof YtdlRoute
   DbIdRoute: typeof DbIdRoute
   DbCreateRoute: typeof DbCreateRoute
+  SSlugRoute: typeof SSlugRoute
   ShsdbIdRoute: typeof ShsdbIdRoute
   ShsdbCreateRoute: typeof ShsdbCreateRoute
   ApiAccountsCreateRoute: typeof ApiAccountsCreateRoute
@@ -833,6 +859,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IsraelRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/host': {
+      id: '/host'
+      path: '/host'
+      fullPath: '/host'
+      preLoaderRoute: typeof HostRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/gitnetwork': {
       id: '/gitnetwork'
       path: '/gitnetwork'
@@ -894,6 +927,13 @@ declare module '@tanstack/react-router' {
       path: '/shsdb/$id'
       fullPath: '/shsdb/$id'
       preLoaderRoute: typeof ShsdbIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/s/$slug': {
+      id: '/s/$slug'
+      path: '/s/$slug'
+      fullPath: '/s/$slug'
+      preLoaderRoute: typeof SSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/note/$noteId': {
@@ -1163,6 +1203,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConvertRoute: ConvertRoute,
   DbConsoleRoute: DbConsoleRoute,
   GitnetworkRoute: GitnetworkRoute,
+  HostRoute: HostRoute,
   IsraelRoute: IsraelRoute,
   LinksRoute: LinksRoute,
   MainRoute: MainRoute,
@@ -1178,6 +1219,7 @@ const rootRouteChildren: RootRouteChildren = {
   YtdlRoute: YtdlRoute,
   DbIdRoute: DbIdRoute,
   DbCreateRoute: DbCreateRoute,
+  SSlugRoute: SSlugRoute,
   ShsdbIdRoute: ShsdbIdRoute,
   ShsdbCreateRoute: ShsdbCreateRoute,
   ApiAccountsCreateRoute: ApiAccountsCreateRoute,

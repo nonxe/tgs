@@ -297,6 +297,15 @@ function DashboardHome() {
       color: "text-blue-400 border-blue-500/20 bg-blue-500/5 hover:border-blue-500/40"
     },
     { 
+      id: "host", 
+      title: "Static Repo Host", 
+      desc: "Host static web apps from any public GitHub repo with permanent custom links via nonxe/aslink.", 
+      icon: Globe, 
+      link: "/host",
+      badge: "NEW FEATURE",
+      color: "text-cyan-400 border-cyan-500/20 bg-cyan-500/5 hover:border-cyan-500/40"
+    },
+    { 
       id: "whiteboard", 
       title: "LetMeSketch", 
       desc: "Hand-drawn sketch diagrams & pressure drawing powered by Rough.js & Perfect-Freehand.", 
@@ -433,6 +442,9 @@ function DashboardHome() {
           </Link>
           <Link to="/links" className="text-[14px] sm:text-[16px] md:text-[18px] font-black tracking-tighter select-none opacity-50 hover:opacity-100 transition-opacity flex-shrink-0">
             LINKS
+          </Link>
+          <Link to="/host" className="text-[14px] sm:text-[16px] md:text-[18px] font-black tracking-tighter select-none opacity-50 hover:opacity-100 transition-opacity flex-shrink-0 text-cyan-400">
+            HOST
           </Link>
           <Link to="/tempchat" className="text-[14px] sm:text-[16px] md:text-[18px] font-black tracking-tighter select-none opacity-50 hover:opacity-100 transition-opacity flex-shrink-0">
             CHAT
