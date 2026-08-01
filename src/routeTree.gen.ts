@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as YtdlRouteImport } from './routes/ytdl'
 import { Route as XRouteImport } from './routes/x'
+import { Route as WabotRouteImport } from './routes/wabot'
 import { Route as TempmailRouteImport } from './routes/tempmail'
 import { Route as TempchatRouteImport } from './routes/tempchat'
 import { Route as ShsdbConsoleRouteImport } from './routes/shsdb-console'
@@ -71,6 +72,11 @@ const YtdlRoute = YtdlRouteImport.update({
 const XRoute = XRouteImport.update({
   id: '/x',
   path: '/x',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WabotRoute = WabotRouteImport.update({
+  id: '/wabot',
+  path: '/wabot',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TempmailRoute = TempmailRouteImport.update({
@@ -347,6 +353,7 @@ export interface FileRoutesByFullPath {
   '/shsdb-console': typeof ShsdbConsoleRoute
   '/tempchat': typeof TempchatRoute
   '/tempmail': typeof TempmailRoute
+  '/wabot': typeof WabotRoute
   '/x': typeof XRoute
   '/ytdl': typeof YtdlRoute
   '/db/$id': typeof DbIdRoute
@@ -401,6 +408,7 @@ export interface FileRoutesByTo {
   '/shsdb-console': typeof ShsdbConsoleRoute
   '/tempchat': typeof TempchatRoute
   '/tempmail': typeof TempmailRoute
+  '/wabot': typeof WabotRoute
   '/x': typeof XRoute
   '/ytdl': typeof YtdlRoute
   '/db/$id': typeof DbIdRoute
@@ -457,6 +465,7 @@ export interface FileRoutesById {
   '/shsdb-console': typeof ShsdbConsoleRoute
   '/tempchat': typeof TempchatRoute
   '/tempmail': typeof TempmailRoute
+  '/wabot': typeof WabotRoute
   '/x': typeof XRoute
   '/ytdl': typeof YtdlRoute
   '/db/$id': typeof DbIdRoute
@@ -514,6 +523,7 @@ export interface FileRouteTypes {
     | '/shsdb-console'
     | '/tempchat'
     | '/tempmail'
+    | '/wabot'
     | '/x'
     | '/ytdl'
     | '/db/$id'
@@ -568,6 +578,7 @@ export interface FileRouteTypes {
     | '/shsdb-console'
     | '/tempchat'
     | '/tempmail'
+    | '/wabot'
     | '/x'
     | '/ytdl'
     | '/db/$id'
@@ -623,6 +634,7 @@ export interface FileRouteTypes {
     | '/shsdb-console'
     | '/tempchat'
     | '/tempmail'
+    | '/wabot'
     | '/x'
     | '/ytdl'
     | '/db/$id'
@@ -679,6 +691,7 @@ export interface RootRouteChildren {
   ShsdbConsoleRoute: typeof ShsdbConsoleRoute
   TempchatRoute: typeof TempchatRoute
   TempmailRoute: typeof TempmailRoute
+  WabotRoute: typeof WabotRoute
   XRoute: typeof XRoute
   YtdlRoute: typeof YtdlRoute
   DbIdRoute: typeof DbIdRoute
@@ -728,6 +741,13 @@ declare module '@tanstack/react-router' {
       path: '/x'
       fullPath: '/x'
       preLoaderRoute: typeof XRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/wabot': {
+      id: '/wabot'
+      path: '/wabot'
+      fullPath: '/wabot'
+      preLoaderRoute: typeof WabotRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/tempmail': {
@@ -1133,6 +1153,7 @@ const rootRouteChildren: RootRouteChildren = {
   ShsdbConsoleRoute: ShsdbConsoleRoute,
   TempchatRoute: TempchatRoute,
   TempmailRoute: TempmailRoute,
+  WabotRoute: WabotRoute,
   XRoute: XRoute,
   YtdlRoute: YtdlRoute,
   DbIdRoute: DbIdRoute,

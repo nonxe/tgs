@@ -36,7 +36,8 @@ import {
   MessageCircle,
   Network,
   Palette,
-  ShieldCheck
+  ShieldCheck,
+  Bot
 } from "lucide-react";
 
 function StarOfDavidIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -290,6 +291,15 @@ function DashboardHome() {
       color: "text-orange-400 border-orange-500/20 bg-orange-500/5 hover:border-orange-500/40"
     },
     { 
+      id: "wabot", 
+      title: "WhatsApp Bot", 
+      desc: "Manage session IDs & auto-restart GitHub Action bot runners in nonxe/oien.", 
+      icon: Bot, 
+      link: "/wabot",
+      badge: "WABOT",
+      color: "text-emerald-400 border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500/40"
+    },
+    { 
       id: "notes", 
       title: "Quick Notes", 
       desc: "Create and publish anonymous notes with shortened slugs.", 
@@ -428,6 +438,9 @@ function DashboardHome() {
           </Link>
           <Link to="/tempchat" className="text-[14px] sm:text-[16px] md:text-[18px] font-black tracking-tighter select-none opacity-50 hover:opacity-100 transition-opacity flex-shrink-0">
             CHAT
+          </Link>
+          <Link to="/wabot" className="text-[14px] sm:text-[16px] md:text-[18px] font-black tracking-tighter select-none opacity-50 hover:opacity-100 transition-opacity flex-shrink-0 text-emerald-400">
+            WABOT
           </Link>
           <Link to="/owner" className="text-[14px] sm:text-[16px] md:text-[18px] font-black tracking-tighter select-none opacity-50 hover:opacity-100 transition-opacity flex-shrink-0">
             ABOUT
