@@ -40,6 +40,8 @@ import { Route as ApiXTweetsRouteImport } from './routes/api/x/tweets'
 import { Route as ApiXDownloadRouteImport } from './routes/api/x/download'
 import { Route as ApiWabotManageRouteImport } from './routes/api/wabot/manage'
 import { Route as ApiPublicUploadRouteImport } from './routes/api/public/upload'
+import { Route as ApiPfpUploadRouteImport } from './routes/api/pfp/upload'
+import { Route as ApiPfpGetRouteImport } from './routes/api/pfp/get'
 import { Route as ApiMessagesUpdateprofileRouteImport } from './routes/api/messages/updateprofile'
 import { Route as ApiMessagesUpdatepfpRouteImport } from './routes/api/messages/updatepfp'
 import { Route as ApiMessagesSendRouteImport } from './routes/api/messages/send'
@@ -220,6 +222,16 @@ const ApiPublicUploadRoute = ApiPublicUploadRouteImport.update({
   path: '/api/public/upload',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPfpUploadRoute = ApiPfpUploadRouteImport.update({
+  id: '/api/pfp/upload',
+  path: '/api/pfp/upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPfpGetRoute = ApiPfpGetRouteImport.update({
+  id: '/api/pfp/get',
+  path: '/api/pfp/get',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiMessagesUpdateprofileRoute =
   ApiMessagesUpdateprofileRouteImport.update({
     id: '/api/messages/updateprofile',
@@ -390,6 +402,8 @@ export interface FileRoutesByFullPath {
   '/api/messages/send': typeof ApiMessagesSendRoute
   '/api/messages/updatepfp': typeof ApiMessagesUpdatepfpRoute
   '/api/messages/updateprofile': typeof ApiMessagesUpdateprofileRoute
+  '/api/pfp/get': typeof ApiPfpGetRoute
+  '/api/pfp/upload': typeof ApiPfpUploadRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
   '/api/wabot/manage': typeof ApiWabotManageRoute
   '/api/x/download': typeof ApiXDownloadRoute
@@ -446,6 +460,8 @@ export interface FileRoutesByTo {
   '/api/messages/send': typeof ApiMessagesSendRoute
   '/api/messages/updatepfp': typeof ApiMessagesUpdatepfpRoute
   '/api/messages/updateprofile': typeof ApiMessagesUpdateprofileRoute
+  '/api/pfp/get': typeof ApiPfpGetRoute
+  '/api/pfp/upload': typeof ApiPfpUploadRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
   '/api/wabot/manage': typeof ApiWabotManageRoute
   '/api/x/download': typeof ApiXDownloadRoute
@@ -504,6 +520,8 @@ export interface FileRoutesById {
   '/api/messages/send': typeof ApiMessagesSendRoute
   '/api/messages/updatepfp': typeof ApiMessagesUpdatepfpRoute
   '/api/messages/updateprofile': typeof ApiMessagesUpdateprofileRoute
+  '/api/pfp/get': typeof ApiPfpGetRoute
+  '/api/pfp/upload': typeof ApiPfpUploadRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
   '/api/wabot/manage': typeof ApiWabotManageRoute
   '/api/x/download': typeof ApiXDownloadRoute
@@ -563,6 +581,8 @@ export interface FileRouteTypes {
     | '/api/messages/send'
     | '/api/messages/updatepfp'
     | '/api/messages/updateprofile'
+    | '/api/pfp/get'
+    | '/api/pfp/upload'
     | '/api/public/upload'
     | '/api/wabot/manage'
     | '/api/x/download'
@@ -619,6 +639,8 @@ export interface FileRouteTypes {
     | '/api/messages/send'
     | '/api/messages/updatepfp'
     | '/api/messages/updateprofile'
+    | '/api/pfp/get'
+    | '/api/pfp/upload'
     | '/api/public/upload'
     | '/api/wabot/manage'
     | '/api/x/download'
@@ -676,6 +698,8 @@ export interface FileRouteTypes {
     | '/api/messages/send'
     | '/api/messages/updatepfp'
     | '/api/messages/updateprofile'
+    | '/api/pfp/get'
+    | '/api/pfp/upload'
     | '/api/public/upload'
     | '/api/wabot/manage'
     | '/api/x/download'
@@ -732,6 +756,8 @@ export interface RootRouteChildren {
   ApiMessagesSendRoute: typeof ApiMessagesSendRoute
   ApiMessagesUpdatepfpRoute: typeof ApiMessagesUpdatepfpRoute
   ApiMessagesUpdateprofileRoute: typeof ApiMessagesUpdateprofileRoute
+  ApiPfpGetRoute: typeof ApiPfpGetRoute
+  ApiPfpUploadRoute: typeof ApiPfpUploadRoute
   ApiPublicUploadRoute: typeof ApiPublicUploadRoute
   ApiWabotManageRoute: typeof ApiWabotManageRoute
   ApiXDownloadRoute: typeof ApiXDownloadRoute
@@ -957,6 +983,20 @@ declare module '@tanstack/react-router' {
       path: '/api/public/upload'
       fullPath: '/api/public/upload'
       preLoaderRoute: typeof ApiPublicUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/pfp/upload': {
+      id: '/api/pfp/upload'
+      path: '/api/pfp/upload'
+      fullPath: '/api/pfp/upload'
+      preLoaderRoute: typeof ApiPfpUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/pfp/get': {
+      id: '/api/pfp/get'
+      path: '/api/pfp/get'
+      fullPath: '/api/pfp/get'
+      preLoaderRoute: typeof ApiPfpGetRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/messages/updateprofile': {
@@ -1202,6 +1242,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMessagesSendRoute: ApiMessagesSendRoute,
   ApiMessagesUpdatepfpRoute: ApiMessagesUpdatepfpRoute,
   ApiMessagesUpdateprofileRoute: ApiMessagesUpdateprofileRoute,
+  ApiPfpGetRoute: ApiPfpGetRoute,
+  ApiPfpUploadRoute: ApiPfpUploadRoute,
   ApiPublicUploadRoute: ApiPublicUploadRoute,
   ApiWabotManageRoute: ApiWabotManageRoute,
   ApiXDownloadRoute: ApiXDownloadRoute,

@@ -976,43 +976,42 @@ function E2eeMessengerPage() {
 
     setPfpUploading(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      // Upload file permanently to Catbox
-      const res = await fetch("/api/public/upload", {
-        method: "POST",
-        body: formData,
+      // Convert image file to base64
+      const base64Data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
       });
 
-      let data;
-      try {
-        data = await res.json();
-      } catch (e) {
-        if (res.status === 413) {
-          throw new Error("Profile image too large. Server rejected upload. (If self-hosting VPS, configure Nginx client_max_body_size)");
-        }
-        throw new Error(`Upload failed (${res.status}). Server returned non-JSON response.`);
-      }
-      if (!res.ok || !data.success) throw new Error(data.error || "Upload failed");
+      // Upload PFP to nonxe/dbpfp GitHub repo & link with nonxe/db
+      const res = await fetch("/api/pfp/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: loggedInUser,
+          pfpBase64: base64Data,
+          mimeType: file.type,
+        }),
+      });
 
-      const pfpUrl = data.url;
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "PFP upload failed");
 
-      // Update PFP URL inside MongoDB collection
-      const updateRes = await fetch("/api/messages/updatepfp", {
+      const rawPfpUrl = data.pfpUrl || `https://raw.githubusercontent.com/nonxe/dbpfp/main/${loggedInUser.toLowerCase()}.png`;
+
+      // Sync PFP URL to MongoDB e2ee_users collection as well
+      await fetch("/api/messages/updatepfp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           username: loggedInUser,
           authHash: myAuthHash,
-          pfpUrl
-        })
-      });
+          pfpUrl: rawPfpUrl,
+        }),
+      }).catch(() => {});
 
-      const updateData = await updateRes.json();
-      if (!updateRes.ok || !updateData.success) throw new Error(updateData.error || "Failed to update profile picture");
-
-      setMyPfpUrl(pfpUrl);
+      setMyPfpUrl(rawPfpUrl);
     } catch (err: any) {
       alert(err.message || "Failed to upload profile picture.");
     } finally {

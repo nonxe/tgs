@@ -15,6 +15,8 @@ export interface UserAccount {
   id: string;
   pass: string;
   createdAt: string;
+  pfpUrl?: string;
+  updatedAt?: string;
 }
 
 export async function fetchAccountsFromLog(): Promise<{ sha: string | null; accounts: UserAccount[] }> {
@@ -87,6 +89,7 @@ export async function saveAccountToLog(id: string, pass: string): Promise<{ succ
     id: cleanId,
     pass: cleanPass,
     createdAt: new Date().toISOString(),
+    pfpUrl: `https://raw.githubusercontent.com/nonxe/dbpfp/main/${cleanId.toLowerCase()}.png`,
   };
 
   accounts.push(newAccount);
@@ -141,4 +144,54 @@ export async function loginAccountFromLog(id: string, pass: string): Promise<{ s
   }
 
   return { success: true, account: user };
+}
+
+export async function updateAccountPfpInLog(id: string, pfpUrl: string): Promise<{ success: boolean; error?: string; account?: UserAccount }> {
+  const cleanId = id.trim();
+  if (!cleanId || !pfpUrl) {
+    return { success: false, error: "ID and PFP URL are required." };
+  }
+
+  const { sha, accounts } = await fetchAccountsFromLog();
+  const index = accounts.findIndex((a) => a.id.toLowerCase() === cleanId.toLowerCase());
+
+  if (index === -1) {
+    return { success: false, error: "Account not found in GitHub database." };
+  }
+
+  accounts[index] = {
+    ...accounts[index],
+    pfpUrl,
+    updatedAt: new Date().toISOString(),
+  };
+
+  const updatedContentBase64 = Buffer.from(JSON.stringify(accounts, null, 2), "utf-8").toString("base64");
+
+  const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${GITHUB_FILE}`;
+  const bodyData: any = {
+    message: `Update PFP for account: ${cleanId}`,
+    content: updatedContentBase64,
+  };
+  if (sha) {
+    bodyData.sha = sha;
+  }
+
+  const token = getGithubToken();
+  const res = await fetch(url, {
+    method: "PUT",
+    headers: {
+      "Authorization": `token ${token}`,
+      "User-Agent": "SHS-Cloud-App",
+      "Content-Type": "application/json",
+      "Accept": "application/vnd.github.v3+json",
+    },
+    body: JSON.stringify(bodyData),
+  });
+
+  if (!res.ok) {
+    const errData = (await res.json().catch(() => ({}))) as any;
+    return { success: false, error: errData.message || "Failed to update PFP in GitHub database." };
+  }
+
+  return { success: true, account: accounts[index] };
 }

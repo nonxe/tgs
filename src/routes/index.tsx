@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { 
   Upload, 
   FileText, 
@@ -37,7 +37,8 @@ import {
   Network,
   Palette,
   ShieldCheck,
-  Bot
+  Bot,
+  Camera
 } from "lucide-react";
 
 function StarOfDavidIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -78,12 +79,53 @@ function DashboardHome() {
   const [lastVisit, setLastVisit] = useState<string | null>(null);
 
   // nonxe/db User Account state
-  const [savedAccount, setSavedAccount] = useState<{ id: string; createdAt?: string } | null>(null);
+  const [savedAccount, setSavedAccount] = useState<{ id: string; createdAt?: string; pfpUrl?: string } | null>(null);
   const [accTab, setAccTab] = useState<"create" | "login">("create");
   const [accIdInput, setAccIdInput] = useState("");
   const [accPassInput, setAccPassInput] = useState("");
   const [accLoading, setAccLoading] = useState(false);
   const [accMsg, setAccMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  // nonxe/dbpfp User Profile Picture state
+  const [pfpUploading, setPfpUploading] = useState(false);
+  const [pfpCacheKey, setPfpCacheKey] = useState(Date.now());
+  const pfpInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handlePfpChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !savedAccount) return;
+
+    setPfpUploading(true);
+    try {
+      const base64Data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+      const res = await fetch("/api/pfp/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: savedAccount.id,
+          pfpBase64: base64Data,
+          mimeType: file.type,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "PFP upload failed");
+
+      setPfpCacheKey(Date.now());
+      setAccMsg({ type: "success", text: "Profile picture uploaded to nonxe/dbpfp and linked to nonxe/db!" });
+    } catch (err: any) {
+      setAccMsg({ type: "error", text: err.message || "Failed to upload PFP." });
+    } finally {
+      setPfpUploading(false);
+      if (pfpInputRef.current) pfpInputRef.current.value = "";
+    }
+  };
 
   // Activity History state (synced via nonxe/db history.txt)
   const [userHistory, setUserHistory] = useState<Array<{ action: string; detail: string; timestamp: string }>>([]);
@@ -775,12 +817,35 @@ function DashboardHome() {
                     <div className="p-3.5 rounded-[16px] bg-purple-500/10 border border-purple-500/30 space-y-2.5">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
-                          <div className="size-9 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-300 font-black text-[13px]">
-                            {savedAccount.id.charAt(0).toUpperCase()}
+                          <input
+                            type="file"
+                            ref={pfpInputRef}
+                            onChange={handlePfpChange}
+                            accept="image/*"
+                            className="hidden"
+                          />
+                          <div
+                            onClick={() => pfpInputRef.current?.click()}
+                            className="relative size-10 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-300 font-black text-[13px] overflow-hidden cursor-pointer group hover:border-purple-400 transition-all"
+                            title="Click to upload Profile Picture to nonxe/dbpfp"
+                          >
+                            <img
+                              src={savedAccount.pfpUrl || `https://raw.githubusercontent.com/nonxe/dbpfp/main/${savedAccount.id.toLowerCase()}.png?t=${pfpCacheKey}`}
+                              alt={savedAccount.id}
+                              className="size-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLElement).style.display = "none";
+                              }}
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                              {pfpUploading ? <Loader2 className="size-3.5 animate-spin" /> : <Camera className="size-3.5" />}
+                            </div>
                           </div>
                           <div>
-                            <p className="text-[13px] font-black text-foreground leading-none">{savedAccount.id}</p>
-                            <p className="text-[10px] text-emerald-400 font-semibold mt-1">● Synced to Cloud</p>
+                            <p className="text-[13px] font-black text-foreground leading-none flex items-center gap-1">
+                              <span>{savedAccount.id}</span>
+                            </p>
+                            <p className="text-[10px] text-emerald-400 font-semibold mt-1">● Synced to Cloud & PFP</p>
                           </div>
                         </div>
                         <button
