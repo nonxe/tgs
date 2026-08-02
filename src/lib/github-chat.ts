@@ -130,7 +130,7 @@ export async function createRoom(
 
   if (!cleanName || !cleanAdmin) return { success: false, error: "Room name and your name are required." };
   if (isNameReserved(cleanAdmin))
-    return { success: false, error: "The name 'suhu' is reserved — it belongs to the Queen 👑" };
+    return { success: false, error: "This username is permanently reserved by System Administration." };
 
   const { sha, rooms } = await fetchRooms();
 
@@ -167,7 +167,7 @@ export async function joinRoom(
 
   if (!cleanCode || !cleanUser) return { success: false, error: "Join code and your name are required." };
   if (isNameReserved(cleanUser))
-    return { success: false, error: "The name 'suhu' is reserved — it belongs to the Queen 👑" };
+    return { success: false, error: "This username is permanently reserved by System Administration." };
 
   const { sha, rooms } = await fetchRooms();
   const room = rooms.find((r) => r.code === cleanCode);

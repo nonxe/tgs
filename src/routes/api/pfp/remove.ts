@@ -45,7 +45,7 @@ async function handlePfpRemove(request: Request) {
       JSON.stringify({
         success: true,
         username,
-        message: `Profile picture removed from nonxe/dbpfp and unlinked from nonxe/db!`,
+        message: `Profile picture removed successfully!`,
       }),
       { status: 200, headers: CORS_HEADERS }
     );

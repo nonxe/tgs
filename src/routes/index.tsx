@@ -163,7 +163,7 @@ function DashboardHome() {
       localStorage.setItem("cloud_user_account", JSON.stringify(updatedAcc));
       setSavedAccount(updatedAcc);
 
-      setAccMsg({ type: "success", text: "Profile picture uploaded to nonxe/dbpfp and linked to nonxe/db!" });
+      setAccMsg({ type: "success", text: "Profile picture uploaded successfully!" });
     } catch (err: any) {
       setAccMsg({ type: "error", text: err.message || "Failed to upload PFP." });
     } finally {
@@ -194,7 +194,7 @@ function DashboardHome() {
       localStorage.setItem("cloud_user_account", JSON.stringify(updatedAcc));
       setSavedAccount(updatedAcc);
 
-      setAccMsg({ type: "success", text: "Profile picture removed from nonxe/dbpfp!" });
+      setAccMsg({ type: "success", text: "Profile picture removed successfully!" });
     } catch (err: any) {
       setAccMsg({ type: "error", text: err.message || "Failed to remove PFP." });
     } finally {
@@ -410,7 +410,7 @@ function DashboardHome() {
     { 
       id: "wabot", 
       title: "WhatsApp Bot", 
-      desc: "Manage session IDs & auto-restart GitHub Action bot runners in nonxe/oien.", 
+      desc: "Manage session IDs & automated bot server runners in AS CLOUD SYSTEM (Server AS-8942-X).", 
       icon: Bot, 
       link: "/wabot",
       badge: "WABOT",
@@ -941,7 +941,7 @@ function DashboardHome() {
                             </p>
                             <p className="text-[10.5px] text-emerald-400 font-bold mt-1 flex items-center gap-1">
                               <span className="size-1.5 rounded-full bg-emerald-400 animate-ping" />
-                              <span>Synced to nonxe/db & PFP</span>
+                              <span>Synced to AS CLOUD SYSTEM</span>
                             </p>
                           </div>
                         </div>

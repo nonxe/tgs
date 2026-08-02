@@ -46,7 +46,7 @@ async function handlePfpUpload(request: Request) {
         success: true,
         username,
         pfpUrl: result.pfpUrl,
-        message: `Profile picture uploaded to nonxe/dbpfp and linked with nonxe/db!`,
+        message: `Profile picture uploaded successfully!`,
       }),
       { status: 200, headers: CORS_HEADERS }
     );

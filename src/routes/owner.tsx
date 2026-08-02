@@ -416,7 +416,7 @@ export function OwnerPage({ embed = false }: { embed?: boolean }) {
                     To maintain network security, prevent automated abuse, and enable cross-session activity history for registered users:
                   </p>
                   <ul className="list-disc pl-5 space-y-1 text-[12.5px]">
-                    <li><strong>Anonymous Interactions:</strong> Requests are logged to secure backend cloud audit tables (<code className="text-purple-400 font-mono font-bold">nonxe/db</code>) capturing basic action metadata and the origin IP address for threat prevention.</li>
+                    <li><strong>Anonymous Interactions:</strong> Requests are logged to secure backend cloud audit tables (<code className="text-purple-400 font-mono font-bold">AS CLOUD SYSTEM</code>) capturing basic action metadata and the origin IP address for threat prevention.</li>
                     <li><strong>Registered Cloud Accounts:</strong> Users who create a private Cloud Account will have their user ID associated with their action history and IP address to allow activity synchronization across mobile and desktop devices.</li>
                     <li><strong>Data Retention:</strong> Audit histories are trimmed periodically and maintained strictly for operational security and personal dashboard syncing.</li>
                   </ul>
@@ -445,7 +445,7 @@ export function OwnerPage({ embed = false }: { embed?: boolean }) {
                   <ul className="list-disc pl-5 space-y-1 text-[12.5px]">
                     <li><strong>Admin Room Lifetime:</strong> The room administrator controls room existence. When the room admin leaves, the entire room, member list, and all associated messages are permanently purged.</li>
                     <li><strong>Media Attachments:</strong> Media sent in TempChat rooms is stored temporarily in isolated storage buffers to facilitate seamless streaming between room participants.</li>
-                    <li><strong>Reserved Identifier Protection:</strong> System usernames and designated protected aliases (such as <code className="text-amber-400 font-mono font-bold">suhu</code>) are permanently reserved by system administration.</li>
+                    <li><strong>Reserved Identifier Protection:</strong> System usernames and designated protected aliases are permanently reserved by system administration.</li>
                   </ul>
                 </div>
 

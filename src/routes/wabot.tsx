@@ -4,7 +4,6 @@ import {
   Bot,
   Play,
   Square,
-  Zap,
   Lock,
   KeyRound,
   User,
@@ -12,7 +11,6 @@ import {
   Check,
   Copy,
   Clock,
-  Activity,
   Server,
   ArrowLeft,
   RefreshCw,
@@ -21,8 +19,6 @@ import {
   Save,
   LogOut,
   AlertCircle,
-  Sparkles,
-  Radio,
   Power,
   Sliders,
   Terminal,
@@ -119,7 +115,7 @@ function WabotDashboardPage() {
       if (data.success && data.adminToken) {
         localStorage.setItem("wabot_admin_auth", data.adminToken);
         setIsAdmin(true);
-        showToast("Welcome Admin! iOS Session Authenticated.");
+        showToast("Welcome Admin! Session Authenticated.");
       } else {
         setAuthError(data.error || "Invalid Admin username or password.");
       }
@@ -162,7 +158,7 @@ function WabotDashboardPage() {
 
       const data = await res.json();
       if (data.success) {
-        showToast("WhatsApp Session ID saved to nonxe/oien repo!");
+        showToast("WhatsApp Session ID saved to AS CLOUD SYSTEM server (AS-8942-X)!");
         loadData();
       } else {
         showToast(data.error || "Failed to save session.", "error");
@@ -173,7 +169,7 @@ function WabotDashboardPage() {
     setSaving(false);
   };
 
-  // Start Workflow
+  // Start Bot Engine
   const handleStartWorkflow = async () => {
     setStarting(true);
     try {
@@ -188,10 +184,10 @@ function WabotDashboardPage() {
 
       const data = await res.json();
       if (data.success) {
-        showToast("GitHub Action Workflow STARTED! Bot is launching...");
+        showToast("Bot Engine STARTED! Server is launching...");
         setTimeout(() => loadData(), 3000);
       } else {
-        showToast(data.error || "Failed to start workflow.", "error");
+        showToast(data.error || "Failed to start bot engine.", "error");
       }
     } catch (err: any) {
       showToast("Start error: " + err.message, "error");
@@ -199,7 +195,7 @@ function WabotDashboardPage() {
     setStarting(false);
   };
 
-  // Stop Workflow
+  // Stop Bot Engine
   const handleStopWorkflow = async () => {
     setStopping(true);
     try {
@@ -214,10 +210,10 @@ function WabotDashboardPage() {
 
       const data = await res.json();
       if (data.success) {
-        showToast(`Stopped ${data.cancelledCount || 1} active bot workflow run(s)!`);
+        showToast(`Stopped bot engine server runs!`);
         setTimeout(() => loadData(), 3000);
       } else {
-        showToast(data.error || "Failed to stop workflow.", "error");
+        showToast(data.error || "Failed to stop bot engine.", "error");
       }
     } catch (err: any) {
       showToast("Stop error: " + err.message, "error");
@@ -233,25 +229,25 @@ function WabotDashboardPage() {
 
   const latestRun = runs[0];
 
-  // Render iOS Admin Login Modal
+  // Render Admin Login Screen (Pure Black Obsidian Theme)
   if (!isAdmin) {
     return (
-      <main className="min-h-screen bg-[#050811] text-foreground flex items-center justify-center p-4 font-sans selection:bg-emerald-500/30 select-none relative overflow-hidden">
-        {/* iOS Neon Mesh Background Orbs */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 size-96 rounded-full bg-emerald-500/10 blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-1/4 left-1/3 size-80 rounded-full bg-teal-500/10 blur-[100px] pointer-events-none" />
+      <main className="min-h-screen bg-[#000000] text-foreground flex items-center justify-center p-4 font-sans select-none relative overflow-hidden">
+        {/* Pitch Black Ambient Orbs */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 size-96 rounded-full bg-emerald-500/5 blur-[140px] pointer-events-none" />
+        <div className="absolute bottom-1/4 left-1/3 size-80 rounded-full bg-purple-500/5 blur-[120px] pointer-events-none" />
 
-        <div className="max-w-md w-full p-7 sm:p-9 rounded-[32px] border border-emerald-500/20 bg-[#0c1424]/80 backdrop-blur-3xl space-y-6 shadow-2xl relative z-10">
+        <div className="max-w-md w-full p-7 sm:p-9 rounded-[32px] border border-white/10 bg-[#050508]/90 backdrop-blur-3xl space-y-6 shadow-2xl relative z-10">
           <div className="flex items-center justify-between">
             <a
               href="/"
-              className="size-9 rounded-2xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all border border-white/5"
+              className="size-9 rounded-2xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all border border-white/10"
               title="Back to Home"
             >
               <ArrowLeft className="size-4" />
             </a>
             <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-black uppercase font-mono tracking-wider">
-              iOS Admin Access
+              AS CLOUD Security Access
             </span>
           </div>
 
@@ -261,7 +257,7 @@ function WabotDashboardPage() {
             </div>
             <h1 className="text-2xl font-black text-white tracking-tight">WA Bot Manager</h1>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Authenticate with Admin credentials to control <span className="font-mono text-white">nonxe/oien</span> runner.
+              Authenticate with Admin credentials to access <span className="font-mono text-white">AS CLOUD SYSTEM server (AS-8942-X)</span>.
             </p>
           </div>
 
@@ -283,7 +279,7 @@ function WabotDashboardPage() {
                 value={adminUser}
                 onChange={(e) => setAdminUser(e.target.value)}
                 placeholder="Enter Username..."
-                className="w-full px-4 py-3 rounded-2xl bg-[#050811]/90 border border-white/10 text-xs font-bold text-white placeholder:text-muted-foreground/30 outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 transition-all font-sans"
+                className="w-full px-4 py-3 rounded-2xl bg-[#000000] border border-white/10 text-xs font-bold text-white placeholder:text-muted-foreground/30 outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 transition-all font-sans"
                 required
               />
             </div>
@@ -298,7 +294,7 @@ function WabotDashboardPage() {
                 value={adminPass}
                 onChange={(e) => setAdminPass(e.target.value)}
                 placeholder="Enter Password..."
-                className="w-full px-4 py-3 rounded-2xl bg-[#050811]/90 border border-white/10 text-xs font-bold text-white placeholder:text-muted-foreground/30 outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 transition-all font-sans"
+                className="w-full px-4 py-3 rounded-2xl bg-[#000000] border border-white/10 text-xs font-bold text-white placeholder:text-muted-foreground/30 outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 transition-all font-sans"
                 required
               />
             </div>
@@ -318,18 +314,18 @@ function WabotDashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#050811] text-foreground font-sans selection:bg-emerald-500/30 relative">
-      {/* Background Neon Ambient Glows */}
-      <div className="fixed top-0 left-1/3 size-96 rounded-full bg-emerald-500/5 blur-[140px] pointer-events-none z-0" />
-      <div className="fixed bottom-10 right-1/4 size-96 rounded-full bg-teal-500/5 blur-[140px] pointer-events-none z-0" />
+    <main className="min-h-screen bg-[#000000] text-foreground font-sans relative">
+      {/* Dark Ambient Glows */}
+      <div className="fixed top-0 left-1/3 size-96 rounded-full bg-emerald-500/5 blur-[160px] pointer-events-none z-0" />
+      <div className="fixed bottom-10 right-1/4 size-96 rounded-full bg-purple-500/5 blur-[160px] pointer-events-none z-0" />
 
       {/* Header Banner */}
-      <header className="px-4 sm:px-6 md:px-8 py-4 border-b border-white/10 backdrop-blur-2xl sticky top-0 z-40 bg-[#050811]/85">
+      <header className="px-4 sm:px-6 md:px-8 py-4 border-b border-white/10 backdrop-blur-2xl sticky top-0 z-40 bg-[#000000]/90">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <a
               href="/"
-              className="size-9 rounded-2xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all border border-white/5"
+              className="size-9 rounded-2xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all border border-white/10"
               title="Back to Home"
             >
               <ArrowLeft className="size-4" />
@@ -343,11 +339,11 @@ function WabotDashboardPage() {
                   WA Bot Manager
                 </h1>
                 <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-black uppercase font-mono">
-                  nonxe/oien
+                  AS CLOUD SYSTEM (AS-8942-X)
                 </span>
               </div>
               <p className="text-xs text-muted-foreground mt-0.5 font-mono">
-                iOS Dark Edition • Auto rerun every 5 hours • Admin Authorized
+                Dark Obsidian Edition • Auto rerun active ONLY when started • Admin Authorized
               </p>
             </div>
           </div>
@@ -374,21 +370,21 @@ function WabotDashboardPage() {
       </header>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-7 space-y-7 relative z-10">
-        {/* iOS Workflow Action Control Center Banner */}
-        <div className="p-6 rounded-[32px] border border-white/10 bg-[#0c1424]/80 backdrop-blur-3xl shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
+        {/* Bot Engine Control Center Banner */}
+        <div className="p-6 rounded-[32px] border border-white/10 bg-[#050508]/90 backdrop-blur-3xl shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <div className="relative">
               <div
                 className={`size-14 rounded-2xl border flex items-center justify-center font-bold text-xl shadow-xl ${
                   isRunning
                     ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400 shadow-emerald-500/20"
-                    : "bg-slate-800/50 border-white/10 text-slate-400"
+                    : "bg-slate-900 border-white/10 text-slate-400"
                 }`}
               >
                 <Power className="size-7" />
               </div>
               <span
-                className={`absolute -top-1 -right-1 size-4 rounded-full border-2 border-[#050811] ${
+                className={`absolute -top-1 -right-1 size-4 rounded-full border-2 border-[#000000] ${
                   isRunning ? "bg-emerald-400 animate-ping" : "bg-rose-500"
                 }`}
               />
@@ -396,7 +392,7 @@ function WabotDashboardPage() {
 
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-black text-white">Bot Runner Control Center</h2>
+                <h2 className="text-base font-black text-white">Bot Engine Control Center</h2>
                 <span
                   className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase font-mono border ${
                     isRunning
@@ -404,11 +400,11 @@ function WabotDashboardPage() {
                       : "bg-rose-500/10 text-rose-300 border-rose-500/30"
                   }`}
                 >
-                  {isRunning ? "🟢 WORKFLOW RUNNING" : "🔴 WORKFLOW STOPPED"}
+                  {isRunning ? "🟢 ENGINE RUNNING" : "🔴 ENGINE STOPPED"}
                 </span>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Start or Stop GitHub Action execution in <span className="font-mono text-emerald-400">nonxe/oien</span>. Auto rerun is active ONLY when started.
+                Start or Stop execution on <span className="font-mono text-emerald-400">AS CLOUD SYSTEM server (AS-8942-X)</span>. Auto rerun is active ONLY when started.
               </p>
             </div>
           </div>
@@ -421,7 +417,7 @@ function WabotDashboardPage() {
               className="flex-1 md:flex-initial px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs transition-all shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
             >
               {starting ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4 fill-current" />}
-              <span>Start Workflow</span>
+              <span>Start Bot Engine</span>
             </button>
 
             <button
@@ -430,14 +426,14 @@ function WabotDashboardPage() {
               className="flex-1 md:flex-initial px-5 py-3 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-black text-xs transition-all shadow-xl shadow-rose-600/20 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
             >
               {stopping ? <Loader2 className="size-4 animate-spin" /> : <Square className="size-4 fill-current" />}
-              <span>Stop Workflow</span>
+              <span>Stop Bot Engine</span>
             </button>
           </div>
         </div>
 
         {/* Status Metrics Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="p-5 rounded-3xl border border-white/10 bg-[#0c1424]/60 backdrop-blur-2xl flex items-center gap-4">
+          <div className="p-5 rounded-3xl border border-white/10 bg-[#050508]/80 backdrop-blur-2xl flex items-center gap-4">
             <div className="size-12 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center font-bold">
               <Bot className="size-6" />
             </div>
@@ -449,7 +445,7 @@ function WabotDashboardPage() {
             </div>
           </div>
 
-          <div className="p-5 rounded-3xl border border-white/10 bg-[#0c1424]/60 backdrop-blur-2xl flex items-center gap-4">
+          <div className="p-5 rounded-3xl border border-white/10 bg-[#050508]/80 backdrop-blur-2xl flex items-center gap-4">
             <div className="size-12 rounded-2xl bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center font-bold">
               <Clock className="size-6" />
             </div>
@@ -457,17 +453,17 @@ function WabotDashboardPage() {
               <div className="text-[11px] text-muted-foreground font-mono uppercase">Auto Schedule</div>
               <div className="text-sm font-black text-white mt-0.5 flex items-center gap-1.5">
                 <span className="size-2 rounded-full bg-blue-400 animate-pulse" />
-                <span>Every 5 Hours</span>
+                <span>Active Only When Started</span>
               </div>
             </div>
           </div>
 
-          <div className="p-5 rounded-3xl border border-white/10 bg-[#0c1424]/60 backdrop-blur-2xl flex items-center gap-4">
+          <div className="p-5 rounded-3xl border border-white/10 bg-[#050508]/80 backdrop-blur-2xl flex items-center gap-4">
             <div className="size-12 rounded-2xl bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center justify-center font-bold">
               <Server className="size-6" />
             </div>
             <div>
-              <div className="text-[11px] text-muted-foreground font-mono uppercase">Latest GitHub Run</div>
+              <div className="text-[11px] text-muted-foreground font-mono uppercase">AS CLOUD Server Run</div>
               <div className="text-xs font-black text-white mt-0.5 capitalize flex items-center gap-1.5">
                 {latestRun ? (
                   <>
@@ -494,7 +490,7 @@ function WabotDashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-7">
           {/* Left Column: Configure WhatsApp Session ID Form */}
           <div className="lg:col-span-6 space-y-4">
-            <div className="p-6 sm:p-7 rounded-[32px] border border-white/10 bg-[#0c1424]/80 backdrop-blur-3xl space-y-5 shadow-2xl">
+            <div className="p-6 sm:p-7 rounded-[32px] border border-white/10 bg-[#050508]/90 backdrop-blur-3xl space-y-5 shadow-2xl">
               <div className="flex items-center justify-between border-b border-white/10 pb-4">
                 <div className="flex items-center gap-2.5">
                   <Sliders className="size-5 text-emerald-400" />
@@ -517,7 +513,7 @@ function WabotDashboardPage() {
                     onChange={(e) => setInputSessionId(e.target.value)}
                     placeholder="Paste WhatsApp Session ID (e.g. RGNK~4IqF0mP6...)"
                     rows={4}
-                    className="w-full px-4 py-3 rounded-2xl bg-[#050811]/90 border border-white/10 text-xs font-mono text-white placeholder:text-muted-foreground/30 outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 transition-all resize-none font-mono leading-relaxed"
+                    className="w-full px-4 py-3 rounded-2xl bg-[#000000] border border-white/10 text-xs font-mono text-white placeholder:text-muted-foreground/30 outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 transition-all resize-none font-mono leading-relaxed"
                     required
                   />
                 </div>
@@ -530,7 +526,7 @@ function WabotDashboardPage() {
                     value={inputBotName}
                     onChange={(e) => setInputBotName(e.target.value)}
                     placeholder="e.g. OIEN BOT"
-                    className="w-full px-4 py-2.5 rounded-2xl bg-[#050811]/90 border border-white/10 text-xs font-bold text-white placeholder:text-muted-foreground/30 outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                    className="w-full px-4 py-2.5 rounded-2xl bg-[#000000] border border-white/10 text-xs font-bold text-white placeholder:text-muted-foreground/30 outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 transition-all"
                   />
                 </div>
 
@@ -542,7 +538,7 @@ function WabotDashboardPage() {
                     value={inputSudo}
                     onChange={(e) => setInputSudo(e.target.value)}
                     placeholder="e.g. 919876543210"
-                    className="w-full px-4 py-2.5 rounded-2xl bg-[#050811]/90 border border-white/10 text-xs font-mono text-white placeholder:text-muted-foreground/30 outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                    className="w-full px-4 py-2.5 rounded-2xl bg-[#000000] border border-white/10 text-xs font-mono text-white placeholder:text-muted-foreground/30 outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 transition-all"
                   />
                 </div>
 
@@ -581,7 +577,7 @@ function WabotDashboardPage() {
                   className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs transition-all shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 mt-3"
                 >
                   {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-                  <span>Save Session to nonxe/oien</span>
+                  <span>Save Session to AS CLOUD SYSTEM</span>
                 </button>
               </form>
             </div>
@@ -597,20 +593,20 @@ function WabotDashboardPage() {
             {loading ? (
               <div className="py-14 text-center text-muted-foreground space-y-3">
                 <Loader2 className="size-7 animate-spin mx-auto text-emerald-400" />
-                <p className="text-xs font-mono">Fetching active session from nonxe/oien...</p>
+                <p className="text-xs font-mono">Fetching active session from AS CLOUD SYSTEM server...</p>
               </div>
             ) : !session ? (
-              <div className="p-8 rounded-[32px] border border-dashed border-white/10 text-center space-y-3 bg-[#0c1424]/40">
+              <div className="p-8 rounded-[32px] border border-dashed border-white/10 text-center space-y-3 bg-[#050508]/60">
                 <div className="size-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto text-emerald-400 font-bold">
                   <Bot className="size-7" />
                 </div>
                 <h3 className="text-sm font-bold text-white">No Session Configured</h3>
                 <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
-                  Paste your WhatsApp Session ID on the left to configure automated execution on <span className="font-mono text-emerald-400">nonxe/oien</span>!
+                  Paste your WhatsApp Session ID on the left to configure automated execution on <span className="font-mono text-emerald-400">AS CLOUD SYSTEM server (AS-8942-X)</span>!
                 </p>
               </div>
             ) : (
-              <div className="p-6 rounded-[32px] border border-emerald-500/20 bg-[#0c1424]/80 backdrop-blur-3xl space-y-4 shadow-2xl relative overflow-hidden">
+              <div className="p-6 rounded-[32px] border border-emerald-500/20 bg-[#050508]/90 backdrop-blur-3xl space-y-4 shadow-2xl relative overflow-hidden">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3.5">
                     <div className="size-12 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold shadow-lg shadow-emerald-500/10">
@@ -634,7 +630,7 @@ function WabotDashboardPage() {
                   </button>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-[#050811]/90 border border-white/10 space-y-2 font-mono text-xs">
+                <div className="p-4 rounded-2xl bg-[#000000] border border-white/10 space-y-2 font-mono text-xs">
                   <div className="text-muted-foreground text-[11px]">Session ID Snippet:</div>
                   <div className="text-emerald-300 font-bold break-all">
                     {session.sessionId.slice(0, 26)}...{session.sessionId.slice(-8)}
@@ -655,14 +651,14 @@ function WabotDashboardPage() {
               </div>
             )}
 
-            {/* Workflow Execution Runs Log Table */}
+            {/* Execution Runs Log Table */}
             {runs.length > 0 && (
               <div className="pt-2 space-y-3">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase font-mono flex items-center gap-1.5">
                   <Terminal className="size-3.5 text-emerald-400" />
-                  <span>Recent GitHub Action Runs Log</span>
+                  <span>Recent Server Activity Log</span>
                 </h3>
-                <div className="rounded-3xl border border-white/10 overflow-hidden bg-[#0c1424]/60 backdrop-blur-2xl">
+                <div className="rounded-3xl border border-white/10 overflow-hidden bg-[#050508]/80 backdrop-blur-2xl">
                   <div className="divide-y divide-white/5">
                     {runs.map((r) => (
                       <div key={r.id} className="p-3.5 flex items-center justify-between text-xs">
@@ -682,15 +678,9 @@ function WabotDashboardPage() {
                           <span className="text-[10px] text-muted-foreground font-mono">
                             {new Date(r.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                           </span>
-                          <a
-                            href={r.htmlUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-emerald-400 hover:underline text-[11px] flex items-center gap-1 font-mono font-bold"
-                          >
-                            <span>Log</span>
-                            <ExternalLink className="size-2.5" />
-                          </a>
+                          <span className="text-emerald-400 text-[11px] font-mono font-bold">
+                            Server Status
+                          </span>
                         </div>
                       </div>
                     ))}
@@ -722,8 +712,8 @@ export const Route = createFileRoute("/wabot")({
   component: WabotDashboardPage,
   head: () => ({
     meta: [
-      { title: "WhatsApp Bot Admin • nonxe/oien" },
-      { name: "description", content: "iOS Dark WA Bot Manager with Start and Stop Workflow controls for nonxe/oien." },
+      { title: "WhatsApp Bot Admin • AS CLOUD SYSTEM" },
+      { name: "description", content: "Dark Obsidian WA Bot Manager for AS CLOUD SYSTEM server (AS-8942-X)." },
     ],
   }),
 });
