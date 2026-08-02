@@ -38,8 +38,26 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
+
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
+
+    // Automatically reload page if a stale deployment JS chunk failed to load
+    const isChunkError =
+      error?.message?.includes("Failed to fetch dynamically imported module") ||
+      error?.message?.includes("Failed to load module script") ||
+      error?.message?.includes("Importing a module script failed") ||
+      error?.name === "ChunkLoadError";
+
+    if (isChunkError && typeof window !== "undefined") {
+      const lastReload = sessionStorage.getItem("chunk_reload_time");
+      const now = Date.now();
+      // Prevent infinite reload loops if network is offline
+      if (!lastReload || now - parseInt(lastReload, 10) > 8000) {
+        sessionStorage.setItem("chunk_reload_time", now.toString());
+        window.location.reload();
+      }
+    }
   }, [error]);
 
   return (
