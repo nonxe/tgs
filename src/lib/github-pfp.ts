@@ -17,6 +17,48 @@ export function getRawPfpUrl(username: string, ext = "jpg"): string {
   return `https://raw.githubusercontent.com/${PFP_REPO}/main/${cleanUser}.${ext}`;
 }
 
+/** Clean up old PFP files with different extensions for the same username */
+async function removeOldUserPfpFiles(username: string, currentFilename: string, token: string) {
+  const cleanUser = username.trim().toLowerCase();
+  const extensions = ["jpg", "jpeg", "png", "webp", "gif"];
+
+  for (const ext of extensions) {
+    const fn = `${cleanUser}.${ext}`;
+    if (fn === currentFilename) continue;
+
+    try {
+      const url = `https://api.github.com/repos/${PFP_REPO}/contents/${fn}`;
+      const res = await fetch(url, {
+        headers: {
+          Authorization: `token ${token}`,
+          "User-Agent": "SHS-Cloud-App",
+          Accept: "application/vnd.github.v3+json",
+        },
+        cache: "no-store",
+      });
+
+      if (res.ok) {
+        const data = (await res.json()) as any;
+        if (data.sha) {
+          await fetch(url, {
+            method: "DELETE",
+            headers: {
+              Authorization: `token ${token}`,
+              "User-Agent": "SHS-Cloud-App",
+              Accept: "application/vnd.github.v3+json",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              message: `Remove old PFP image for user: ${cleanUser}`,
+              sha: data.sha,
+            }),
+          });
+        }
+      }
+    } catch {}
+  }
+}
+
 /** Upload user Profile Picture (PFP) to GitHub repository nonxe/dbpfp and link with nonxe/db */
 export async function uploadPfpToDbPfp(
   username: string,
@@ -32,7 +74,7 @@ export async function uploadPfpToDbPfp(
     return { success: false, error: "Image data is required." };
   }
 
-  // Detect file extension, defaulting to jpg
+  // Standardize file extension to jpg for all uploaded profile pictures
   let ext = "jpg";
   let cleanBase64 = base64Data;
 
@@ -56,7 +98,10 @@ export async function uploadPfpToDbPfp(
   const url = `https://api.github.com/repos/${PFP_REPO}/contents/${filename}`;
   const token = getGithubToken();
 
-  // Check if file already exists in nonxe/dbpfp to obtain sha
+  // 1. Remove old PFP files with other extensions for this username
+  await removeOldUserPfpFiles(cleanUser, filename, token);
+
+  // 2. Check if target PFP file already exists to obtain sha for overwrite
   let sha: string | null = null;
   try {
     const getRes = await fetch(url, {
@@ -74,14 +119,14 @@ export async function uploadPfpToDbPfp(
   } catch {}
 
   const bodyData: any = {
-    message: `Update Profile Picture for user: ${cleanUser}`,
+    message: `Re-upload PFP for user: ${cleanUser}`,
     content: cleanBase64,
   };
   if (sha) {
     bodyData.sha = sha;
   }
 
-  // Upload/PUT to nonxe/dbpfp GitHub Repository
+  // 3. Upload/PUT to nonxe/dbpfp GitHub Repository
   const putRes = await fetch(url, {
     method: "PUT",
     headers: {
@@ -104,7 +149,7 @@ export async function uploadPfpToDbPfp(
   // Construct GitHub Raw Direct Link
   const rawUrl = `https://raw.githubusercontent.com/${PFP_REPO}/main/${filename}`;
 
-  // Link updated PFP in nonxe/db (log.txt)
+  // 4. Link updated PFP in nonxe/db (log.txt)
   await updateAccountPfpInLog(cleanUser, rawUrl).catch((err) => {
     console.warn("Failed to link PFP in nonxe/db:", err);
   });
