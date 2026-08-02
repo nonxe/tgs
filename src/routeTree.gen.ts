@@ -41,6 +41,7 @@ import { Route as ApiXDownloadRouteImport } from './routes/api/x/download'
 import { Route as ApiWabotManageRouteImport } from './routes/api/wabot/manage'
 import { Route as ApiPublicUploadRouteImport } from './routes/api/public/upload'
 import { Route as ApiPfpUploadRouteImport } from './routes/api/pfp/upload'
+import { Route as ApiPfpRemoveRouteImport } from './routes/api/pfp/remove'
 import { Route as ApiPfpGetRouteImport } from './routes/api/pfp/get'
 import { Route as ApiMessagesUpdateprofileRouteImport } from './routes/api/messages/updateprofile'
 import { Route as ApiMessagesUpdatepfpRouteImport } from './routes/api/messages/updatepfp'
@@ -227,6 +228,11 @@ const ApiPfpUploadRoute = ApiPfpUploadRouteImport.update({
   path: '/api/pfp/upload',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPfpRemoveRoute = ApiPfpRemoveRouteImport.update({
+  id: '/api/pfp/remove',
+  path: '/api/pfp/remove',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPfpGetRoute = ApiPfpGetRouteImport.update({
   id: '/api/pfp/get',
   path: '/api/pfp/get',
@@ -403,6 +409,7 @@ export interface FileRoutesByFullPath {
   '/api/messages/updatepfp': typeof ApiMessagesUpdatepfpRoute
   '/api/messages/updateprofile': typeof ApiMessagesUpdateprofileRoute
   '/api/pfp/get': typeof ApiPfpGetRoute
+  '/api/pfp/remove': typeof ApiPfpRemoveRoute
   '/api/pfp/upload': typeof ApiPfpUploadRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
   '/api/wabot/manage': typeof ApiWabotManageRoute
@@ -461,6 +468,7 @@ export interface FileRoutesByTo {
   '/api/messages/updatepfp': typeof ApiMessagesUpdatepfpRoute
   '/api/messages/updateprofile': typeof ApiMessagesUpdateprofileRoute
   '/api/pfp/get': typeof ApiPfpGetRoute
+  '/api/pfp/remove': typeof ApiPfpRemoveRoute
   '/api/pfp/upload': typeof ApiPfpUploadRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
   '/api/wabot/manage': typeof ApiWabotManageRoute
@@ -521,6 +529,7 @@ export interface FileRoutesById {
   '/api/messages/updatepfp': typeof ApiMessagesUpdatepfpRoute
   '/api/messages/updateprofile': typeof ApiMessagesUpdateprofileRoute
   '/api/pfp/get': typeof ApiPfpGetRoute
+  '/api/pfp/remove': typeof ApiPfpRemoveRoute
   '/api/pfp/upload': typeof ApiPfpUploadRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
   '/api/wabot/manage': typeof ApiWabotManageRoute
@@ -582,6 +591,7 @@ export interface FileRouteTypes {
     | '/api/messages/updatepfp'
     | '/api/messages/updateprofile'
     | '/api/pfp/get'
+    | '/api/pfp/remove'
     | '/api/pfp/upload'
     | '/api/public/upload'
     | '/api/wabot/manage'
@@ -640,6 +650,7 @@ export interface FileRouteTypes {
     | '/api/messages/updatepfp'
     | '/api/messages/updateprofile'
     | '/api/pfp/get'
+    | '/api/pfp/remove'
     | '/api/pfp/upload'
     | '/api/public/upload'
     | '/api/wabot/manage'
@@ -699,6 +710,7 @@ export interface FileRouteTypes {
     | '/api/messages/updatepfp'
     | '/api/messages/updateprofile'
     | '/api/pfp/get'
+    | '/api/pfp/remove'
     | '/api/pfp/upload'
     | '/api/public/upload'
     | '/api/wabot/manage'
@@ -757,6 +769,7 @@ export interface RootRouteChildren {
   ApiMessagesUpdatepfpRoute: typeof ApiMessagesUpdatepfpRoute
   ApiMessagesUpdateprofileRoute: typeof ApiMessagesUpdateprofileRoute
   ApiPfpGetRoute: typeof ApiPfpGetRoute
+  ApiPfpRemoveRoute: typeof ApiPfpRemoveRoute
   ApiPfpUploadRoute: typeof ApiPfpUploadRoute
   ApiPublicUploadRoute: typeof ApiPublicUploadRoute
   ApiWabotManageRoute: typeof ApiWabotManageRoute
@@ -990,6 +1003,13 @@ declare module '@tanstack/react-router' {
       path: '/api/pfp/upload'
       fullPath: '/api/pfp/upload'
       preLoaderRoute: typeof ApiPfpUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/pfp/remove': {
+      id: '/api/pfp/remove'
+      path: '/api/pfp/remove'
+      fullPath: '/api/pfp/remove'
+      preLoaderRoute: typeof ApiPfpRemoveRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/pfp/get': {
@@ -1243,6 +1263,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMessagesUpdatepfpRoute: ApiMessagesUpdatepfpRoute,
   ApiMessagesUpdateprofileRoute: ApiMessagesUpdateprofileRoute,
   ApiPfpGetRoute: ApiPfpGetRoute,
+  ApiPfpRemoveRoute: ApiPfpRemoveRoute,
   ApiPfpUploadRoute: ApiPfpUploadRoute,
   ApiPublicUploadRoute: ApiPublicUploadRoute,
   ApiWabotManageRoute: ApiWabotManageRoute,

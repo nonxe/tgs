@@ -38,7 +38,9 @@ import {
   Palette,
   ShieldCheck,
   Bot,
-  Camera
+  Camera,
+  Trash2,
+  RefreshCw
 } from "lucide-react";
 
 function StarOfDavidIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -132,6 +134,8 @@ function DashboardHome() {
     });
   };
 
+  const [pfpRemoving, setPfpRemoving] = useState(false);
+
   const handlePfpChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !savedAccount) return;
@@ -155,12 +159,46 @@ function DashboardHome() {
       if (!res.ok || !data.success) throw new Error(data.error || "PFP upload failed");
 
       setPfpCacheKey(Date.now());
+      const updatedAcc = { ...savedAccount, pfpUrl: data.pfpUrl };
+      localStorage.setItem("cloud_user_account", JSON.stringify(updatedAcc));
+      setSavedAccount(updatedAcc);
+
       setAccMsg({ type: "success", text: "Profile picture uploaded to nonxe/dbpfp and linked to nonxe/db!" });
     } catch (err: any) {
       setAccMsg({ type: "error", text: err.message || "Failed to upload PFP." });
     } finally {
       setPfpUploading(false);
       if (pfpInputRef.current) pfpInputRef.current.value = "";
+    }
+  };
+
+  const handlePfpRemove = async () => {
+    if (!savedAccount) return;
+    if (!confirm("Are you sure you want to remove your profile picture?")) return;
+
+    setPfpRemoving(true);
+    try {
+      const res = await fetch("/api/pfp/remove", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: savedAccount.id,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "PFP removal failed");
+
+      setPfpCacheKey(Date.now());
+      const updatedAcc = { ...savedAccount, pfpUrl: "" };
+      localStorage.setItem("cloud_user_account", JSON.stringify(updatedAcc));
+      setSavedAccount(updatedAcc);
+
+      setAccMsg({ type: "success", text: "Profile picture removed from nonxe/dbpfp!" });
+    } catch (err: any) {
+      setAccMsg({ type: "error", text: err.message || "Failed to remove PFP." });
+    } finally {
+      setPfpRemoving(false);
     }
   };
 
@@ -851,9 +889,9 @@ function DashboardHome() {
 
                 {savedAccount ? (
                   <div className="space-y-3">
-                    <div className="p-3.5 rounded-[16px] bg-purple-500/10 border border-purple-500/30 space-y-2.5">
+                    <div className="p-4 rounded-[20px] bg-purple-500/10 border border-purple-500/30 space-y-3">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2.5">
+                        <div className="flex items-center gap-3">
                           <input
                             type="file"
                             ref={pfpInputRef}
@@ -863,16 +901,20 @@ function DashboardHome() {
                           />
                           <div
                             onClick={() => pfpInputRef.current?.click()}
-                            className="relative size-10 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-300 font-black text-[13px] overflow-hidden cursor-pointer group hover:border-purple-400 transition-all flex-shrink-0"
-                            title="Click to upload Profile Picture to nonxe/dbpfp"
+                            className={`relative size-12 rounded-full bg-purple-500/20 border-2 transition-all cursor-pointer group flex items-center justify-center overflow-hidden flex-shrink-0 ${
+                              pfpUploading || pfpRemoving
+                                ? "border-emerald-400 animate-pulse ring-4 ring-emerald-500/20"
+                                : "border-purple-500/40 hover:border-purple-400 hover:scale-105"
+                            }`}
+                            title="Click to change Profile Picture"
                           >
-                            <span className="absolute inset-0 flex items-center justify-center font-black text-[13px] text-purple-300">
+                            <span className="absolute inset-0 flex items-center justify-center font-black text-sm text-purple-300">
                               {savedAccount.id.charAt(0).toUpperCase()}
                             </span>
                             <img
                               src={savedAccount.pfpUrl || `https://raw.githubusercontent.com/nonxe/dbpfp/main/${savedAccount.id.toLowerCase()}.jpg?v=${pfpCacheKey}`}
                               alt={savedAccount.id}
-                              className="absolute inset-0 size-full object-cover z-10"
+                              className="absolute inset-0 size-full object-cover z-10 transition-transform group-hover:scale-110"
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
                                 if (target.src.includes(".jpg")) {
@@ -884,23 +926,54 @@ function DashboardHome() {
                                 }
                               }}
                             />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white z-20">
-                              {pfpUploading ? <Loader2 className="size-3.5 animate-spin" /> : <Camera className="size-3.5" />}
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center text-white z-20 backdrop-blur-xs">
+                              {pfpUploading || pfpRemoving ? (
+                                <Loader2 className="size-4 animate-spin text-emerald-400" />
+                              ) : (
+                                <Camera className="size-4" />
+                              )}
                             </div>
                           </div>
+
                           <div>
-                            <p className="text-[13px] font-black text-foreground leading-none flex items-center gap-1">
+                            <p className="text-[13.5px] font-black text-foreground leading-none flex items-center gap-1.5">
                               <span>{savedAccount.id}</span>
                             </p>
-                            <p className="text-[10px] text-emerald-400 font-semibold mt-1">● Synced to Cloud & PFP</p>
+                            <p className="text-[10.5px] text-emerald-400 font-bold mt-1 flex items-center gap-1">
+                              <span className="size-1.5 rounded-full bg-emerald-400 animate-ping" />
+                              <span>Synced to nonxe/db & PFP</span>
+                            </p>
                           </div>
                         </div>
+
                         <button
                           onClick={handleLogout}
-                          className="px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[11px] font-bold flex items-center gap-1 transition-colors"
+                          className="px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-[11px] font-bold flex items-center gap-1 transition-all active:scale-95"
                         >
                           <LogOut className="size-3" />
                           <span>Logout</span>
+                        </button>
+                      </div>
+
+                      {/* Social Media PFP Action Toolbar */}
+                      <div className="flex items-center gap-2 pt-2 border-t border-purple-500/20">
+                        <button
+                          onClick={() => pfpInputRef.current?.click()}
+                          disabled={pfpUploading || pfpRemoving}
+                          className="flex-1 py-1.5 px-3 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-200 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 disabled:opacity-50"
+                        >
+                          {pfpUploading ? <Loader2 className="size-3.5 animate-spin" /> : <Camera className="size-3.5 text-purple-300" />}
+                          <span>{pfpUploading ? "Uploading..." : "Upload Photo"}</span>
+                        </button>
+
+                        <button
+                          onClick={handlePfpRemove}
+                          disabled={pfpUploading || pfpRemoving}
+                          className="py-1.5 px-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 disabled:opacity-50"
+                          title="Remove Profile Picture"
+                        >
+                          {pfpRemoving ? <Loader2 className="size-3.5 animate-spin text-rose-400" /> : <Trash2 className="size-3.5 text-rose-400" />}
+                          <span>Remove</span>
                         </button>
                       </div>
                     </div>

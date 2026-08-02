@@ -156,3 +156,55 @@ export async function uploadPfpToDbPfp(
 
   return { success: true, pfpUrl: rawUrl };
 }
+
+/** Permanently delete user Profile Picture (PFP) from nonxe/dbpfp and clear link in nonxe/db */
+export async function deletePfpFromDbPfp(
+  username: string
+): Promise<{ success: boolean; error?: string }> {
+  const cleanUser = username.trim().toLowerCase();
+  if (!cleanUser) {
+    return { success: false, error: "Username is required." };
+  }
+
+  const token = getGithubToken();
+  const extensions = ["jpg", "jpeg", "png", "webp", "gif"];
+
+  for (const ext of extensions) {
+    const filename = `${cleanUser}.${ext}`;
+    const url = `https://api.github.com/repos/${PFP_REPO}/contents/${filename}`;
+    try {
+      const getRes = await fetch(url, {
+        headers: {
+          Authorization: `token ${token}`,
+          "User-Agent": "SHS-Cloud-App",
+          Accept: "application/vnd.github.v3+json",
+        },
+        cache: "no-store",
+      });
+
+      if (getRes.ok) {
+        const data = (await getRes.json()) as any;
+        if (data.sha) {
+          await fetch(url, {
+            method: "DELETE",
+            headers: {
+              Authorization: `token ${token}`,
+              "User-Agent": "SHS-Cloud-App",
+              Accept: "application/vnd.github.v3+json",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              message: `Remove PFP for user: ${cleanUser}`,
+              sha: data.sha,
+            }),
+          });
+        }
+      }
+    } catch {}
+  }
+
+  // Clear PFP link in nonxe/db (log.txt)
+  await updateAccountPfpInLog(cleanUser, "").catch(() => {});
+
+  return { success: true };
+}
