@@ -701,9 +701,8 @@ function E2eeMessengerPage() {
       setPublicKeysCache(prev => ({ ...prev, [peerUsername]: pubKey }));
       calculateFingerprint(peerUsername, data.publicKey);
 
-      if (data.pfpUrl) {
-        setPfpsCache(prev => ({ ...prev, [peerUsername]: data.pfpUrl }));
-      }
+      const peerPfp = data.pfpUrl || `https://raw.githubusercontent.com/nonxe/dbpfp/main/${peerUsername.toLowerCase()}.jpg`;
+      setPfpsCache(prev => ({ ...prev, [peerUsername]: peerPfp }));
       if (data.dob) {
         setDobsCache(prev => ({ ...prev, [peerUsername]: data.dob }));
       }

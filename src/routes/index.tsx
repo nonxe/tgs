@@ -863,18 +863,28 @@ function DashboardHome() {
                           />
                           <div
                             onClick={() => pfpInputRef.current?.click()}
-                            className="relative size-10 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-300 font-black text-[13px] overflow-hidden cursor-pointer group hover:border-purple-400 transition-all"
+                            className="relative size-10 rounded-full bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-300 font-black text-[13px] overflow-hidden cursor-pointer group hover:border-purple-400 transition-all flex-shrink-0"
                             title="Click to upload Profile Picture to nonxe/dbpfp"
                           >
+                            <span className="absolute inset-0 flex items-center justify-center font-black text-[13px] text-purple-300">
+                              {savedAccount.id.charAt(0).toUpperCase()}
+                            </span>
                             <img
-                              src={savedAccount.pfpUrl || `https://raw.githubusercontent.com/nonxe/dbpfp/main/${savedAccount.id.toLowerCase()}.png?t=${pfpCacheKey}`}
+                              src={savedAccount.pfpUrl || `https://raw.githubusercontent.com/nonxe/dbpfp/main/${savedAccount.id.toLowerCase()}.jpg?v=${pfpCacheKey}`}
                               alt={savedAccount.id}
-                              className="size-full object-cover"
+                              className="absolute inset-0 size-full object-cover z-10"
                               onError={(e) => {
-                                (e.target as HTMLElement).style.display = "none";
+                                const target = e.target as HTMLImageElement;
+                                if (target.src.includes(".jpg")) {
+                                  target.src = `https://raw.githubusercontent.com/nonxe/dbpfp/main/${savedAccount.id.toLowerCase()}.webp?v=${pfpCacheKey}`;
+                                } else if (target.src.includes(".webp")) {
+                                  target.src = `https://raw.githubusercontent.com/nonxe/dbpfp/main/${savedAccount.id.toLowerCase()}.png?v=${pfpCacheKey}`;
+                                } else {
+                                  target.style.display = "none";
+                                }
                               }}
                             />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white z-20">
                               {pfpUploading ? <Loader2 className="size-3.5 animate-spin" /> : <Camera className="size-3.5" />}
                             </div>
                           </div>

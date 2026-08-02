@@ -32,7 +32,7 @@ export async function uploadPfpToDbPfp(
     return { success: false, error: "Image data is required." };
   }
 
-  // Extract base64 payload and detect file extension
+  // Detect file extension, defaulting to jpg
   let ext = "jpg";
   let cleanBase64 = base64Data;
 

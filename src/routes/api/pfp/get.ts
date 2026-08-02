@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { fetchAccountsFromLog } from "../../../lib/github-db";
+import { getRawPfpUrl } from "../../../lib/github-pfp";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -24,13 +25,13 @@ async function handleGetPfp(request: Request) {
     const { accounts } = await fetchAccountsFromLog();
     const userAccount = accounts.find((a) => a.id.toLowerCase() === cleanUser);
 
-    const rawUrl = userAccount?.pfpUrl || `https://raw.githubusercontent.com/nonxe/dbpfp/main/${cleanUser}.png`;
+    const pfpUrl = userAccount?.pfpUrl || getRawPfpUrl(cleanUser, "jpg");
 
     return new Response(
       JSON.stringify({
         success: true,
         username: cleanUser,
-        pfpUrl: rawUrl,
+        pfpUrl,
       }),
       { status: 200, headers: CORS_HEADERS }
     );
