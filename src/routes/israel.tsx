@@ -40,16 +40,16 @@ export const Route = createFileRoute("/israel")({
 function StarOfDavidIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
-      viewBox="0 0 100 100"
+      viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="9"
+      strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
       {...props}
     >
-      <polygon points="50,8 92,80 8,80" />
-      <polygon points="50,92 92,20 8,20" />
+      <polygon points="12,2.5 20.23,16.75 3.77,16.75" />
+      <polygon points="12,21.5 20.23,7.25 3.77,7.25" />
     </svg>
   );
 }
