@@ -91,18 +91,55 @@ function DashboardHome() {
   const [pfpCacheKey, setPfpCacheKey] = useState(Date.now());
   const pfpInputRef = useRef<HTMLInputElement | null>(null);
 
+  const compressPfp = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          let width = img.width;
+          let height = img.height;
+          const maxDim = 350;
+
+          if (width > height) {
+            if (width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL("image/jpeg", 0.85));
+          } else {
+            resolve(e.target?.result as string);
+          }
+        };
+        img.onerror = reject;
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handlePfpChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !savedAccount) return;
 
     setPfpUploading(true);
     try {
-      const base64Data = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
+      // Compress image to lightweight ~30KB JPEG
+      const base64Data = await compressPfp(file);
 
       const res = await fetch("/api/pfp/upload", {
         method: "POST",
@@ -110,7 +147,7 @@ function DashboardHome() {
         body: JSON.stringify({
           username: savedAccount.id,
           pfpBase64: base64Data,
-          mimeType: file.type,
+          mimeType: "image/jpeg",
         }),
       });
 

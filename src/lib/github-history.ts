@@ -72,9 +72,18 @@ export async function addHistoryEntry(
 
   const { sha, entries } = await fetchHistory();
 
+  // Determine clean rawUserId
+  let cleanRawUser = rawUserId ? rawUserId.trim().toLowerCase() : undefined;
+  if (!cleanRawUser && !userId.startsWith("[")) {
+    const firstWord = userId.split(" ")[0].trim();
+    if (firstWord && !firstWord.startsWith("[")) {
+      cleanRawUser = firstWord.toLowerCase();
+    }
+  }
+
   const newEntry: HistoryEntry = {
     userId: userId.trim(),
-    rawUserId: rawUserId ? rawUserId.trim().toLowerCase() : undefined,
+    rawUserId: cleanRawUser,
     ip,
     action,
     detail,
@@ -118,13 +127,22 @@ export async function addHistoryEntry(
 }
 
 export async function getUserHistory(userId: string): Promise<HistoryEntry[]> {
+  const cleanTarget = userId ? userId.trim().toLowerCase() : "";
+  if (!cleanTarget) return [];
+
   const { entries } = await fetchHistory();
-  const target = userId.trim().toLowerCase();
+
   return entries
     .filter((e) => {
-      if (e.rawUserId && e.rawUserId === target) return true;
-      if (e.userId.toLowerCase().startsWith(target + " [")) return true;
-      if (e.userId.toLowerCase() === target) return true;
+      // 1. Check exact rawUserId match
+      if (e.rawUserId && e.rawUserId.toLowerCase() === cleanTarget) {
+        return true;
+      }
+      // 2. Check formatted userId first word match (e.g. "john [1.2.3.4]")
+      if (e.userId && !e.userId.startsWith("[")) {
+        const firstWord = e.userId.split(" ")[0].trim().toLowerCase();
+        if (firstWord === cleanTarget) return true;
+      }
       return false;
     })
     .reverse(); // newest first

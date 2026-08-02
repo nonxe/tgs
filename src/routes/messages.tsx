@@ -976,10 +976,42 @@ function E2eeMessengerPage() {
 
     setPfpUploading(true);
     try {
-      // Convert image file to base64
+      // Compress image to lightweight ~30KB JPEG
       const base64Data = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
+        reader.onload = (ev) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            let width = img.width;
+            let height = img.height;
+            const maxDim = 350;
+
+            if (width > height) {
+              if (width > maxDim) {
+                height = Math.round((height * maxDim) / width);
+                width = maxDim;
+              }
+            } else {
+              if (height > maxDim) {
+                width = Math.round((width * maxDim) / height);
+                height = maxDim;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            if (ctx) {
+              ctx.drawImage(img, 0, 0, width, height);
+              resolve(canvas.toDataURL("image/jpeg", 0.85));
+            } else {
+              resolve(ev.target?.result as string);
+            }
+          };
+          img.onerror = reject;
+          img.src = ev.target?.result as string;
+        };
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
@@ -991,7 +1023,7 @@ function E2eeMessengerPage() {
         body: JSON.stringify({
           username: loggedInUser,
           pfpBase64: base64Data,
-          mimeType: file.type,
+          mimeType: "image/jpeg",
         }),
       });
 

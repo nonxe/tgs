@@ -12,7 +12,7 @@ function getGithubToken(): string {
   return `${p1}${p2}${p3}`;
 }
 
-export function getRawPfpUrl(username: string, ext = "png"): string {
+export function getRawPfpUrl(username: string, ext = "jpg"): string {
   const cleanUser = username.trim().toLowerCase();
   return `https://raw.githubusercontent.com/${PFP_REPO}/main/${cleanUser}.${ext}`;
 }
@@ -21,7 +21,7 @@ export function getRawPfpUrl(username: string, ext = "png"): string {
 export async function uploadPfpToDbPfp(
   username: string,
   base64Data: string,
-  mimeType = "image/png"
+  mimeType = "image/jpeg"
 ): Promise<{ success: boolean; pfpUrl?: string; error?: string }> {
   const cleanUser = username.trim().toLowerCase();
   if (!cleanUser) {
@@ -33,21 +33,24 @@ export async function uploadPfpToDbPfp(
   }
 
   // Extract base64 payload and detect file extension
-  let ext = "png";
+  let ext = "jpg";
   let cleanBase64 = base64Data;
 
   if (base64Data.includes(";base64,")) {
     const parts = base64Data.split(";base64,");
     const meta = parts[0];
     cleanBase64 = parts[1];
-    if (meta.includes("jpeg") || meta.includes("jpg")) ext = "jpg";
+    if (meta.includes("png")) ext = "png";
     else if (meta.includes("webp")) ext = "webp";
     else if (meta.includes("gif")) ext = "gif";
-  } else if (mimeType.includes("jpeg") || mimeType.includes("jpg")) {
-    ext = "jpg";
+  } else if (mimeType.includes("png")) {
+    ext = "png";
   } else if (mimeType.includes("webp")) {
     ext = "webp";
   }
+
+  // Strip all whitespace/newlines from base64 string for GitHub API compatibility
+  cleanBase64 = cleanBase64.replace(/[\n\r\s]/g, "");
 
   const filename = `${cleanUser}.${ext}`;
   const url = `https://api.github.com/repos/${PFP_REPO}/contents/${filename}`;
@@ -94,7 +97,7 @@ export async function uploadPfpToDbPfp(
     const errData = (await putRes.json().catch(() => ({}))) as any;
     return {
       success: false,
-      error: errData.message || "Failed to upload PFP image to nonxe/dbpfp repository.",
+      error: errData.message || `GitHub API error (${putRes.status}) while saving PFP image to nonxe/dbpfp.`,
     };
   }
 
