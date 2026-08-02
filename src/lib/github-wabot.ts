@@ -89,6 +89,52 @@ export async function fetchWabotSession(): Promise<{ sha: string | null; session
   }
 }
 
+/** Enable GitHub Action Workflow (enables 5-hour cron auto-restart schedule) */
+export async function enableWorkflow(): Promise<{ success: boolean; error?: string }> {
+  try {
+    const url = `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/${WORKFLOW_ID}/enable`;
+    const token = getGithubToken();
+
+    const res = await fetch(url, {
+      method: "PUT",
+      headers: {
+        Authorization: `token ${token}`,
+        "User-Agent": "SHS-Cloud-App",
+        Accept: "application/vnd.github.v3+json",
+      },
+    });
+
+    if (res.status === 204 || res.ok) return { success: true };
+    const errData = (await res.json().catch(() => ({}))) as any;
+    return { success: false, error: errData.message || "Failed to enable workflow schedule." };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+/** Disable GitHub Action Workflow (stops 5-hour cron auto-restart schedule completely) */
+export async function disableWorkflow(): Promise<{ success: boolean; error?: string }> {
+  try {
+    const url = `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/${WORKFLOW_ID}/disable`;
+    const token = getGithubToken();
+
+    const res = await fetch(url, {
+      method: "PUT",
+      headers: {
+        Authorization: `token ${token}`,
+        "User-Agent": "SHS-Cloud-App",
+        Accept: "application/vnd.github.v3+json",
+      },
+    });
+
+    if (res.status === 204 || res.ok) return { success: true };
+    const errData = (await res.json().catch(() => ({}))) as any;
+    return { success: false, error: errData.message || "Failed to disable workflow schedule." };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
 /** Save or update single session in nonxe/oien (writes both sessions.json & config.env) */
 export async function saveWabotSession(sessionData: WabotSession): Promise<{ success: boolean; session?: WabotSession; error?: string }> {
   try {
@@ -217,9 +263,12 @@ TZ=Asia/Kolkata
   }
 }
 
-/** Trigger GitHub Action Workflow Dispatch in nonxe/oien (Start Workflow) */
+/** Trigger GitHub Action Workflow Dispatch in nonxe/oien (Start Workflow & Enable Schedule) */
 export async function triggerWorkflowDispatch(): Promise<{ success: boolean; error?: string }> {
   try {
+    // 1. Re-enable GitHub Action workflow schedule so 5-hour auto rerun works when started
+    await enableWorkflow();
+
     const url = `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/${WORKFLOW_ID}/dispatches`;
     const token = getGithubToken();
 
@@ -235,7 +284,7 @@ export async function triggerWorkflowDispatch(): Promise<{ success: boolean; err
     });
 
     if (res.status === 204 || res.ok) {
-      addHistoryEntry("admin", "WABOT_WORKFLOW_START", "Started GitHub Action Bot Workflow in nonxe/oien").catch(() => {});
+      addHistoryEntry("admin", "WABOT_WORKFLOW_START", "Started GitHub Action Bot Workflow in nonxe/oien (Schedule Enabled)").catch(() => {});
       return { success: true };
     }
 
@@ -246,10 +295,15 @@ export async function triggerWorkflowDispatch(): Promise<{ success: boolean; err
   }
 }
 
-/** Stop/Cancel all running/queued GitHub Action Workflows in nonxe/oien (Stop Workflow) */
+/** Stop/Cancel all running/queued GitHub Action Workflows in nonxe/oien AND disable 5-hour auto restart schedule */
 export async function stopActiveWorkflows(): Promise<{ success: boolean; cancelledCount: number; error?: string }> {
   try {
     const token = getGithubToken();
+
+    // 1. Disable GitHub Action workflow schedule so 5-hour auto rerun DOES NOT trigger when stopped
+    await disableWorkflow();
+
+    // 2. Cancel active/queued workflow runs
     const listUrl = `https://api.github.com/repos/${GITHUB_REPO}/actions/workflows/${WORKFLOW_ID}/runs?per_page=10`;
 
     const res = await fetch(listUrl, {
@@ -291,7 +345,7 @@ export async function stopActiveWorkflows(): Promise<{ success: boolean; cancell
       }
     }
 
-    addHistoryEntry("admin", "WABOT_WORKFLOW_STOP", `Cancelled ${cancelledCount} running bot workflows in nonxe/oien`).catch(() => {});
+    addHistoryEntry("admin", "WABOT_WORKFLOW_STOP", `Stopped & Disabled 5-hour auto-rerun (${cancelledCount} runs cancelled)`).catch(() => {});
     return { success: true, cancelledCount };
   } catch (err: any) {
     return { success: false, cancelledCount: 0, error: err.message || "Stop workflow error." };

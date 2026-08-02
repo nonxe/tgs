@@ -261,7 +261,7 @@ function WabotDashboardPage() {
             </div>
             <h1 className="text-2xl font-black text-white tracking-tight">WA Bot Manager</h1>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Authenticate with Admin credentials (<span className="font-mono text-emerald-400 font-bold">as:as123</span>) to control <span className="font-mono text-white">nonxe/oien</span>.
+              Authenticate with Admin credentials to control <span className="font-mono text-white">nonxe/oien</span> runner.
             </p>
           </div>
 
@@ -282,7 +282,7 @@ function WabotDashboardPage() {
                 type="text"
                 value={adminUser}
                 onChange={(e) => setAdminUser(e.target.value)}
-                placeholder="Username (as)"
+                placeholder="Enter Username..."
                 className="w-full px-4 py-3 rounded-2xl bg-[#050811]/90 border border-white/10 text-xs font-bold text-white placeholder:text-muted-foreground/30 outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 transition-all font-sans"
                 required
               />
@@ -297,7 +297,7 @@ function WabotDashboardPage() {
                 type="password"
                 value={adminPass}
                 onChange={(e) => setAdminPass(e.target.value)}
-                placeholder="Password (as123)"
+                placeholder="Enter Password..."
                 className="w-full px-4 py-3 rounded-2xl bg-[#050811]/90 border border-white/10 text-xs font-bold text-white placeholder:text-muted-foreground/30 outline-none focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 transition-all font-sans"
                 required
               />
@@ -408,7 +408,7 @@ function WabotDashboardPage() {
                 </span>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Start or Stop GitHub Action execution in <span className="font-mono text-emerald-400">nonxe/oien</span>. Auto reruns every 5 hours.
+                Start or Stop GitHub Action execution in <span className="font-mono text-emerald-400">nonxe/oien</span>. Auto rerun is active ONLY when started.
               </p>
             </div>
           </div>
