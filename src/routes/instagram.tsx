@@ -7,15 +7,12 @@ import {
   Check,
   ArrowLeft,
   Loader2,
-  Sparkles,
   Play,
   Heart,
   MessageCircle,
   AlertTriangle,
-  RefreshCw,
-  ExternalLink,
-  Video,
   Film,
+  Sparkles,
 } from "lucide-react";
 
 interface InstagramResult {
@@ -40,7 +37,7 @@ function InstagramDownloaderPage() {
   const handleFetchReel = async (targetUrl?: string) => {
     const inputUrl = (targetUrl || url).trim();
     if (!inputUrl) {
-      setError("Please paste a valid Instagram Reel or Video URL.");
+      setError("Please enter a valid Instagram Reel or Video URL.");
       return;
     }
 
@@ -87,105 +84,91 @@ function InstagramDownloaderPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#030712] text-foreground font-sans relative selection:bg-rose-500/30 overflow-x-hidden">
-      {/* Background Neon Ambient Orbs */}
-      <div className="fixed top-0 left-1/3 size-96 rounded-full bg-rose-500/5 blur-[160px] pointer-events-none z-0" />
-      <div className="fixed bottom-10 right-1/4 size-96 rounded-full bg-purple-500/5 blur-[160px] pointer-events-none z-0" />
-
+    <main className="min-h-screen bg-[#000000] text-foreground font-sans relative selection:bg-white/20">
       {/* Header Banner */}
-      <header className="px-4 sm:px-6 md:px-8 py-4 border-b border-white/10 backdrop-blur-2xl sticky top-0 z-40 bg-[#030712]/90">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
+      <header className="px-4 sm:px-6 md:px-8 py-4 border-b border-zinc-800/80 sticky top-0 z-40 bg-[#000000]/95 backdrop-blur-md">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link
               to="/"
-              className="size-9 rounded-2xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-muted-foreground hover:text-foreground transition-all border border-white/10"
+              className="size-9 rounded-xl bg-zinc-900 hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition-all border border-zinc-800"
               title="Back to Home"
             >
               <ArrowLeft className="size-4" />
             </Link>
             <div>
               <div className="flex items-center gap-2">
-                <span className="p-1.5 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
-                  <Instagram className="size-4.5" />
+                <span className="p-1.5 rounded-lg bg-zinc-900 text-white border border-zinc-800">
+                  <Instagram className="size-4" />
                 </span>
-                <h1 className="text-lg sm:text-xl font-black tracking-tight text-white">
+                <h1 className="text-base sm:text-lg font-bold tracking-tight text-white">
                   Instagram Downloader
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[10px] font-black uppercase font-mono tracking-wider flex items-center gap-1">
-                  <Sparkles className="size-3 text-amber-400" />
-                  BETA FEATURE
+                <span className="px-2.5 py-0.5 rounded-full bg-zinc-900 text-amber-400 border border-amber-500/20 text-[10px] font-mono font-bold tracking-wider">
+                  BETA
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground mt-0.5 font-mono">
-                Download Reels, Posts & Videos with high quality thumbnail preview
-              </p>
             </div>
           </div>
 
-          <div className="hidden sm:flex items-center gap-2">
-            <button
-              onClick={handlePasteSample}
-              className="px-3.5 py-2 rounded-2xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-bold transition-all flex items-center gap-1.5"
-            >
-              <Film className="size-3.5" />
-              <span>Try Sample Reel</span>
-            </button>
-          </div>
+          <button
+            onClick={handlePasteSample}
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white text-xs font-semibold transition-all"
+          >
+            <Film className="size-3.5" />
+            <span>Try Sample Reel</span>
+          </button>
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-8 space-y-7 relative z-10">
-        {/* BETA Warning Banner */}
-        <div className="p-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 text-amber-300 text-xs font-medium flex items-center gap-3 backdrop-blur-xl">
-          <AlertTriangle className="size-5 flex-shrink-0 text-amber-400" />
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-8 space-y-6">
+        {/* BETA Notice Banner */}
+        <div className="p-4 rounded-2xl border border-zinc-800 bg-[#09090b] text-zinc-400 text-xs font-normal flex items-start gap-3">
+          <AlertTriangle className="size-4 text-amber-400 flex-shrink-0 mt-0.5" />
           <div className="leading-relaxed">
-            <span className="font-bold text-amber-200">BETA Notice:</span> This Instagram Reel Downloader is currently in <strong>BETA</strong>. Private reels or region-locked posts may require public access.
+            <strong className="text-zinc-200 font-semibold">BETA Feature Notice:</strong> This tool is currently in public BETA. Private or restricted Instagram posts require standard public visibility.
           </div>
         </div>
 
-        {/* Search & Download Input Box */}
-        <div className="p-6 sm:p-8 rounded-[32px] border border-white/10 bg-[#090d16]/90 backdrop-blur-3xl space-y-4 shadow-2xl">
-          <label className="text-xs font-black uppercase text-rose-400 font-mono tracking-wider flex items-center gap-2">
-            <Instagram className="size-4" />
-            <span>Paste Instagram Reel or Post Link</span>
-          </label>
+        {/* Downloader Card */}
+        <div className="p-6 sm:p-7 rounded-2xl border border-zinc-800 bg-[#09090b] space-y-4">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-semibold text-zinc-300 flex items-center gap-2">
+              <span>Instagram Post or Reel URL</span>
+            </label>
+            <button
+              onClick={handlePasteSample}
+              className="text-[11px] text-zinc-400 hover:text-white font-mono underline sm:hidden"
+            >
+              Try Sample
+            </button>
+          </div>
 
           <form
             onSubmit={(e) => {
               e.preventDefault();
               handleFetchReel();
             }}
-            className="flex flex-col sm:flex-row gap-3"
+            className="flex flex-col sm:flex-row gap-2.5"
           >
-            <div className="relative flex-1">
-              <input
-                type="url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://www.instagram.com/reel/DD6q97IuzxD/..."
-                className="w-full h-13 px-4 sm:px-5 rounded-2xl bg-[#030712] border border-white/10 text-xs sm:text-sm font-mono font-bold text-white placeholder:text-muted-foreground/30 outline-none focus:border-rose-500/60 focus:ring-2 focus:ring-rose-500/20 transition-all"
-                required
-              />
-              {url && (
-                <button
-                  type="button"
-                  onClick={() => setUrl("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white text-xs font-bold px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 transition-all"
-                >
-                  Clear
-                </button>
-              )}
-            </div>
+            <input
+              type="url"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="https://www.instagram.com/reel/..."
+              className="flex-1 h-11 px-4 rounded-xl bg-[#000000] border border-zinc-800 text-xs sm:text-sm font-mono font-medium text-white placeholder:text-zinc-600 outline-none focus:border-zinc-500 transition-colors"
+              required
+            />
 
             <button
               type="submit"
               disabled={loading}
-              className="h-13 px-7 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-purple-600 hover:from-rose-400 hover:to-purple-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-xl shadow-rose-500/20 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 flex-shrink-0"
+              className="h-11 px-6 rounded-xl bg-white hover:bg-zinc-200 text-black font-bold text-xs uppercase tracking-wide transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 flex-shrink-0"
             >
               {loading ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  <span>Processing...</span>
+                  <span>Fetching...</span>
                 </>
               ) : (
                 <>
@@ -195,145 +178,112 @@ function InstagramDownloaderPage() {
               )}
             </button>
           </form>
-
-          <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1 px-1">
-            <span>Supported: Reels, IGTV, Video Posts, Carousel Videos</span>
-            <button
-              onClick={handlePasteSample}
-              className="text-rose-400 hover:underline font-mono font-bold flex items-center gap-1 sm:hidden"
-            >
-              <span>Try Sample</span>
-            </button>
-          </div>
         </div>
 
         {/* Loading Spinner */}
         {loading && (
-          <div className="py-16 text-center space-y-4 rounded-[32px] border border-white/10 bg-[#090d16]/50">
-            <Loader2 className="size-10 animate-spin mx-auto text-rose-400" />
-            <div className="space-y-1">
-              <h3 className="text-sm font-bold text-white">Fetching Reel Metadata...</h3>
-              <p className="text-xs text-muted-foreground font-mono">Extracting HD video stream & thumbnail preview</p>
-            </div>
+          <div className="py-12 text-center space-y-3 rounded-2xl border border-zinc-800 bg-[#09090b]">
+            <Loader2 className="size-8 animate-spin mx-auto text-zinc-400" />
+            <p className="text-xs text-zinc-400 font-mono">Fetching video stream & metadata...</p>
           </div>
         )}
 
         {/* Error Alert */}
         {error && (
-          <div className="p-5 rounded-3xl border border-rose-500/30 bg-rose-500/10 text-rose-300 text-xs font-bold text-center space-y-2 animate-shiver">
+          <div className="p-4 rounded-2xl border border-red-900/50 bg-red-950/20 text-red-300 text-xs font-medium text-center space-y-1">
             <p>{error}</p>
-            <p className="text-[11px] text-muted-foreground font-normal">
-              Note: Make sure the Instagram link is publicly accessible.
-            </p>
+            <p className="text-[11px] text-zinc-500">Ensure the reel link is public.</p>
           </div>
         )}
 
-        {/* Result Card: Thumbnail, Title, Download Button */}
+        {/* Result Card */}
         {result && (
-          <div className="p-6 sm:p-8 rounded-[32px] border border-rose-500/30 bg-[#090d16]/90 backdrop-blur-3xl space-y-6 shadow-2xl animate-spring-scale relative overflow-hidden">
-            {/* Header Badge */}
-            <div className="flex items-center justify-between border-b border-white/10 pb-4">
-              <div className="flex items-center gap-2">
-                <span className="size-2 rounded-full bg-emerald-400 animate-ping" />
-                <span className="text-xs font-black uppercase tracking-wider text-emerald-400 font-mono">
-                  Reel Ready to Download
-                </span>
-              </div>
+          <div className="p-6 sm:p-7 rounded-2xl border border-zinc-800 bg-[#09090b] space-y-6">
+            <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
+              <span className="text-xs font-semibold text-emerald-400 flex items-center gap-1.5 font-mono">
+                <span className="size-2 rounded-full bg-emerald-400" />
+                Media Ready
+              </span>
               {result.quality && (
-                <span className="px-3 py-1 rounded-full bg-rose-500/10 text-rose-300 border border-rose-500/30 text-[10px] font-mono font-black uppercase">
+                <span className="px-2.5 py-0.5 rounded-md bg-zinc-900 text-zinc-300 border border-zinc-800 text-[10px] font-mono">
                   {result.quality} MP4
                 </span>
               )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
-              {/* Left Column: Thumbnail / Video Preview */}
-              <div className="md:col-span-5 relative group rounded-2xl overflow-hidden border border-white/10 bg-black aspect-[9/16] max-h-[380px] mx-auto w-full flex items-center justify-center">
+              {/* Media Preview */}
+              <div className="md:col-span-5 relative rounded-xl overflow-hidden border border-zinc-800 bg-black aspect-[9/16] max-h-[340px] mx-auto w-full flex items-center justify-center">
                 {result.video ? (
                   <video
                     src={result.video}
                     poster={result.thumbnail || undefined}
                     controls
-                    className="w-full h-full object-contain rounded-2xl"
+                    className="w-full h-full object-contain"
                   />
                 ) : result.thumbnail ? (
                   <div className="relative size-full">
                     <img
                       src={result.thumbnail}
-                      alt={result.title}
-                      className="w-full h-full object-cover rounded-2xl"
+                      alt="Reel preview"
+                      className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                      <div className="size-14 rounded-full bg-rose-500/80 text-white flex items-center justify-center shadow-xl">
-                        <Play className="size-6 fill-current ml-0.5" />
+                      <div className="size-12 rounded-full bg-white/90 text-black flex items-center justify-center">
+                        <Play className="size-5 fill-current ml-0.5" />
                       </div>
                     </div>
                   </div>
-                ) : (
-                  <div className="p-8 text-center text-muted-foreground">
-                    <Video className="size-10 mx-auto mb-2 text-rose-400 opacity-60" />
-                    <p className="text-xs">No preview available</p>
-                  </div>
-                )}
+                ) : null}
               </div>
 
-              {/* Right Column: Title / Caption & Download Actions */}
-              <div className="md:col-span-7 space-y-5">
-                {/* Title / Caption */}
-                <div className="space-y-2">
-                  <span className="text-[10.5px] font-mono font-bold uppercase text-muted-foreground tracking-wider">
-                    Reel Caption / Title
-                  </span>
-                  <div className="p-4 rounded-2xl bg-[#030712] border border-white/10 text-xs text-white leading-relaxed max-h-48 overflow-y-auto whitespace-pre-wrap font-sans">
+              {/* Title & Download Details */}
+              <div className="md:col-span-7 space-y-4">
+                <div className="space-y-1.5">
+                  <span className="text-[11px] font-mono text-zinc-500 uppercase">Caption</span>
+                  <div className="p-3.5 rounded-xl bg-[#000000] border border-zinc-800 text-xs text-zinc-300 leading-relaxed max-h-40 overflow-y-auto whitespace-pre-wrap">
                     {result.title}
                   </div>
                 </div>
 
-                {/* Metrics: Likes & Comments */}
                 {(result.likeCount || result.commentCount) && (
-                  <div className="flex items-center gap-4 text-xs font-mono font-bold">
+                  <div className="flex items-center gap-3 text-xs font-mono">
                     {result.likeCount && (
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
-                        <Heart className="size-3.5 fill-current" />
-                        <span>{formatNumber(result.likeCount)} Likes</span>
-                      </div>
+                      <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-zinc-900 text-zinc-300 border border-zinc-800">
+                        <Heart className="size-3 text-red-400 fill-current" />
+                        <span>{formatNumber(result.likeCount)}</span>
+                      </span>
                     )}
                     {result.commentCount && (
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                        <MessageCircle className="size-3.5" />
-                        <span>{formatNumber(result.commentCount)} Comments</span>
-                      </div>
+                      <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-zinc-900 text-zinc-300 border border-zinc-800">
+                        <MessageCircle className="size-3 text-zinc-400" />
+                        <span>{formatNumber(result.commentCount)}</span>
+                      </span>
                     )}
                   </div>
                 )}
 
-                {/* Main Download Button */}
-                <div className="space-y-3 pt-2">
-                  {result.video ? (
+                <div className="space-y-2 pt-2">
+                  {result.video && (
                     <a
                       href={result.video}
                       target="_blank"
                       rel="noopener noreferrer"
                       download="instagram_reel.mp4"
-                      className="w-full py-4 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-purple-600 hover:from-rose-400 hover:to-purple-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-xl shadow-rose-500/20 flex items-center justify-center gap-2.5 active:scale-95"
+                      className="w-full py-3.5 rounded-xl bg-white hover:bg-zinc-200 text-black font-bold text-xs uppercase tracking-wide transition-all flex items-center justify-center gap-2"
                     >
                       <Download className="size-4" />
-                      <span>Download HD Video (MP4)</span>
+                      <span>Download Video (MP4)</span>
                     </a>
-                  ) : (
-                    <div className="p-3 text-xs text-center text-amber-400 bg-amber-500/10 rounded-2xl border border-amber-500/20">
-                      Direct video stream URL restricted by Instagram API
-                    </div>
                   )}
 
-                  {/* Copy Direct Video URL Button */}
                   {result.video && (
                     <button
                       onClick={() => handleCopyLink(result.video!)}
-                      className="w-full py-3 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-white text-xs font-bold transition-all flex items-center justify-center gap-2"
+                      className="w-full py-2.5 rounded-xl border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-medium transition-all flex items-center justify-center gap-2"
                     >
                       {copied ? <Check className="size-3.5 text-emerald-400" /> : <Copy className="size-3.5" />}
-                      <span>{copied ? "Direct Video Link Copied!" : "Copy Direct Video CDN Link"}</span>
+                      <span>{copied ? "Link Copied" : "Copy Direct Video Link"}</span>
                     </button>
                   )}
                 </div>
@@ -350,8 +300,8 @@ export const Route = createFileRoute("/instagram")({
   component: InstagramDownloaderPage,
   head: () => ({
     meta: [
-      { title: "Instagram Downloader • BETA FEATURE" },
-      { name: "description", content: "Download Instagram Reels and videos with title, thumbnail preview, and direct MP4 export." },
+      { title: "Instagram Downloader • BETA" },
+      { name: "description", content: "Download Instagram Reels and videos with thumbnail preview and direct MP4 export." },
     ],
   }),
 });

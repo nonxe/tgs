@@ -664,32 +664,25 @@ function CloudifyMusicPage() {
   );
 
   return (
-    <main className="min-h-screen bg-[#050508] text-white flex flex-col font-sans relative overflow-hidden select-none pb-28">
-      {/* Dynamic Background Glowing Orbs */}
-      <div 
-        className="absolute top-[-10%] left-[-10%] w-[450px] h-[450px] rounded-full blur-[140px] pointer-events-none opacity-30 transition-all duration-700"
-        style={{ backgroundColor: currentSong ? getAvatarColor(currentSong.title) : "#ec4899" }}
-      />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-violet-600/15 blur-[160px] pointer-events-none" />
-
+    <main className="min-h-screen bg-[#000000] text-white flex flex-col font-sans relative overflow-hidden select-none pb-28">
       {/* Header */}
-      <header className="px-5 py-4 border-b border-zinc-900/80 backdrop-blur-2xl sticky top-0 z-40 bg-[#050508]/85 flex items-center justify-between flex-shrink-0">
+      <header className="px-5 py-4 border-b border-zinc-800/80 backdrop-blur-2xl sticky top-0 z-40 bg-[#000000]/95 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-3">
           <Link
             to="/"
-            className="size-9.5 rounded-full bg-zinc-900/90 border border-zinc-800 flex items-center justify-center hover:bg-zinc-800 active:scale-95 transition-all text-white shadow-md"
+            className="size-9 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center hover:bg-zinc-800 active:scale-95 transition-all text-white"
           >
-            <ArrowLeft className="size-4.5" />
+            <ArrowLeft className="size-4" />
           </Link>
           <div className="flex items-center gap-2.5">
-            <div className="size-9.5 rounded-xl bg-gradient-to-tr from-pink-500 via-purple-500 to-indigo-500 flex items-center justify-center shadow-lg shadow-pink-500/20">
-              <Music className="size-5 text-white" />
+            <div className="size-9 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-white">
+              <Music className="size-4.5" />
             </div>
             <div>
-              <h1 className="text-[17.5px] font-black tracking-tight leading-none text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-zinc-400">
-                CLOUDIFY
+              <h1 className="text-base font-bold tracking-tight text-white">
+                Cloudify Music
               </h1>
-              <p className="text-[9px] text-pink-400/90 font-black tracking-widest uppercase mt-0.5">Cloudify Music Engine</p>
+              <p className="text-[10px] text-zinc-400 font-mono">Stream & Manage Audio Library</p>
             </div>
           </div>
         </div>
@@ -698,14 +691,14 @@ function CloudifyMusicPage() {
           {isAdmin && (
             <button
               onClick={() => setShowAdminPanel(true)}
-              className="px-3.5 h-8.5 rounded-full bg-gradient-to-tr from-pink-500 to-rose-600 text-[11px] font-black tracking-wider uppercase flex items-center gap-1.5 shadow-lg hover:brightness-110 active:scale-95 transition-all"
+              className="px-3.5 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs font-semibold hover:bg-zinc-800 transition-all flex items-center gap-1.5"
             >
               <Settings className="size-3.5" />
               <span>Admin Panel</span>
             </button>
           )}
-          <span className="text-[9px] font-black text-pink-400 bg-pink-500/10 border border-pink-500/20 px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm">
-            PRO AUDIO
+          <span className="text-[10px] font-mono font-bold text-zinc-300 bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded-lg uppercase tracking-wider">
+            AUDIO ENGINE
           </span>
         </div>
       </header>
@@ -714,39 +707,39 @@ function CloudifyMusicPage() {
       <div className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 py-6 space-y-6 overflow-y-auto">
 
         {/* Navigation Tabs Header */}
-        <div className="flex items-center justify-between gap-2 border-b border-zinc-900 pb-3">
-          <div className="flex items-center gap-1.5 bg-zinc-950/80 p-1 rounded-2xl border border-zinc-800/80">
+        <div className="flex items-center justify-between gap-2 border-b border-zinc-800/80 pb-3">
+          <div className="flex items-center gap-1.5 bg-[#09090b] p-1 rounded-xl border border-zinc-800">
             <button
               onClick={() => { setActiveTab("library"); setSelectedPlaylist(null); }}
-              className={`px-4 py-2 rounded-xl text-[12px] font-black tracking-wide transition-all flex items-center gap-1.5 ${
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold tracking-wide transition-all flex items-center gap-1.5 ${
                 activeTab === "library" && !selectedPlaylist
-                  ? "bg-gradient-to-r from-pink-500 to-rose-600 text-white shadow-md shadow-pink-500/20"
+                  ? "bg-white text-black shadow-sm"
                   : "text-zinc-400 hover:text-white"
               }`}
             >
               <Music className="size-3.5" />
               <span>Library</span>
-              <span className="text-[9px] bg-black/40 px-1.5 py-0.2 rounded-full ml-0.5">{songs.length}</span>
+              <span className="text-[10px] opacity-70 font-mono ml-0.5">({songs.length})</span>
             </button>
 
             <button
               onClick={() => { setActiveTab("playlists"); setSelectedPlaylist(null); }}
-              className={`px-4 py-2 rounded-xl text-[12px] font-black tracking-wide transition-all flex items-center gap-1.5 ${
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold tracking-wide transition-all flex items-center gap-1.5 ${
                 activeTab === "playlists" || selectedPlaylist
-                  ? "bg-gradient-to-r from-pink-500 to-rose-600 text-white shadow-md shadow-pink-500/20"
+                  ? "bg-white text-black shadow-sm"
                   : "text-zinc-400 hover:text-white"
               }`}
             >
               <Layers className="size-3.5" />
               <span>Playlists</span>
-              <span className="text-[9px] bg-black/40 px-1.5 py-0.2 rounded-full ml-0.5">{playlists.length}</span>
+              <span className="text-[10px] opacity-70 font-mono ml-0.5">({playlists.length})</span>
             </button>
 
             <button
               onClick={() => { setActiveTab("search"); setSelectedPlaylist(null); }}
-              className={`px-4 py-2 rounded-xl text-[12px] font-black tracking-wide transition-all flex items-center gap-1.5 ${
+              className={`px-4 py-1.5 rounded-lg text-xs font-bold tracking-wide transition-all flex items-center gap-1.5 ${
                 activeTab === "search"
-                  ? "bg-gradient-to-r from-pink-500 to-rose-600 text-white shadow-md shadow-pink-500/20"
+                  ? "bg-white text-black shadow-sm"
                   : "text-zinc-400 hover:text-white"
               }`}
             >

@@ -452,10 +452,10 @@ function DashboardHome() {
     { 
       id: "cloudify", 
       title: "Cloudify Music", 
-      desc: "Premium cloud music player. Stream, search, and manage custom playlists.", 
+      desc: "Cloud music engine. Stream, search online audio, and manage custom playlists.", 
       icon: Music, 
       link: "/cloudify",
-      color: "text-pink-400 border-pink-500/20 bg-pink-500/5 hover:border-pink-500/40"
+      color: "text-zinc-200 border-zinc-800 bg-zinc-900/40 hover:border-zinc-700"
     },
     { 
       id: "ytdl", 
@@ -468,11 +468,11 @@ function DashboardHome() {
     { 
       id: "instagram", 
       title: "Instagram Downloader", 
-      desc: "Download Instagram Reels & videos with thumbnail preview & title export.", 
+      desc: "Download Instagram Reels & videos with thumbnail preview & caption export.", 
       icon: Instagram, 
       link: "/instagram",
       badge: "BETA",
-      color: "text-rose-400 border-rose-500/20 bg-rose-500/5 hover:border-rose-500/40"
+      color: "text-zinc-200 border-zinc-800 bg-zinc-900/40 hover:border-zinc-700"
     },
     { 
       id: "israel", 
