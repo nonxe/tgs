@@ -10,16 +10,8 @@ import {
 import { useEffect, useState, type ReactNode } from "react";
 import { ShieldAlert, Lock } from "lucide-react";
 
-import "../styles.css";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-
-function getSanitizedCssUrl(url: any): string {
-  const raw = typeof url === "string" ? url : (url as any)?.default || "";
-  if (!raw) return "/styles.css";
-  if (raw.startsWith("/") || raw.startsWith("http")) return raw;
-  return `/${raw}`;
-}
 
 function NotFoundComponent() {
   return (
@@ -126,7 +118,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     links: [
       {
         rel: "stylesheet",
-        href: getSanitizedCssUrl(appCss),
+        href: appCss,
       },
     ],
   }),
