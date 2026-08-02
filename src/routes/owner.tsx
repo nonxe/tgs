@@ -70,7 +70,7 @@ export function OwnerPage({ embed = false }: { embed?: boolean }) {
     { icon: Upload, title: "File Cloud", desc: "Upload any file and get instant shareable links with permanent or temporary storage." },
     { icon: FileText, title: "Quick Notes", desc: "Write and publish anonymous notes with short shareable links. No sign-up needed." },
     { icon: Archive, title: "Media Convert", desc: "Convert audio and video files between formats directly in your browser." },
-    { icon: Sparkles, title: "AI Assistant", desc: "Access 17+ AI models for writing, coding, and creative tasks." },
+    { icon: Sparkles, title: "Claude AI Assistant", desc: "Access Claude 4.5 Haiku AI for writing, coding, and reasoning tasks." },
   ];
 
   const content = (

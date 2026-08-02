@@ -435,11 +435,11 @@ function DashboardHome() {
     },
     { 
       id: "ai", 
-      title: "AI Assistant", 
-      desc: "Converse with 17+ advanced language models in real-time.", 
+      title: "Claude AI Assistant", 
+      desc: "Converse with Claude 4.5 Haiku for fast writing, coding, and reasoning.", 
       icon: Sparkles, 
       link: "/more",
-      color: "text-pink-400 border-pink-500/20 bg-pink-500/5 hover:border-pink-500/40"
+      color: "text-amber-400 border-amber-500/20 bg-amber-500/5 hover:border-amber-500/40"
     },
     { 
       id: "xview", 
