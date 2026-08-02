@@ -40,7 +40,8 @@ import {
   Bot,
   Camera,
   Trash2,
-  RefreshCw
+  RefreshCw,
+  Instagram
 } from "lucide-react";
 
 function StarOfDavidIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -463,6 +464,15 @@ function DashboardHome() {
       icon: Youtube, 
       link: "/ytdl",
       color: "text-red-400 border-red-500/20 bg-red-500/5 hover:border-red-500/40"
+    },
+    { 
+      id: "instagram", 
+      title: "Instagram Downloader", 
+      desc: "Download Instagram Reels & videos with thumbnail preview & title export.", 
+      icon: Instagram, 
+      link: "/instagram",
+      badge: "BETA",
+      color: "text-rose-400 border-rose-500/20 bg-rose-500/5 hover:border-rose-500/40"
     },
     { 
       id: "israel", 

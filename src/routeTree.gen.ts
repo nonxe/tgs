@@ -22,6 +22,7 @@ import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as MainRouteImport } from './routes/main'
 import { Route as LinksRouteImport } from './routes/links'
 import { Route as IsraelRouteImport } from './routes/israel'
+import { Route as InstagramRouteImport } from './routes/instagram'
 import { Route as GitnetworkRouteImport } from './routes/gitnetwork'
 import { Route as DbConsoleRouteImport } from './routes/db-console'
 import { Route as ConvertRouteImport } from './routes/convert'
@@ -53,6 +54,7 @@ import { Route as ApiMessagesListRouteImport } from './routes/api/messages/list'
 import { Route as ApiMessagesFeedRouteImport } from './routes/api/messages/feed'
 import { Route as ApiMessagesActionRouteImport } from './routes/api/messages/action'
 import { Route as ApiLinksManageRouteImport } from './routes/api/links/manage'
+import { Route as ApiInstagramDownloadRouteImport } from './routes/api/instagram/download'
 import { Route as ApiGitnetworkV1RouteImport } from './routes/api/gitnetwork/v1'
 import { Route as ApiGitnetworkManageRouteImport } from './routes/api/gitnetwork/manage'
 import { Route as ApiCloudifyUpdateRouteImport } from './routes/api/cloudify/update'
@@ -131,6 +133,11 @@ const LinksRoute = LinksRouteImport.update({
 const IsraelRoute = IsraelRouteImport.update({
   id: '/israel',
   path: '/israel',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InstagramRoute = InstagramRouteImport.update({
+  id: '/instagram',
+  path: '/instagram',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GitnetworkRoute = GitnetworkRouteImport.update({
@@ -289,6 +296,11 @@ const ApiLinksManageRoute = ApiLinksManageRouteImport.update({
   path: '/api/links/manage',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiInstagramDownloadRoute = ApiInstagramDownloadRouteImport.update({
+  id: '/api/instagram/download',
+  path: '/api/instagram/download',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiGitnetworkV1Route = ApiGitnetworkV1RouteImport.update({
   id: '/api/gitnetwork/v1',
   path: '/api/gitnetwork/v1',
@@ -367,6 +379,7 @@ export interface FileRoutesByFullPath {
   '/convert': typeof ConvertRoute
   '/db-console': typeof DbConsoleRoute
   '/gitnetwork': typeof GitnetworkRoute
+  '/instagram': typeof InstagramRoute
   '/israel': typeof IsraelRoute
   '/links': typeof LinksRoute
   '/main': typeof MainRoute
@@ -398,6 +411,7 @@ export interface FileRoutesByFullPath {
   '/api/cloudify/update': typeof ApiCloudifyUpdateRoute
   '/api/gitnetwork/manage': typeof ApiGitnetworkManageRoute
   '/api/gitnetwork/v1': typeof ApiGitnetworkV1Route
+  '/api/instagram/download': typeof ApiInstagramDownloadRoute
   '/api/links/manage': typeof ApiLinksManageRoute
   '/api/messages/action': typeof ApiMessagesActionRoute
   '/api/messages/feed': typeof ApiMessagesFeedRouteWithChildren
@@ -427,6 +441,7 @@ export interface FileRoutesByTo {
   '/convert': typeof ConvertRoute
   '/db-console': typeof DbConsoleRoute
   '/gitnetwork': typeof GitnetworkRoute
+  '/instagram': typeof InstagramRoute
   '/israel': typeof IsraelRoute
   '/links': typeof LinksRoute
   '/main': typeof MainRoute
@@ -457,6 +472,7 @@ export interface FileRoutesByTo {
   '/api/cloudify/update': typeof ApiCloudifyUpdateRoute
   '/api/gitnetwork/manage': typeof ApiGitnetworkManageRoute
   '/api/gitnetwork/v1': typeof ApiGitnetworkV1Route
+  '/api/instagram/download': typeof ApiInstagramDownloadRoute
   '/api/links/manage': typeof ApiLinksManageRoute
   '/api/messages/action': typeof ApiMessagesActionRoute
   '/api/messages/feed': typeof ApiMessagesFeedRouteWithChildren
@@ -487,6 +503,7 @@ export interface FileRoutesById {
   '/convert': typeof ConvertRoute
   '/db-console': typeof DbConsoleRoute
   '/gitnetwork': typeof GitnetworkRoute
+  '/instagram': typeof InstagramRoute
   '/israel': typeof IsraelRoute
   '/links': typeof LinksRoute
   '/main': typeof MainRoute
@@ -518,6 +535,7 @@ export interface FileRoutesById {
   '/api/cloudify/update': typeof ApiCloudifyUpdateRoute
   '/api/gitnetwork/manage': typeof ApiGitnetworkManageRoute
   '/api/gitnetwork/v1': typeof ApiGitnetworkV1Route
+  '/api/instagram/download': typeof ApiInstagramDownloadRoute
   '/api/links/manage': typeof ApiLinksManageRoute
   '/api/messages/action': typeof ApiMessagesActionRoute
   '/api/messages/feed': typeof ApiMessagesFeedRouteWithChildren
@@ -549,6 +567,7 @@ export interface FileRouteTypes {
     | '/convert'
     | '/db-console'
     | '/gitnetwork'
+    | '/instagram'
     | '/israel'
     | '/links'
     | '/main'
@@ -580,6 +599,7 @@ export interface FileRouteTypes {
     | '/api/cloudify/update'
     | '/api/gitnetwork/manage'
     | '/api/gitnetwork/v1'
+    | '/api/instagram/download'
     | '/api/links/manage'
     | '/api/messages/action'
     | '/api/messages/feed'
@@ -609,6 +629,7 @@ export interface FileRouteTypes {
     | '/convert'
     | '/db-console'
     | '/gitnetwork'
+    | '/instagram'
     | '/israel'
     | '/links'
     | '/main'
@@ -639,6 +660,7 @@ export interface FileRouteTypes {
     | '/api/cloudify/update'
     | '/api/gitnetwork/manage'
     | '/api/gitnetwork/v1'
+    | '/api/instagram/download'
     | '/api/links/manage'
     | '/api/messages/action'
     | '/api/messages/feed'
@@ -668,6 +690,7 @@ export interface FileRouteTypes {
     | '/convert'
     | '/db-console'
     | '/gitnetwork'
+    | '/instagram'
     | '/israel'
     | '/links'
     | '/main'
@@ -699,6 +722,7 @@ export interface FileRouteTypes {
     | '/api/cloudify/update'
     | '/api/gitnetwork/manage'
     | '/api/gitnetwork/v1'
+    | '/api/instagram/download'
     | '/api/links/manage'
     | '/api/messages/action'
     | '/api/messages/feed'
@@ -729,6 +753,7 @@ export interface RootRouteChildren {
   ConvertRoute: typeof ConvertRoute
   DbConsoleRoute: typeof DbConsoleRoute
   GitnetworkRoute: typeof GitnetworkRoute
+  InstagramRoute: typeof InstagramRoute
   IsraelRoute: typeof IsraelRoute
   LinksRoute: typeof LinksRoute
   MainRoute: typeof MainRoute
@@ -758,6 +783,7 @@ export interface RootRouteChildren {
   ApiCloudifyUpdateRoute: typeof ApiCloudifyUpdateRoute
   ApiGitnetworkManageRoute: typeof ApiGitnetworkManageRoute
   ApiGitnetworkV1Route: typeof ApiGitnetworkV1Route
+  ApiInstagramDownloadRoute: typeof ApiInstagramDownloadRoute
   ApiLinksManageRoute: typeof ApiLinksManageRoute
   ApiMessagesActionRoute: typeof ApiMessagesActionRoute
   ApiMessagesFeedRoute: typeof ApiMessagesFeedRouteWithChildren
@@ -870,6 +896,13 @@ declare module '@tanstack/react-router' {
       path: '/israel'
       fullPath: '/israel'
       preLoaderRoute: typeof IsraelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/instagram': {
+      id: '/instagram'
+      path: '/instagram'
+      fullPath: '/instagram'
+      preLoaderRoute: typeof InstagramRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/gitnetwork': {
@@ -1089,6 +1122,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiLinksManageRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/instagram/download': {
+      id: '/api/instagram/download'
+      path: '/api/instagram/download'
+      fullPath: '/api/instagram/download'
+      preLoaderRoute: typeof ApiInstagramDownloadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/gitnetwork/v1': {
       id: '/api/gitnetwork/v1'
       path: '/api/gitnetwork/v1'
@@ -1223,6 +1263,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConvertRoute: ConvertRoute,
   DbConsoleRoute: DbConsoleRoute,
   GitnetworkRoute: GitnetworkRoute,
+  InstagramRoute: InstagramRoute,
   IsraelRoute: IsraelRoute,
   LinksRoute: LinksRoute,
   MainRoute: MainRoute,
@@ -1252,6 +1293,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCloudifyUpdateRoute: ApiCloudifyUpdateRoute,
   ApiGitnetworkManageRoute: ApiGitnetworkManageRoute,
   ApiGitnetworkV1Route: ApiGitnetworkV1Route,
+  ApiInstagramDownloadRoute: ApiInstagramDownloadRoute,
   ApiLinksManageRoute: ApiLinksManageRoute,
   ApiMessagesActionRoute: ApiMessagesActionRoute,
   ApiMessagesFeedRoute: ApiMessagesFeedRouteWithChildren,
