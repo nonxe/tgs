@@ -32,7 +32,7 @@ function InstagramDownloaderPage() {
   const [result, setResult] = useState<InstagramResult | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const sampleReelUrl = "https://www.instagram.com/reel/DD6q97IuzxD/?igsh=YzljYTk1ODg3Zg==";
+  const sampleReelUrl = "https://www.instagram.com/reel/DVydQvZDAfr/";
 
   const handleFetchReel = async (targetUrl?: string) => {
     const inputUrl = (targetUrl || url).trim();
