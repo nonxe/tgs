@@ -489,7 +489,7 @@ function CloudifyMusicPage() {
   };
 
   // Upload Song Helper
-  const uploadToCatbox = async (file: File): Promise<string> => {
+  const uploadToCloudStorage = async (file: File): Promise<string> => {
     const formData = new FormData();
     formData.append("file", file);
 
@@ -545,7 +545,7 @@ function CloudifyMusicPage() {
       let coverUrl = "";
       if (coverSource === "file") {
         setUploadProgress(30);
-        coverUrl = await uploadToCatbox(coverFile!);
+        coverUrl = await uploadToCloudStorage(coverFile!);
       } else {
         coverUrl = coverUrlInput.trim();
       }
@@ -553,7 +553,7 @@ function CloudifyMusicPage() {
       let audioUrl = "";
       if (audioSource === "file") {
         setUploadProgress(60);
-        audioUrl = await uploadToCatbox(audioFile!);
+        audioUrl = await uploadToCloudStorage(audioFile!);
       } else {
         audioUrl = audioUrlInput.trim();
       }

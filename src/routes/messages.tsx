@@ -2568,7 +2568,7 @@ function E2eeMessengerPage() {
                         type="button"
                         onClick={handleMediaClick}
                         disabled={mediaUploading}
-                        title="Attach File (Permanent Catbox)"
+                        title="Attach File (Cloud Storage)"
                         className="size-9.5 rounded-full hover:bg-secondary dark:hover:bg-[#202b36] text-muted-foreground hover:text-foreground flex items-center justify-center transition-colors flex-shrink-0 active:scale-95 disabled:opacity-50"
                       >
                         {mediaUploading ? (

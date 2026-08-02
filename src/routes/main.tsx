@@ -367,10 +367,10 @@ export function FileCloudPage({ embed = false }: { embed?: boolean }) {
             onDragLeave={handleDrag}
             onDrop={handleDrop}
             onClick={() => inputRef.current?.click()}
-            className={`group border border-dashed rounded-[24px] p-8 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[260px] relative overflow-hidden select-none ${
+            className={`group border border-dashed rounded-[28px] p-8 sm:p-10 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[280px] relative overflow-hidden select-none shadow-2xl ${
               dragging
-                ? "border-purple-500 bg-purple-500/5 scale-[1.01]"
-                : "border-border/60 hover:border-purple-500/40 bg-secondary/15 hover:bg-secondary/25"
+                ? "border-purple-500 bg-purple-500/10 scale-[1.02] shadow-purple-500/20"
+                : "border-purple-500/30 hover:border-purple-400/60 bg-secondary/15 hover:bg-secondary/30"
             }`}
           >
             <input
@@ -381,50 +381,60 @@ export function FileCloudPage({ embed = false }: { embed?: boolean }) {
             />
 
             {previewUrl ? (
-              <div className="absolute inset-0 z-0 p-4">
+              <div className="absolute inset-0 z-0 p-3">
                 <img
                   src={previewUrl}
                   alt="Preview"
-                  className="w-full h-full object-cover rounded-[16px] opacity-25 filter blur-[2px]"
+                  className="w-full h-full object-cover rounded-[22px] opacity-20 filter blur-[1px] group-hover:opacity-30 transition-opacity"
                 />
               </div>
             ) : null}
 
-            <div className="relative z-10 space-y-4">
-              <div className="size-14 rounded-[20px] bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mx-auto text-purple-400 group-hover:scale-105 transition-transform duration-200 shadow-md">
-                <Upload className="size-6" />
+            <div className="relative z-10 space-y-4 max-w-sm">
+              <div className="size-16 rounded-[24px] bg-gradient-to-tr from-purple-500/20 to-pink-500/20 border border-purple-500/30 flex items-center justify-center mx-auto text-purple-400 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-xl shadow-purple-500/10">
+                <Upload className="size-7" />
               </div>
               <div>
-                <p className="text-[15px] font-black tracking-tight">
-                  {file ? file.name : "Select or Drop any file"}
+                <p className="text-[16px] font-black tracking-tight text-foreground">
+                  {file ? file.name : "Select or Drop any file here"}
                 </p>
-                <p className="text-[12px] text-muted-foreground/80 mt-1">
-                  {file ? `${formatBytes(file.size)} • ${file.type || "unknown"}` : "Supports documents, audio, videos, archives"}
+                <p className="text-[12.5px] text-muted-foreground mt-1.5 flex items-center justify-center gap-1 font-medium">
+                  {file ? (
+                    <span className="px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 font-mono font-bold text-[11px]">
+                      {formatBytes(file.size)} • {file.type || "unknown"}
+                    </span>
+                  ) : (
+                    "Upload documents, images, audio, video, zip files up to 100MB"
+                  )}
                 </p>
               </div>
             </div>
           </div>
 
           {file && (
-            <div className="rounded-[20px] border border-border bg-secondary/15 p-5 space-y-5 animate-spring-scale select-none">
+            <div className="rounded-[28px] border border-purple-500/25 bg-secondary/20 p-6 space-y-5 shadow-2xl backdrop-blur-xl animate-spring-scale select-none">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] font-black uppercase text-muted-foreground tracking-wider">Retention Config</span>
-                  <div className="flex bg-background border border-border/40 p-0.5 rounded-[12px] mt-1.5 gap-0.5">
+                  <span className="text-[10px] font-black uppercase text-purple-400 tracking-wider">Storage Node Config</span>
+                  <div className="flex bg-background/80 border border-purple-500/20 p-1 rounded-2xl mt-1.5 gap-1">
                     <button
                       onClick={() => setRetention("permanent")}
                       disabled={busy}
-                      className={`px-3 py-1.5 rounded-[10px] text-[11.5px] font-black tracking-tight transition-all ${
-                        retention === "permanent" ? "bg-secondary text-foreground shadow-sm" : "text-muted-foreground"
+                      className={`px-4 py-2 rounded-xl text-[12px] font-black tracking-tight transition-all ${
+                        retention === "permanent"
+                          ? "bg-purple-600 text-white shadow-lg shadow-purple-600/30"
+                          : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
-                      Permanent (Catbox)
+                      Permanent (AS CLOUD Storage)
                     </button>
                     <button
                       onClick={() => setRetention("72h")}
                       disabled={busy}
-                      className={`px-3 py-1.5 rounded-[10px] text-[11.5px] font-black tracking-tight transition-all ${
-                        retention === "72h" ? "bg-secondary text-foreground shadow-sm" : "text-muted-foreground"
+                      className={`px-4 py-2 rounded-xl text-[12px] font-black tracking-tight transition-all ${
+                        retention === "72h"
+                          ? "bg-purple-600 text-white shadow-lg shadow-purple-600/30"
+                          : "text-muted-foreground hover:text-foreground"
                       }`}
                     >
                       Temporary (72h)
@@ -433,45 +443,62 @@ export function FileCloudPage({ embed = false }: { embed?: boolean }) {
                 </div>
               </div>
 
+              {busy && (
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs font-mono font-bold text-purple-300">
+                    <span>Uploading to CDN...</span>
+                    <span>{progress}%</span>
+                  </div>
+                  <div className="w-full h-2.5 rounded-full bg-secondary overflow-hidden border border-purple-500/20">
+                    <div
+                      className="h-full bg-gradient-to-r from-purple-500 to-emerald-400 transition-all duration-300 rounded-full"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
               <button
                 onClick={() => upload(file)}
                 disabled={busy}
-                className="w-full h-11 rounded-[14px] bg-foreground text-background font-black text-[13.5px] hover:scale-[1.01] active:scale-[0.98] transition-all disabled:opacity-40"
+                className="w-full h-12 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-xl shadow-purple-600/20 active:scale-95 disabled:opacity-40"
               >
-                {busy ? `Uploading (${progress}%)` : "Upload File"}
+                {busy ? `Uploading (${progress}%)...` : "Upload File Now"}
               </button>
             </div>
           )}
 
           {error && (
-            <div className="rounded-[20px] border border-destructive/20 bg-destructive/5 text-destructive text-[12.5px] font-bold p-4 text-center select-none animate-shiver">
+            <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 text-rose-300 text-[12.5px] font-bold p-4 text-center select-none animate-shiver">
               {error}
             </div>
           )}
 
           {result && result.success && (
-            <div className="rounded-[20px] border border-border p-5 bg-secondary/10 space-y-5 animate-spring-scale">
-              <div className="text-center">
-                <span className="text-[11px] font-black uppercase text-green-500 tracking-wider">Upload Success</span>
-                <h4 className="text-[15px] font-black truncate mt-1">{result.filename}</h4>
+            <div className="rounded-[28px] border border-emerald-500/30 p-6 bg-emerald-500/5 backdrop-blur-xl space-y-5 shadow-2xl animate-spring-scale">
+              <div className="text-center space-y-1">
+                <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono font-black text-[10px] uppercase tracking-widest">
+                  ✓ Upload Completed
+                </span>
+                <h4 className="text-[15px] font-black truncate text-foreground pt-1">{result.filename}</h4>
               </div>
 
               {/* Link 1: Primary */}
               <div className="space-y-1.5">
-                <label className="text-[10.5px] font-black uppercase text-muted-foreground tracking-wider">Direct Link</label>
+                <label className="text-[10.5px] font-black uppercase text-muted-foreground tracking-wider">Direct CDN Link</label>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     readOnly
                     value={result.url}
-                    className="flex-1 h-10 bg-secondary/40 border border-border/30 rounded-[14px] px-3.5 text-[12px] font-bold text-muted-foreground outline-none min-w-0"
+                    className="flex-1 h-11 bg-background border border-border/50 rounded-2xl px-4 text-xs font-mono font-bold text-foreground outline-none min-w-0"
                   />
                   <button
                     onClick={() => copyLink(result.url)}
-                    className="h-10 px-3.5 rounded-[14px] bg-foreground text-background font-bold text-[12px] flex items-center gap-1.5 flex-shrink-0"
+                    className="h-11 px-4 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs transition-all shadow-lg shadow-purple-600/20 flex items-center gap-1.5 flex-shrink-0 active:scale-95"
                   >
-                    {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-                    <span className="hidden sm:inline">{copied ? "Copied" : "Copy"}</span>
+                    {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+                    <span className="hidden sm:inline">{copied ? "Copied" : "Copy Link"}</span>
                   </button>
                 </div>
               </div>
@@ -479,20 +506,20 @@ export function FileCloudPage({ embed = false }: { embed?: boolean }) {
               {/* Link 2: Mirror */}
               {retention === "permanent" && getMirrorUrl(result.url) && (
                 <div className="space-y-1.5">
-                  <label className="text-[10.5px] font-black uppercase text-purple-500 tracking-wider">Mirror Link</label>
+                  <label className="text-[10.5px] font-black uppercase text-purple-400 tracking-wider">Worker Mirror Link</label>
                   <div className="flex gap-2">
                     <input
                       type="text"
                       readOnly
                       value={getMirrorUrl(result.url)!}
-                      className="flex-1 h-10 bg-secondary/40 border border-purple-500/20 rounded-[14px] px-3.5 text-[12px] font-bold text-muted-foreground outline-none min-w-0"
+                      className="flex-1 h-11 bg-background border border-purple-500/30 rounded-2xl px-4 text-xs font-mono font-bold text-foreground outline-none min-w-0"
                     />
                     <button
                       onClick={() => copyMirrorLink(getMirrorUrl(result.url)!)}
-                      className="h-10 px-3.5 rounded-[14px] bg-purple-600 text-white font-bold text-[12px] flex items-center gap-1.5 flex-shrink-0"
+                      className="h-11 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs transition-all shadow-lg shadow-indigo-600/20 flex items-center gap-1.5 flex-shrink-0 active:scale-95"
                     >
-                      {copiedMirror ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-                      <span className="hidden sm:inline">{copiedMirror ? "Copied" : "Copy"}</span>
+                      {copiedMirror ? <Check className="size-4" /> : <Copy className="size-4" />}
+                      <span className="hidden sm:inline">{copiedMirror ? "Copied" : "Copy Mirror"}</span>
                     </button>
                   </div>
                 </div>
