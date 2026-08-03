@@ -183,6 +183,24 @@ export async function validateAndIncrementApiKey(
   let targetIndex = records.findIndex((r) => r.apiKey === cleanKey && r.status === "active");
 
   if (targetIndex === -1) {
+    if (cleanKey.startsWith("as_live_")) {
+      const parts = cleanKey.split("_");
+      const userFromKey = parts[2] || "user";
+      const newRecord: ApiRecord = {
+        apiKey: cleanKey,
+        username: userFromKey,
+        createdAt: new Date().toISOString(),
+        status: "active",
+        requestCount: 1,
+        serviceBreakdown: { [serviceName]: 1 },
+        recentLogs: [
+          { timestamp: new Date().toISOString(), service: serviceName, endpoint: `/api/v1/${serviceName}`, status, latencyMs },
+        ],
+      };
+      records.push(newRecord);
+      saveApiRecordsToGithub(records, sha, `auto-register & log request for ${cleanKey}`).catch(() => {});
+      return { valid: true, record: newRecord };
+    }
     return { valid: false };
   }
 

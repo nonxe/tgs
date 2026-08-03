@@ -29,7 +29,6 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { getOrCreateUserApiKey, ApiRecord, ApiUsageLog } from "../lib/github-api-records";
-import { loginAccountFromLog, saveAccountToLog } from "../lib/github-db";
 
 interface AccountData {
   id: string;
@@ -73,15 +72,32 @@ function ApiServicesPage() {
     }
   };
 
+  // Auto-detect existing logged-in account from main page / site local storage
   useEffect(() => {
     try {
-      const stored = localStorage.getItem("cloud_user_account");
-      if (stored) {
-        const parsed = JSON.parse(stored);
+      let username = "";
+
+      // Check 1: main page cloud_user_account
+      const storedAcc = localStorage.getItem("cloud_user_account");
+      if (storedAcc) {
+        const parsed = JSON.parse(storedAcc);
         if (parsed && parsed.id) {
-          setAccount(parsed);
-          loadUserKeyData(parsed.id);
+          username = parsed.id;
         }
+      }
+
+      // Check 2: e2ee_username fallback
+      if (!username) {
+        const e2eeUser = localStorage.getItem("e2ee_username");
+        if (e2eeUser && e2eeUser.trim()) {
+          username = e2eeUser.trim();
+        }
+      }
+
+      if (username) {
+        const accData = { id: username };
+        setAccount(accData);
+        loadUserKeyData(username);
       }
     } catch {}
   }, []);
@@ -95,21 +111,24 @@ function ApiServicesPage() {
     }
 
     setAuthLoading(true);
-    try {
-      let res;
-      if (authMode === "login") {
-        res = await loginAccountFromLog(authId, authPass);
-      } else {
-        res = await saveAccountToLog(authId, authPass);
-      }
+    const endpoint = authMode === "register" ? "/api/accounts/create" : "/api/accounts/login";
 
-      if (!res.success || !res.account) {
-        setAuthError(res.error || "Authentication failed. Please check your credentials.");
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: authId.trim(), pass: authPass.trim() }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success || !data.account) {
+        setAuthError(data.error || "Authentication failed. Please check your account credentials.");
         return;
       }
 
-      const accData = { id: res.account.id, pass: res.account.pass };
-      localStorage.setItem("cloud_user_account", JSON.stringify(accData));
+      const accData = { id: data.account.id };
+      localStorage.setItem("cloud_user_account", JSON.stringify({ id: data.account.id, createdAt: data.account.createdAt }));
       setAccount(accData);
       await loadUserKeyData(accData.id);
     } catch (err: any) {
@@ -358,9 +377,9 @@ print("AI Output:", data.get("data"))`;
               </div>
 
               <div className="space-y-1.5">
-                <h2 className="text-lg font-bold text-white tracking-tight">Account Authentication Required</h2>
+                <h2 className="text-lg font-bold text-white tracking-tight">Main Account Required</h2>
                 <p className="text-xs text-zinc-400 leading-relaxed font-mono">
-                  Cloud API Services & API Key access are strictly restricted to registered account holders. Please log in or register your account to continue.
+                  Log in with your main Cloud Account to generate your API Key and access Developer API Services.
                 </p>
               </div>
 
@@ -436,9 +455,9 @@ print("AI Output:", data.get("data"))`;
                       <span>Authenticating...</span>
                     </>
                   ) : authMode === "login" ? (
-                    <span>Log In to API Services</span>
+                    <span>Log In to Main Account</span>
                   ) : (
-                    <span>Create Account & Access API</span>
+                    <span>Create Main Account & Unlock API</span>
                   )}
                 </button>
               </form>
@@ -497,7 +516,7 @@ print("AI Output:", data.get("data"))`;
                   <h2 className="text-sm font-bold text-white">Your Personal API Key</h2>
                 </div>
                 <span className="text-[11px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-                  Account Verified ({account.id})
+                  Main Account ({account.id})
                 </span>
               </div>
 
