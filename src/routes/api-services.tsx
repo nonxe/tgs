@@ -16,13 +16,14 @@ import {
   BarChart3,
   Clock,
   Activity,
-  Layers,
   Youtube,
   Instagram,
   Sparkles,
   Database,
   CheckCircle2,
-  Server,
+  BookOpen,
+  FileCode,
+  ShieldCheck,
   Zap,
 } from "lucide-react";
 import { getOrCreateUserApiKey, ApiRecord, ApiUsageLog } from "../lib/github-api-records";
@@ -40,6 +41,7 @@ function ApiServicesPage() {
   const [copiedKey, setCopiedKey] = useState<boolean>(false);
   const [copiedResponse, setCopiedResponse] = useState<boolean>(false);
   const [keyLoading, setKeyLoading] = useState<boolean>(false);
+  const [codeTab, setCodeTab] = useState<"curl" | "js" | "python">("curl");
 
   // Playground state
   const [selectedEndpoint, setSelectedEndpoint] = useState<"ytv3" | "instagram" | "ai">("ytv3");
@@ -62,7 +64,6 @@ function ApiServicesPage() {
     }
   };
 
-  // Initialize Account and API Key from nonxe/recordsapi
   useEffect(() => {
     try {
       const stored = localStorage.getItem("cloud_user_account");
@@ -128,7 +129,6 @@ function ApiServicesPage() {
       setLatency(Math.round(endTime - startTime));
       setTestResponse(data);
 
-      // Refresh records analytics if logged in
       if (account) {
         loadUserKeyData(account.id);
       }
@@ -160,11 +160,85 @@ function ApiServicesPage() {
   const getJsSnippet = () => {
     const origin = typeof window !== "undefined" ? window.location.origin : "https://yourdomain.com";
     if (selectedEndpoint === "ytv3") {
-      return `fetch("${origin}/api/v1/ytv3?url=${encodeURIComponent(inputQuery)}&apikey=${apiKey}")\n  .then(res => res.json())\n  .then(data => console.log(data.creator, data.result));`;
+      return `// JavaScript fetch example
+async function downloadYouTube(videoUrl, apiKey) {
+  const response = await fetch(\`${origin}/api/v1/ytv3?url=\${encodeURIComponent(videoUrl)}&apikey=\${apiKey}\`);
+  const data = await response.json();
+  console.log("Creator:", data.creator);
+  console.log("Download URL:", data.result?.download_url);
+  return data;
+}
+
+downloadYouTube("${inputQuery}", "${apiKey}");`;
     } else if (selectedEndpoint === "instagram") {
-      return `fetch("${origin}/api/v1/instagram?url=${encodeURIComponent(inputQuery)}&apikey=${apiKey}")\n  .then(res => res.json())\n  .then(data => console.log(data.creator, data.result));`;
+      return `// JavaScript fetch example
+async function downloadInstagram(reelUrl, apiKey) {
+  const response = await fetch(\`${origin}/api/v1/instagram?url=\${encodeURIComponent(reelUrl)}&apikey=\${apiKey}\`);
+  const data = await response.json();
+  console.log("Creator:", data.creator);
+  console.log("Media URL:", data.result?.video || data.result?.url);
+  return data;
+}
+
+downloadInstagram("${inputQuery}", "${apiKey}");`;
     } else {
-      return `fetch("${origin}/api/v1/ai?prompt=${encodeURIComponent(inputQuery)}&apikey=${apiKey}")\n  .then(res => res.json())\n  .then(data => console.log(data.creator, data.data));`;
+      return `// JavaScript fetch example
+async function askClaude(prompt, apiKey) {
+  const response = await fetch(\`${origin}/api/v1/ai?prompt=\${encodeURIComponent(prompt)}&apikey=\${apiKey}\`);
+  const data = await response.json();
+  console.log("Creator:", data.creator);
+  console.log("AI Response:", data.data);
+  return data;
+}
+
+askClaude("${inputQuery}", "${apiKey}");`;
+    }
+  };
+
+  const getPythonSnippet = () => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://yourdomain.com";
+    if (selectedEndpoint === "ytv3") {
+      return `# Python requests example
+import requests
+
+url = "${origin}/api/v1/ytv3"
+params = {
+    "url": "${inputQuery}",
+    "apikey": "${apiKey}"
+}
+
+response = requests.get(url, params=params)
+data = response.json()
+print("Creator:", data.get("creator"))
+print("Download URL:", data.get("result", {}).get("download_url"))`;
+    } else if (selectedEndpoint === "instagram") {
+      return `# Python requests example
+import requests
+
+url = "${origin}/api/v1/instagram"
+params = {
+    "url": "${inputQuery}",
+    "apikey": "${apiKey}"
+}
+
+response = requests.get(url, params=params)
+data = response.json()
+print("Creator:", data.get("creator"))
+print("Media URL:", data.get("result", {}).get("video"))`;
+    } else {
+      return `# Python requests example
+import requests
+
+url = "${origin}/api/v1/ai"
+params = {
+    "prompt": "${inputQuery}",
+    "apikey": "${apiKey}"
+}
+
+response = requests.get(url, params=params)
+data = response.json()
+print("Creator:", data.get("creator"))
+print("AI Output:", data.get("data"))`;
     }
   };
 
@@ -174,7 +248,7 @@ function ApiServicesPage() {
 
   return (
     <main className="min-h-screen bg-[#000000] text-foreground font-sans relative selection:bg-white/20 pb-20">
-      {/* Header Banner */}
+      {/* Top Navbar Header */}
       <header className="px-4 sm:px-6 md:px-8 py-4 border-b border-zinc-800/80 sticky top-0 z-40 bg-[#000000]/95 backdrop-blur-md">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -187,18 +261,15 @@ function ApiServicesPage() {
             </Link>
             <div>
               <div className="flex items-center gap-2">
-                <span className="p-1.5 rounded-lg bg-zinc-900 text-emerald-400 border border-zinc-800">
+                <span className="p-1 rounded-lg bg-zinc-900 text-emerald-400 border border-zinc-800">
                   <Code2 className="size-4" />
                 </span>
                 <h1 className="text-base sm:text-lg font-bold tracking-tight text-white">
                   CLOUD API SERVICES
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full bg-zinc-900 text-emerald-400 border border-zinc-800 text-[10px] font-mono font-bold tracking-wider">
-                  V1 GATEWAY
-                </span>
               </div>
               <p className="text-xs text-zinc-400 mt-0.5 font-mono">
-                Developer API Gateway & Analytics Engine
+                Developer API Gateway & Authentication Services
               </p>
             </div>
           </div>
@@ -212,7 +283,7 @@ function ApiServicesPage() {
             ) : (
               <a
                 href="/"
-                className="px-3 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 hover:text-white text-xs font-semibold transition-all"
+                className="px-3.5 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 hover:text-white text-xs font-semibold transition-all"
               >
                 Connect Main Account
               </a>
@@ -222,40 +293,40 @@ function ApiServicesPage() {
       </header>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 md:px-8 py-8 space-y-7">
-        {/* Account Analytics Dashboard */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-5 rounded-2xl border border-zinc-800 bg-[#09090b] flex items-center gap-4">
-            <div className="size-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
-              <BarChart3 className="size-5" />
+        {/* Quick Analytics Bar */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="p-4 rounded-xl border border-zinc-800 bg-[#09090b] flex items-center gap-3.5">
+            <div className="size-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
+              <BarChart3 className="size-4" />
             </div>
             <div>
               <div className="text-[11px] text-zinc-400 font-mono uppercase">Total API Requests</div>
-              <div className="text-xl font-bold text-white mt-0.5 font-mono">
-                {totalRequests.toLocaleString()} <span className="text-xs font-normal text-zinc-500">calls</span>
+              <div className="text-lg font-bold text-white font-mono mt-0.5">
+                {totalRequests.toLocaleString()}
               </div>
             </div>
           </div>
 
-          <div className="p-5 rounded-2xl border border-zinc-800 bg-[#09090b] flex items-center gap-4">
-            <div className="size-11 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center font-bold">
-              <Database className="size-5" />
+          <div className="p-4 rounded-xl border border-zinc-800 bg-[#09090b] flex items-center gap-3.5">
+            <div className="size-10 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center">
+              <Database className="size-4" />
             </div>
             <div>
-              <div className="text-[11px] text-zinc-400 font-mono uppercase">Database Storage</div>
-              <div className="text-xs font-bold text-emerald-400 mt-1 font-mono flex items-center gap-1">
+              <div className="text-[11px] text-zinc-400 font-mono uppercase">Database Connection</div>
+              <div className="text-xs font-bold text-emerald-400 font-mono mt-1 flex items-center gap-1">
                 <CheckCircle2 className="size-3.5" />
-                <span>nonxe/recordsapi</span>
+                <span>Cloud Database Active</span>
               </div>
             </div>
           </div>
 
-          <div className="p-5 rounded-2xl border border-zinc-800 bg-[#09090b] flex items-center gap-4">
-            <div className="size-11 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center font-bold">
-              <Clock className="size-5" />
+          <div className="p-4 rounded-xl border border-zinc-800 bg-[#09090b] flex items-center gap-3.5">
+            <div className="size-10 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center justify-center">
+              <Clock className="size-4" />
             </div>
             <div>
-              <div className="text-[11px] text-zinc-400 font-mono uppercase">Last Active Request</div>
-              <div className="text-xs font-bold text-white mt-1 font-mono truncate max-w-[170px]">
+              <div className="text-[11px] text-zinc-400 font-mono uppercase">Last Active Call</div>
+              <div className="text-xs font-bold text-white font-mono mt-1 truncate max-w-[170px]">
                 {apiRecord?.lastUsedAt
                   ? new Date(apiRecord.lastUsedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
                   : "No Requests Yet"}
@@ -264,15 +335,15 @@ function ApiServicesPage() {
           </div>
         </div>
 
-        {/* Account API Key Card */}
-        <div className="p-6 sm:p-7 rounded-2xl border border-zinc-800 bg-[#09090b] space-y-4">
+        {/* API Key Credentials Management */}
+        <div className="p-6 rounded-2xl border border-zinc-800 bg-[#09090b] space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Key className="size-4 text-emerald-400" />
-              <h2 className="text-sm font-bold text-white">Personal API Authentication Key</h2>
+              <h2 className="text-sm font-bold text-white">Your Personal API Key</h2>
             </div>
             <span className="text-[11px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
-              Synced to nonxe/recordsapi
+              {account ? "Account Key Active" : "Public Demo Key"}
             </span>
           </div>
 
@@ -287,7 +358,7 @@ function ApiServicesPage() {
               <button
                 onClick={() => setShowKey(!showKey)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white"
-                title={showKey ? "Hide API Key" : "Show API Key"}
+                title={showKey ? "Hide Key" : "Show Key"}
               >
                 {showKey ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>
@@ -306,16 +377,16 @@ function ApiServicesPage() {
                 onClick={handleRegenerateKey}
                 disabled={keyLoading}
                 className="h-11 px-3.5 rounded-xl border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white transition-all disabled:opacity-50"
-                title="Regenerate Key"
+                title="Regenerate API Key"
               >
                 <RefreshCw className={`size-4 ${keyLoading ? "animate-spin text-emerald-400" : ""}`} />
               </button>
             </div>
           </div>
 
-          {/* Service Usage Breakdown */}
-          <div className="pt-2 border-t border-zinc-800/80 space-y-2">
-            <div className="text-[11px] font-mono text-zinc-400 uppercase">Service Request Breakdown (nonxe/recordsapi):</div>
+          {/* Breakdown per service */}
+          <div className="pt-2 border-t border-zinc-800/80">
+            <div className="text-[11px] font-mono text-zinc-400 uppercase mb-2">Request Counters per Service:</div>
             <div className="grid grid-cols-3 gap-3">
               <div className="p-3 rounded-xl bg-[#000000] border border-zinc-800 flex items-center justify-between">
                 <div className="flex items-center gap-2 text-xs font-semibold text-zinc-300">
@@ -344,46 +415,12 @@ function ApiServicesPage() {
           </div>
         </div>
 
-        {/* Live Activity Stream Table */}
-        {recentLogs.length > 0 && (
-          <div className="p-6 sm:p-7 rounded-2xl border border-zinc-800 bg-[#09090b] space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Activity className="size-4 text-emerald-400" />
-                <h2 className="text-sm font-bold text-white">Recent API Request Stream Logs</h2>
-              </div>
-              <span className="text-[10px] font-mono text-zinc-400">Stored in nonxe/recordsapi</span>
-            </div>
-
-            <div className="rounded-xl border border-zinc-800 overflow-hidden bg-[#000000]">
-              <div className="divide-y divide-zinc-800/80">
-                {recentLogs.map((log, idx) => (
-                  <div key={idx} className="p-3 flex items-center justify-between text-xs font-mono">
-                    <div className="flex items-center gap-3">
-                      <span className="size-2 rounded-full bg-emerald-400" />
-                      <span className="font-bold text-white uppercase">{log.service}</span>
-                      <span className="text-zinc-500">{log.endpoint}</span>
-                    </div>
-                    <div className="flex items-center gap-4 text-zinc-400 text-[11px]">
-                      <span>{log.latencyMs ? `${log.latencyMs}ms` : "OK"}</span>
-                      <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-bold border border-emerald-500/20">
-                        {log.status || 200} OK
-                      </span>
-                      <span>{new Date(log.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Interactive Testing Playground Console */}
-        <div className="p-6 sm:p-7 rounded-2xl border border-zinc-800 bg-[#09090b] space-y-6">
+        {/* Live Testing Playground */}
+        <div className="p-6 rounded-2xl border border-zinc-800 bg-[#09090b] space-y-6">
           <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
             <div className="flex items-center gap-2">
               <Terminal className="size-4 text-emerald-400" />
-              <h2 className="text-sm font-bold text-white">Live API Testing Playground</h2>
+              <h2 className="text-sm font-bold text-white">Live API Playground Console</h2>
             </div>
             {latency !== null && (
               <span className="px-2.5 py-0.5 rounded-md bg-zinc-900 text-emerald-400 border border-zinc-800 text-[10px] font-mono font-bold">
@@ -392,7 +429,6 @@ function ApiServicesPage() {
             )}
           </div>
 
-          {/* Endpoint Selector Tabs */}
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => {
@@ -433,17 +469,16 @@ function ApiServicesPage() {
                   : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white"
               }`}
             >
-              GET /api/v1/ai (Claude 4.5 Haiku)
+              GET /api/v1/ai (Claude 4.5 AI)
             </button>
           </div>
 
-          {/* Parameter Input & Execute */}
           <div className="flex flex-col sm:flex-row gap-2.5">
             <input
               type="text"
               value={inputQuery}
               onChange={(e) => setInputQuery(e.target.value)}
-              placeholder="Enter parameter value..."
+              placeholder="Enter URL or prompt..."
               className="flex-1 h-11 px-4 rounded-xl bg-[#000000] border border-zinc-800 text-xs font-mono text-white placeholder:text-zinc-600 outline-none focus:border-zinc-500"
             />
             <button
@@ -454,21 +489,21 @@ function ApiServicesPage() {
               {testLoading ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  <span>Executing...</span>
+                  <span>Testing...</span>
                 </>
               ) : (
                 <>
                   <Play className="size-4 fill-current" />
-                  <span>Send Request</span>
+                  <span>Execute API</span>
                 </>
               )}
             </button>
           </div>
 
-          {/* Live JSON Response Inspector Box */}
+          {/* JSON Response Inspector */}
           <div className="space-y-2">
             <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400">
-              <span>Response Payload Inspector (Creator: "AS CLOUD SYSTEM"):</span>
+              <span>Response JSON Inspector (Creator: "AS CLOUD SYSTEM"):</span>
               {testResponse && (
                 <button
                   onClick={() => handleCopy(JSON.stringify(testResponse, null, 2), "response")}
@@ -484,7 +519,7 @@ function ApiServicesPage() {
               {testLoading ? (
                 <div className="py-8 text-center text-zinc-500 space-y-2">
                   <Loader2 className="size-6 animate-spin mx-auto text-emerald-400" />
-                  <p>Proxying request & logging to nonxe/recordsapi...</p>
+                  <p>Processing API Request...</p>
                 </div>
               ) : testResponse ? (
                 <pre className="text-emerald-300 font-bold whitespace-pre-wrap">
@@ -492,34 +527,135 @@ function ApiServicesPage() {
                 </pre>
               ) : (
                 <div className="py-8 text-center text-zinc-600">
-                  Click "Send Request" above to execute API call & view JSON response payload.
+                  Execute an API request above to view formatted JSON response.
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Code Integration Snippets */}
-        <div className="p-6 sm:p-7 rounded-2xl border border-zinc-800 bg-[#09090b] space-y-4">
-          <div className="flex items-center gap-2">
-            <Code2 className="size-4 text-emerald-400" />
-            <h2 className="text-sm font-bold text-white">Integration Code Snippets</h2>
+        {/* Comprehensive API Documentation & Reference */}
+        <div className="p-6 rounded-2xl border border-zinc-800 bg-[#09090b] space-y-6">
+          <div className="flex items-center gap-2 border-b border-zinc-800/80 pb-4">
+            <BookOpen className="size-4 text-emerald-400" />
+            <h2 className="text-sm font-bold text-white">API Reference & Endpoint Documentation</h2>
           </div>
 
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <span className="text-[11px] font-mono text-zinc-400 uppercase">cURL Example</span>
-              <pre className="p-3.5 rounded-xl bg-[#000000] border border-zinc-800 font-mono text-xs text-zinc-300 overflow-x-auto">
-                {getCurlSnippet()}
-              </pre>
+          {/* Authentication Section */}
+          <div className="space-y-3">
+            <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono flex items-center gap-2">
+              <ShieldCheck className="size-4 text-emerald-400" />
+              Authentication Methods
+            </h3>
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              All requests to the Cloud API Services Gateway require valid API authentication. You can pass your key via query parameter or HTTP header:
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="p-3.5 rounded-xl bg-[#000000] border border-zinc-800 space-y-1">
+                <span className="text-[11px] font-mono text-emerald-400 font-bold">1. Query Parameter</span>
+                <p className="text-xs font-mono text-zinc-300">GET /api/v1/ytv3?url=...&apikey=YOUR_KEY</p>
+              </div>
+              <div className="p-3.5 rounded-xl bg-[#000000] border border-zinc-800 space-y-1">
+                <span className="text-[11px] font-mono text-emerald-400 font-bold">2. HTTP Header</span>
+                <p className="text-xs font-mono text-zinc-300">x-api-key: YOUR_KEY</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Endpoints Breakdown */}
+          <div className="space-y-4 pt-2">
+            <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">Available Endpoints</h3>
+
+            {/* Endpoint 1 */}
+            <div className="p-4 rounded-xl bg-[#000000] border border-zinc-800 space-y-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono text-[11px] font-bold">
+                    GET
+                  </span>
+                  <code className="text-xs font-mono font-bold text-white">/api/v1/ytv3</code>
+                </div>
+                <span className="text-xs text-zinc-400">YouTube Video Downloader (MP4 720p)</span>
+              </div>
+              <div className="text-xs text-zinc-400 space-y-1 font-mono">
+                <div><span className="text-zinc-500">Parameters:</span> <code className="text-emerald-400">url</code> (required, YouTube link), <code className="text-emerald-400">apikey</code> (required)</div>
+                <div><span className="text-zinc-500">Creator Field:</span> Returns <code className="text-emerald-400 font-bold">"AS CLOUD SYSTEM"</code></div>
+              </div>
             </div>
 
-            <div className="space-y-1.5">
-              <span className="text-[11px] font-mono text-zinc-400 uppercase">JavaScript (fetch) Example</span>
-              <pre className="p-3.5 rounded-xl bg-[#000000] border border-zinc-800 font-mono text-xs text-zinc-300 overflow-x-auto">
-                {getJsSnippet()}
-              </pre>
+            {/* Endpoint 2 */}
+            <div className="p-4 rounded-xl bg-[#000000] border border-zinc-800 space-y-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono text-[11px] font-bold">
+                    GET
+                  </span>
+                  <code className="text-xs font-mono font-bold text-white">/api/v1/instagram</code>
+                </div>
+                <span className="text-xs text-zinc-400">Instagram Reel & Post Downloader</span>
+              </div>
+              <div className="text-xs text-zinc-400 space-y-1 font-mono">
+                <div><span className="text-zinc-500">Parameters:</span> <code className="text-emerald-400">url</code> (required, Instagram link), <code className="text-emerald-400">apikey</code> (required)</div>
+                <div><span className="text-zinc-500">Creator Field:</span> Returns <code className="text-emerald-400 font-bold">"AS CLOUD SYSTEM"</code></div>
+              </div>
             </div>
+
+            {/* Endpoint 3 */}
+            <div className="p-4 rounded-xl bg-[#000000] border border-zinc-800 space-y-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono text-[11px] font-bold">
+                    GET
+                  </span>
+                  <code className="text-xs font-mono font-bold text-white">/api/v1/ai</code>
+                </div>
+                <span className="text-xs text-zinc-400">Claude 4.5 Haiku AI Assistant</span>
+              </div>
+              <div className="text-xs text-zinc-400 space-y-1 font-mono">
+                <div><span className="text-zinc-500">Parameters:</span> <code className="text-emerald-400">prompt</code> (required, text query), <code className="text-emerald-400">apikey</code> (required)</div>
+                <div><span className="text-zinc-500">Creator Field:</span> Returns <code className="text-emerald-400 font-bold">"AS CLOUD SYSTEM"</code></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Integration Code Tabs */}
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2">
+              <div className="flex items-center gap-2">
+                <FileCode className="size-4 text-emerald-400" />
+                <h3 className="text-xs font-bold text-white uppercase tracking-wider font-mono">Code Implementation Examples</h3>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setCodeTab("curl")}
+                  className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all ${
+                    codeTab === "curl" ? "bg-white text-black" : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  cURL
+                </button>
+                <button
+                  onClick={() => setCodeTab("js")}
+                  className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all ${
+                    codeTab === "js" ? "bg-white text-black" : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  JavaScript
+                </button>
+                <button
+                  onClick={() => setCodeTab("python")}
+                  className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all ${
+                    codeTab === "python" ? "bg-white text-black" : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  Python
+                </button>
+              </div>
+            </div>
+
+            <pre className="p-4 rounded-xl bg-[#000000] border border-zinc-800 font-mono text-xs text-zinc-300 overflow-x-auto leading-relaxed">
+              {codeTab === "curl" ? getCurlSnippet() : codeTab === "js" ? getJsSnippet() : getPythonSnippet()}
+            </pre>
           </div>
         </div>
       </div>
@@ -532,7 +668,7 @@ export const Route = createFileRoute("/api-services")({
   head: () => ({
     meta: [
       { title: "CLOUD API SERVICES • Developer Gateway" },
-      { name: "description", content: "Developer API Gateway for YouTube, Instagram & AI endpoints stored in nonxe/recordsapi with creator AS CLOUD SYSTEM." },
+      { name: "description", content: "Developer API Services for YouTube, Instagram & AI proxy endpoints with creator attribution AS CLOUD SYSTEM." },
     ],
   }),
 });
