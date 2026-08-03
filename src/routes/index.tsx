@@ -41,7 +41,8 @@ import {
   Camera,
   Trash2,
   RefreshCw,
-  Instagram
+  Instagram,
+  Code2
 } from "lucide-react";
 
 function StarOfDavidIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -473,6 +474,15 @@ function DashboardHome() {
       link: "/instagram",
       badge: "BETA",
       color: "text-zinc-200 border-zinc-800 bg-zinc-900/40 hover:border-zinc-700"
+    },
+    { 
+      id: "api-services", 
+      title: "Cloud API Services", 
+      desc: "Developer API Gateway. Generate API keys & proxy YouTube, Instagram & AI endpoints.", 
+      icon: Code2, 
+      link: "/api-services",
+      badge: "DEV",
+      color: "text-emerald-400 border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500/40"
     },
     { 
       id: "israel", 

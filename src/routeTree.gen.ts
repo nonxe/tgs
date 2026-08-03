@@ -27,6 +27,7 @@ import { Route as GitnetworkRouteImport } from './routes/gitnetwork'
 import { Route as DbConsoleRouteImport } from './routes/db-console'
 import { Route as ConvertRouteImport } from './routes/convert'
 import { Route as CloudifyRouteImport } from './routes/cloudify'
+import { Route as ApiServicesRouteImport } from './routes/api-services'
 import { Route as FilenameRouteImport } from './routes/$filename'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as NoteIndexRouteImport } from './routes/note.index'
@@ -40,6 +41,9 @@ import { Route as ApiXUserRouteImport } from './routes/api/x/user'
 import { Route as ApiXTweetsRouteImport } from './routes/api/x/tweets'
 import { Route as ApiXDownloadRouteImport } from './routes/api/x/download'
 import { Route as ApiWabotManageRouteImport } from './routes/api/wabot/manage'
+import { Route as ApiV1Ytv3RouteImport } from './routes/api/v1/ytv3'
+import { Route as ApiV1InstagramRouteImport } from './routes/api/v1/instagram'
+import { Route as ApiV1AiRouteImport } from './routes/api/v1/ai'
 import { Route as ApiPublicUploadRouteImport } from './routes/api/public/upload'
 import { Route as ApiPfpUploadRouteImport } from './routes/api/pfp/upload'
 import { Route as ApiPfpRemoveRouteImport } from './routes/api/pfp/remove'
@@ -160,6 +164,11 @@ const CloudifyRoute = CloudifyRouteImport.update({
   path: '/cloudify',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiServicesRoute = ApiServicesRouteImport.update({
+  id: '/api-services',
+  path: '/api-services',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FilenameRoute = FilenameRouteImport.update({
   id: '/$filename',
   path: '/$filename',
@@ -223,6 +232,21 @@ const ApiXDownloadRoute = ApiXDownloadRouteImport.update({
 const ApiWabotManageRoute = ApiWabotManageRouteImport.update({
   id: '/api/wabot/manage',
   path: '/api/wabot/manage',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1Ytv3Route = ApiV1Ytv3RouteImport.update({
+  id: '/api/v1/ytv3',
+  path: '/api/v1/ytv3',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1InstagramRoute = ApiV1InstagramRouteImport.update({
+  id: '/api/v1/instagram',
+  path: '/api/v1/instagram',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1AiRoute = ApiV1AiRouteImport.update({
+  id: '/api/v1/ai',
+  path: '/api/v1/ai',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicUploadRoute = ApiPublicUploadRouteImport.update({
@@ -375,6 +399,7 @@ const ApiMessagesFeedCommentRoute = ApiMessagesFeedCommentRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$filename': typeof FilenameRoute
+  '/api-services': typeof ApiServicesRoute
   '/cloudify': typeof CloudifyRoute
   '/convert': typeof ConvertRoute
   '/db-console': typeof DbConsoleRoute
@@ -426,6 +451,9 @@ export interface FileRoutesByFullPath {
   '/api/pfp/remove': typeof ApiPfpRemoveRoute
   '/api/pfp/upload': typeof ApiPfpUploadRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
+  '/api/v1/ai': typeof ApiV1AiRoute
+  '/api/v1/instagram': typeof ApiV1InstagramRoute
+  '/api/v1/ytv3': typeof ApiV1Ytv3Route
   '/api/wabot/manage': typeof ApiWabotManageRoute
   '/api/x/download': typeof ApiXDownloadRoute
   '/api/x/tweets': typeof ApiXTweetsRoute
@@ -437,6 +465,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$filename': typeof FilenameRoute
+  '/api-services': typeof ApiServicesRoute
   '/cloudify': typeof CloudifyRoute
   '/convert': typeof ConvertRoute
   '/db-console': typeof DbConsoleRoute
@@ -487,6 +516,9 @@ export interface FileRoutesByTo {
   '/api/pfp/remove': typeof ApiPfpRemoveRoute
   '/api/pfp/upload': typeof ApiPfpUploadRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
+  '/api/v1/ai': typeof ApiV1AiRoute
+  '/api/v1/instagram': typeof ApiV1InstagramRoute
+  '/api/v1/ytv3': typeof ApiV1Ytv3Route
   '/api/wabot/manage': typeof ApiWabotManageRoute
   '/api/x/download': typeof ApiXDownloadRoute
   '/api/x/tweets': typeof ApiXTweetsRoute
@@ -499,6 +531,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$filename': typeof FilenameRoute
+  '/api-services': typeof ApiServicesRoute
   '/cloudify': typeof CloudifyRoute
   '/convert': typeof ConvertRoute
   '/db-console': typeof DbConsoleRoute
@@ -550,6 +583,9 @@ export interface FileRoutesById {
   '/api/pfp/remove': typeof ApiPfpRemoveRoute
   '/api/pfp/upload': typeof ApiPfpUploadRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
+  '/api/v1/ai': typeof ApiV1AiRoute
+  '/api/v1/instagram': typeof ApiV1InstagramRoute
+  '/api/v1/ytv3': typeof ApiV1Ytv3Route
   '/api/wabot/manage': typeof ApiWabotManageRoute
   '/api/x/download': typeof ApiXDownloadRoute
   '/api/x/tweets': typeof ApiXTweetsRoute
@@ -563,6 +599,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$filename'
+    | '/api-services'
     | '/cloudify'
     | '/convert'
     | '/db-console'
@@ -614,6 +651,9 @@ export interface FileRouteTypes {
     | '/api/pfp/remove'
     | '/api/pfp/upload'
     | '/api/public/upload'
+    | '/api/v1/ai'
+    | '/api/v1/instagram'
+    | '/api/v1/ytv3'
     | '/api/wabot/manage'
     | '/api/x/download'
     | '/api/x/tweets'
@@ -625,6 +665,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/$filename'
+    | '/api-services'
     | '/cloudify'
     | '/convert'
     | '/db-console'
@@ -675,6 +716,9 @@ export interface FileRouteTypes {
     | '/api/pfp/remove'
     | '/api/pfp/upload'
     | '/api/public/upload'
+    | '/api/v1/ai'
+    | '/api/v1/instagram'
+    | '/api/v1/ytv3'
     | '/api/wabot/manage'
     | '/api/x/download'
     | '/api/x/tweets'
@@ -686,6 +730,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/$filename'
+    | '/api-services'
     | '/cloudify'
     | '/convert'
     | '/db-console'
@@ -737,6 +782,9 @@ export interface FileRouteTypes {
     | '/api/pfp/remove'
     | '/api/pfp/upload'
     | '/api/public/upload'
+    | '/api/v1/ai'
+    | '/api/v1/instagram'
+    | '/api/v1/ytv3'
     | '/api/wabot/manage'
     | '/api/x/download'
     | '/api/x/tweets'
@@ -749,6 +797,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   FilenameRoute: typeof FilenameRoute
+  ApiServicesRoute: typeof ApiServicesRoute
   CloudifyRoute: typeof CloudifyRoute
   ConvertRoute: typeof ConvertRoute
   DbConsoleRoute: typeof DbConsoleRoute
@@ -798,6 +847,9 @@ export interface RootRouteChildren {
   ApiPfpRemoveRoute: typeof ApiPfpRemoveRoute
   ApiPfpUploadRoute: typeof ApiPfpUploadRoute
   ApiPublicUploadRoute: typeof ApiPublicUploadRoute
+  ApiV1AiRoute: typeof ApiV1AiRoute
+  ApiV1InstagramRoute: typeof ApiV1InstagramRoute
+  ApiV1Ytv3Route: typeof ApiV1Ytv3Route
   ApiWabotManageRoute: typeof ApiWabotManageRoute
   ApiXDownloadRoute: typeof ApiXDownloadRoute
   ApiXTweetsRoute: typeof ApiXTweetsRoute
@@ -933,6 +985,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CloudifyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api-services': {
+      id: '/api-services'
+      path: '/api-services'
+      fullPath: '/api-services'
+      preLoaderRoute: typeof ApiServicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/$filename': {
       id: '/$filename'
       path: '/$filename'
@@ -1022,6 +1081,27 @@ declare module '@tanstack/react-router' {
       path: '/api/wabot/manage'
       fullPath: '/api/wabot/manage'
       preLoaderRoute: typeof ApiWabotManageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/ytv3': {
+      id: '/api/v1/ytv3'
+      path: '/api/v1/ytv3'
+      fullPath: '/api/v1/ytv3'
+      preLoaderRoute: typeof ApiV1Ytv3RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/instagram': {
+      id: '/api/v1/instagram'
+      path: '/api/v1/instagram'
+      fullPath: '/api/v1/instagram'
+      preLoaderRoute: typeof ApiV1InstagramRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/ai': {
+      id: '/api/v1/ai'
+      path: '/api/v1/ai'
+      fullPath: '/api/v1/ai'
+      preLoaderRoute: typeof ApiV1AiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/upload': {
@@ -1259,6 +1339,7 @@ const ApiMessagesFeedRouteWithChildren = ApiMessagesFeedRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   FilenameRoute: FilenameRoute,
+  ApiServicesRoute: ApiServicesRoute,
   CloudifyRoute: CloudifyRoute,
   ConvertRoute: ConvertRoute,
   DbConsoleRoute: DbConsoleRoute,
@@ -1308,6 +1389,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPfpRemoveRoute: ApiPfpRemoveRoute,
   ApiPfpUploadRoute: ApiPfpUploadRoute,
   ApiPublicUploadRoute: ApiPublicUploadRoute,
+  ApiV1AiRoute: ApiV1AiRoute,
+  ApiV1InstagramRoute: ApiV1InstagramRoute,
+  ApiV1Ytv3Route: ApiV1Ytv3Route,
   ApiWabotManageRoute: ApiWabotManageRoute,
   ApiXDownloadRoute: ApiXDownloadRoute,
   ApiXTweetsRoute: ApiXTweetsRoute,
