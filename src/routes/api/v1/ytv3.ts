@@ -35,7 +35,7 @@ async function handleYtV3Proxy(request: Request) {
     }
 
     // Validate key against nonxe/recordsapi database
-    const keyCheck = await validateAndIncrementApiKey(apiKey);
+    const keyCheck = await validateAndIncrementApiKey(apiKey, "ytv3");
     if (!keyCheck.valid) {
       return new Response(
         JSON.stringify({

@@ -35,7 +35,7 @@ async function handleInstagramProxy(request: Request) {
     }
 
     // Validate key against nonxe/recordsapi database
-    const keyCheck = await validateAndIncrementApiKey(apiKey);
+    const keyCheck = await validateAndIncrementApiKey(apiKey, "instagram");
     if (!keyCheck.valid) {
       return new Response(
         JSON.stringify({

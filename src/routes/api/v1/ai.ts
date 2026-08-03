@@ -35,7 +35,7 @@ async function handleAiProxy(request: Request) {
     }
 
     // Validate key against nonxe/recordsapi database
-    const keyCheck = await validateAndIncrementApiKey(apiKey);
+    const keyCheck = await validateAndIncrementApiKey(apiKey, "ai");
     if (!keyCheck.valid) {
       return new Response(
         JSON.stringify({

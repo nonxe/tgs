@@ -11,6 +11,14 @@ function getGithubToken(): string {
   return `${p1}${p2}${p3}`;
 }
 
+export interface ApiUsageLog {
+  timestamp: string;
+  service: string;
+  endpoint: string;
+  status: number;
+  latencyMs?: number;
+}
+
 export interface ApiRecord {
   apiKey: string;
   username: string;
@@ -18,6 +26,13 @@ export interface ApiRecord {
   status: "active" | "revoked";
   requestCount: number;
   lastUsedAt?: string;
+  serviceBreakdown?: {
+    ytv3?: number;
+    instagram?: number;
+    ai?: number;
+    [key: string]: number | undefined;
+  };
+  recentLogs?: ApiUsageLog[];
 }
 
 /**
@@ -138,6 +153,12 @@ export async function getOrCreateUserApiKey(username: string): Promise<{ apiKey:
     createdAt: new Date().toISOString(),
     status: "active",
     requestCount: 0,
+    serviceBreakdown: {
+      ytv3: 0,
+      instagram: 0,
+      ai: 0,
+    },
+    recentLogs: [],
   };
 
   const updatedRecords = [newRecord, ...records];
@@ -147,13 +168,18 @@ export async function getOrCreateUserApiKey(username: string): Promise<{ apiKey:
 }
 
 /**
- * Validate an API Key against nonxe/recordsapi database and increment request counter
+ * Validate an API Key against nonxe/recordsapi and record request details (service, time, count)
  */
-export async function validateAndIncrementApiKey(apiKey: string): Promise<{ valid: boolean; record?: ApiRecord }> {
+export async function validateAndIncrementApiKey(
+  apiKey: string,
+  serviceName = "ytv3",
+  status = 200,
+  latencyMs?: number
+): Promise<{ valid: boolean; record?: ApiRecord }> {
   const cleanKey = apiKey.trim();
   if (!cleanKey) return { valid: false };
 
-  // Demo key is always valid for public testing
+  // Demo key simulation
   if (cleanKey === "as_demo_public_2026") {
     return {
       valid: true,
@@ -162,35 +188,68 @@ export async function validateAndIncrementApiKey(apiKey: string): Promise<{ vali
         username: "public_demo",
         createdAt: new Date().toISOString(),
         status: "active",
-        requestCount: 99,
+        requestCount: 142,
+        serviceBreakdown: { ytv3: 65, instagram: 42, ai: 35 },
+        recentLogs: [
+          { timestamp: new Date().toISOString(), service: serviceName, endpoint: `/api/v1/${serviceName}`, status, latencyMs },
+        ],
       },
     };
   }
 
   const { sha, records } = await fetchApiKeysFromRecords();
-  const targetIndex = records.findIndex((r) => r.apiKey === cleanKey && r.status === "active");
+  let targetIndex = records.findIndex((r) => r.apiKey === cleanKey && r.status === "active");
 
   if (targetIndex === -1) {
-    // If keys.json is empty or key not stored yet, allow validly formatted keys starting with as_live_
     if (cleanKey.startsWith("as_live_")) {
-      return {
-        valid: true,
-        record: {
-          apiKey: cleanKey,
-          username: "live_user",
-          createdAt: new Date().toISOString(),
-          status: "active",
-          requestCount: 1,
-        },
+      const createdRecord: ApiRecord = {
+        apiKey: cleanKey,
+        username: "live_user",
+        createdAt: new Date().toISOString(),
+        status: "active",
+        requestCount: 1,
+        serviceBreakdown: { [serviceName]: 1 },
+        recentLogs: [
+          { timestamp: new Date().toISOString(), service: serviceName, endpoint: `/api/v1/${serviceName}`, status, latencyMs },
+        ],
       };
+      records.push(createdRecord);
+      saveApiRecordsToGithub(records, sha, `register & record request for ${cleanKey}`).catch(() => {});
+      return { valid: true, record: createdRecord };
     }
     return { valid: false };
   }
 
-  // Increment request count in background
-  records[targetIndex].requestCount += 1;
-  records[targetIndex].lastUsedAt = new Date().toISOString();
-  saveApiRecordsToGithub(records, sha, `increment request count for ${cleanKey}`).catch(() => {});
+  // Increment total request count & service breakdown
+  const target = records[targetIndex];
+  target.requestCount = (target.requestCount || 0) + 1;
+  target.lastUsedAt = new Date().toISOString();
 
-  return { valid: true, record: records[targetIndex] };
+  if (!target.serviceBreakdown) target.serviceBreakdown = {};
+  target.serviceBreakdown[serviceName] = (target.serviceBreakdown[serviceName] || 0) + 1;
+
+  if (!target.recentLogs) target.recentLogs = [];
+  target.recentLogs.unshift({
+    timestamp: new Date().toISOString(),
+    service: serviceName,
+    endpoint: `/api/v1/${serviceName}`,
+    status,
+    latencyMs,
+  });
+
+  // Keep last 30 logs per key
+  target.recentLogs = target.recentLogs.slice(0, 30);
+
+  saveApiRecordsToGithub(records, sha, `log request for ${cleanKey} in nonxe/recordsapi`).catch(() => {});
+
+  return { valid: true, record: target };
+}
+
+/**
+ * Fetch API record for a user from nonxe/recordsapi
+ */
+export async function getUserRecord(username: string): Promise<ApiRecord | null> {
+  const cleanUser = username.trim().toLowerCase();
+  const { records } = await fetchApiKeysFromRecords();
+  return records.find((r) => r.username.toLowerCase() === cleanUser) || null;
 }
