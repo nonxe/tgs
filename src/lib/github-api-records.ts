@@ -179,44 +179,10 @@ export async function validateAndIncrementApiKey(
   const cleanKey = apiKey.trim();
   if (!cleanKey) return { valid: false };
 
-  // Demo key simulation
-  if (cleanKey === "as_demo_public_2026") {
-    return {
-      valid: true,
-      record: {
-        apiKey: "as_demo_public_2026",
-        username: "public_demo",
-        createdAt: new Date().toISOString(),
-        status: "active",
-        requestCount: 142,
-        serviceBreakdown: { ytv3: 65, instagram: 42, ai: 35 },
-        recentLogs: [
-          { timestamp: new Date().toISOString(), service: serviceName, endpoint: `/api/v1/${serviceName}`, status, latencyMs },
-        ],
-      },
-    };
-  }
-
   const { sha, records } = await fetchApiKeysFromRecords();
   let targetIndex = records.findIndex((r) => r.apiKey === cleanKey && r.status === "active");
 
   if (targetIndex === -1) {
-    if (cleanKey.startsWith("as_live_")) {
-      const createdRecord: ApiRecord = {
-        apiKey: cleanKey,
-        username: "live_user",
-        createdAt: new Date().toISOString(),
-        status: "active",
-        requestCount: 1,
-        serviceBreakdown: { [serviceName]: 1 },
-        recentLogs: [
-          { timestamp: new Date().toISOString(), service: serviceName, endpoint: `/api/v1/${serviceName}`, status, latencyMs },
-        ],
-      };
-      records.push(createdRecord);
-      saveApiRecordsToGithub(records, sha, `register & record request for ${cleanKey}`).catch(() => {});
-      return { valid: true, record: createdRecord };
-    }
     return { valid: false };
   }
 
