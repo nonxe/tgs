@@ -437,7 +437,7 @@ function DashboardHome() {
     { 
       id: "ai", 
       title: "Claude AI Assistant", 
-      desc: "Converse with Claude 4.5 Haiku for fast writing, coding, and reasoning.", 
+      desc: "Converse with Claude 4.5 Haiku & Claude 4.8 Opus with real-time model switching.", 
       icon: Sparkles, 
       link: "/more",
       color: "text-amber-400 border-amber-500/20 bg-amber-500/5 hover:border-amber-500/40"

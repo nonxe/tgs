@@ -60,7 +60,11 @@ async function handleAiProxy(request: Request) {
       );
     }
 
-    const targetUrl = `https://apis.davidcyril.name.ng/ai/claude-haiku-4.5?prompt=${encodeURIComponent(prompt.trim())}`;
+    const modelParam = (reqUrl.searchParams.get("model") || "").toLowerCase();
+    const isOpus = modelParam === "opus" || modelParam === "claude-opus-4.8";
+    const targetUrl = isOpus
+      ? `https://apis.davidcyril.name.ng/ai/claude-opus-4.8?prompt=${encodeURIComponent(prompt.trim())}`
+      : `https://apis.davidcyril.name.ng/ai/claude-haiku-4.5?prompt=${encodeURIComponent(prompt.trim())}`;
     const apiRes = await fetch(targetUrl, {
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
