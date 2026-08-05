@@ -467,6 +467,15 @@ function DashboardHome() {
       color: "text-red-400 border-red-500/20 bg-red-500/5 hover:border-red-500/40"
     },
     { 
+      id: "ytstream", 
+      title: "YT Premium Stream", 
+      desc: "Search YouTube videos & stream live feed in high definition with direct downloads.", 
+      icon: Youtube, 
+      link: "/ytstream",
+      badge: "NEW",
+      color: "text-red-400 border-red-500/30 bg-red-600/10 hover:border-red-500/50"
+    },
+    { 
       id: "instagram", 
       title: "Instagram Downloader", 
       desc: "Download Instagram Reels & videos with thumbnail preview & caption export.", 
@@ -578,6 +587,9 @@ function DashboardHome() {
           </Link>
           <Link to="/wabot" className="text-[14px] sm:text-[16px] md:text-[18px] font-black tracking-tighter select-none opacity-50 hover:opacity-100 transition-opacity flex-shrink-0 text-emerald-400">
             WABOT
+          </Link>
+          <Link to="/ytstream" className="text-[14px] sm:text-[16px] md:text-[18px] font-black tracking-tighter select-none opacity-50 hover:opacity-100 transition-opacity flex-shrink-0 text-red-500">
+            YT STREAM
           </Link>
           <Link to="/owner" className="text-[14px] sm:text-[16px] md:text-[18px] font-black tracking-tighter select-none opacity-50 hover:opacity-100 transition-opacity flex-shrink-0">
             ABOUT

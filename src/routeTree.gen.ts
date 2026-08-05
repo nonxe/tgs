@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as YtstreamRouteImport } from './routes/ytstream'
 import { Route as YtdlRouteImport } from './routes/ytdl'
 import { Route as XRouteImport } from './routes/x'
 import { Route as WabotRouteImport } from './routes/wabot'
@@ -36,6 +37,7 @@ import { Route as ShsdbIdRouteImport } from './routes/shsdb.$id'
 import { Route as NoteNoteIdRouteImport } from './routes/note.$noteId'
 import { Route as DbCreateRouteImport } from './routes/db.create'
 import { Route as DbIdRouteImport } from './routes/db.$id'
+import { Route as ApiYtstreamSearchRouteImport } from './routes/api/ytstream/search'
 import { Route as ApiYtdlDownloadRouteImport } from './routes/api/ytdl/download'
 import { Route as ApiXUserRouteImport } from './routes/api/x/user'
 import { Route as ApiXTweetsRouteImport } from './routes/api/x/tweets'
@@ -74,6 +76,11 @@ import { Route as ApiAccountsCreateRouteImport } from './routes/api/accounts/cre
 import { Route as ApiMessagesFeedLikeRouteImport } from './routes/api/messages/feed/like'
 import { Route as ApiMessagesFeedCommentRouteImport } from './routes/api/messages/feed/comment'
 
+const YtstreamRoute = YtstreamRouteImport.update({
+  id: '/ytstream',
+  path: '/ytstream',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const YtdlRoute = YtdlRouteImport.update({
   id: '/ytdl',
   path: '/ytdl',
@@ -207,6 +214,11 @@ const DbCreateRoute = DbCreateRouteImport.update({
 const DbIdRoute = DbIdRouteImport.update({
   id: '/db/$id',
   path: '/db/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiYtstreamSearchRoute = ApiYtstreamSearchRouteImport.update({
+  id: '/api/ytstream/search',
+  path: '/api/ytstream/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiYtdlDownloadRoute = ApiYtdlDownloadRouteImport.update({
@@ -418,6 +430,7 @@ export interface FileRoutesByFullPath {
   '/wabot': typeof WabotRoute
   '/x': typeof XRoute
   '/ytdl': typeof YtdlRoute
+  '/ytstream': typeof YtstreamRoute
   '/db/$id': typeof DbIdRoute
   '/db/create': typeof DbCreateRoute
   '/note/$noteId': typeof NoteNoteIdRoute
@@ -459,6 +472,7 @@ export interface FileRoutesByFullPath {
   '/api/x/tweets': typeof ApiXTweetsRoute
   '/api/x/user': typeof ApiXUserRoute
   '/api/ytdl/download': typeof ApiYtdlDownloadRoute
+  '/api/ytstream/search': typeof ApiYtstreamSearchRoute
   '/api/messages/feed/comment': typeof ApiMessagesFeedCommentRoute
   '/api/messages/feed/like': typeof ApiMessagesFeedLikeRoute
 }
@@ -483,6 +497,7 @@ export interface FileRoutesByTo {
   '/wabot': typeof WabotRoute
   '/x': typeof XRoute
   '/ytdl': typeof YtdlRoute
+  '/ytstream': typeof YtstreamRoute
   '/db/$id': typeof DbIdRoute
   '/db/create': typeof DbCreateRoute
   '/note/$noteId': typeof NoteNoteIdRoute
@@ -524,6 +539,7 @@ export interface FileRoutesByTo {
   '/api/x/tweets': typeof ApiXTweetsRoute
   '/api/x/user': typeof ApiXUserRoute
   '/api/ytdl/download': typeof ApiYtdlDownloadRoute
+  '/api/ytstream/search': typeof ApiYtstreamSearchRoute
   '/api/messages/feed/comment': typeof ApiMessagesFeedCommentRoute
   '/api/messages/feed/like': typeof ApiMessagesFeedLikeRoute
 }
@@ -550,6 +566,7 @@ export interface FileRoutesById {
   '/wabot': typeof WabotRoute
   '/x': typeof XRoute
   '/ytdl': typeof YtdlRoute
+  '/ytstream': typeof YtstreamRoute
   '/db/$id': typeof DbIdRoute
   '/db/create': typeof DbCreateRoute
   '/note/$noteId': typeof NoteNoteIdRoute
@@ -591,6 +608,7 @@ export interface FileRoutesById {
   '/api/x/tweets': typeof ApiXTweetsRoute
   '/api/x/user': typeof ApiXUserRoute
   '/api/ytdl/download': typeof ApiYtdlDownloadRoute
+  '/api/ytstream/search': typeof ApiYtstreamSearchRoute
   '/api/messages/feed/comment': typeof ApiMessagesFeedCommentRoute
   '/api/messages/feed/like': typeof ApiMessagesFeedLikeRoute
 }
@@ -618,6 +636,7 @@ export interface FileRouteTypes {
     | '/wabot'
     | '/x'
     | '/ytdl'
+    | '/ytstream'
     | '/db/$id'
     | '/db/create'
     | '/note/$noteId'
@@ -659,6 +678,7 @@ export interface FileRouteTypes {
     | '/api/x/tweets'
     | '/api/x/user'
     | '/api/ytdl/download'
+    | '/api/ytstream/search'
     | '/api/messages/feed/comment'
     | '/api/messages/feed/like'
   fileRoutesByTo: FileRoutesByTo
@@ -683,6 +703,7 @@ export interface FileRouteTypes {
     | '/wabot'
     | '/x'
     | '/ytdl'
+    | '/ytstream'
     | '/db/$id'
     | '/db/create'
     | '/note/$noteId'
@@ -724,6 +745,7 @@ export interface FileRouteTypes {
     | '/api/x/tweets'
     | '/api/x/user'
     | '/api/ytdl/download'
+    | '/api/ytstream/search'
     | '/api/messages/feed/comment'
     | '/api/messages/feed/like'
   id:
@@ -749,6 +771,7 @@ export interface FileRouteTypes {
     | '/wabot'
     | '/x'
     | '/ytdl'
+    | '/ytstream'
     | '/db/$id'
     | '/db/create'
     | '/note/$noteId'
@@ -790,6 +813,7 @@ export interface FileRouteTypes {
     | '/api/x/tweets'
     | '/api/x/user'
     | '/api/ytdl/download'
+    | '/api/ytstream/search'
     | '/api/messages/feed/comment'
     | '/api/messages/feed/like'
   fileRoutesById: FileRoutesById
@@ -816,6 +840,7 @@ export interface RootRouteChildren {
   WabotRoute: typeof WabotRoute
   XRoute: typeof XRoute
   YtdlRoute: typeof YtdlRoute
+  YtstreamRoute: typeof YtstreamRoute
   DbIdRoute: typeof DbIdRoute
   DbCreateRoute: typeof DbCreateRoute
   ShsdbIdRoute: typeof ShsdbIdRoute
@@ -855,10 +880,18 @@ export interface RootRouteChildren {
   ApiXTweetsRoute: typeof ApiXTweetsRoute
   ApiXUserRoute: typeof ApiXUserRoute
   ApiYtdlDownloadRoute: typeof ApiYtdlDownloadRoute
+  ApiYtstreamSearchRoute: typeof ApiYtstreamSearchRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/ytstream': {
+      id: '/ytstream'
+      path: '/ytstream'
+      fullPath: '/ytstream'
+      preLoaderRoute: typeof YtstreamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ytdl': {
       id: '/ytdl'
       path: '/ytdl'
@@ -1046,6 +1079,13 @@ declare module '@tanstack/react-router' {
       path: '/db/$id'
       fullPath: '/db/$id'
       preLoaderRoute: typeof DbIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ytstream/search': {
+      id: '/api/ytstream/search'
+      path: '/api/ytstream/search'
+      fullPath: '/api/ytstream/search'
+      preLoaderRoute: typeof ApiYtstreamSearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/ytdl/download': {
@@ -1358,6 +1398,7 @@ const rootRouteChildren: RootRouteChildren = {
   WabotRoute: WabotRoute,
   XRoute: XRoute,
   YtdlRoute: YtdlRoute,
+  YtstreamRoute: YtstreamRoute,
   DbIdRoute: DbIdRoute,
   DbCreateRoute: DbCreateRoute,
   ShsdbIdRoute: ShsdbIdRoute,
@@ -1397,6 +1438,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiXTweetsRoute: ApiXTweetsRoute,
   ApiXUserRoute: ApiXUserRoute,
   ApiYtdlDownloadRoute: ApiYtdlDownloadRoute,
+  ApiYtstreamSearchRoute: ApiYtstreamSearchRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
