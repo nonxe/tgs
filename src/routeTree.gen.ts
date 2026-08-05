@@ -28,6 +28,7 @@ import { Route as GitnetworkRouteImport } from './routes/gitnetwork'
 import { Route as DbConsoleRouteImport } from './routes/db-console'
 import { Route as ConvertRouteImport } from './routes/convert'
 import { Route as CloudifyRouteImport } from './routes/cloudify'
+import { Route as ClipboardRouteImport } from './routes/clipboard'
 import { Route as ApiServicesRouteImport } from './routes/api-services'
 import { Route as FilenameRouteImport } from './routes/$filename'
 import { Route as IndexRouteImport } from './routes/index'
@@ -63,6 +64,8 @@ import { Route as ApiLinksManageRouteImport } from './routes/api/links/manage'
 import { Route as ApiInstagramDownloadRouteImport } from './routes/api/instagram/download'
 import { Route as ApiGitnetworkV1RouteImport } from './routes/api/gitnetwork/v1'
 import { Route as ApiGitnetworkManageRouteImport } from './routes/api/gitnetwork/manage'
+import { Route as ApiCrossdeviceSendRouteImport } from './routes/api/crossdevice/send'
+import { Route as ApiCrossdeviceReceiveRouteImport } from './routes/api/crossdevice/receive'
 import { Route as ApiCloudifyUpdateRouteImport } from './routes/api/cloudify/update'
 import { Route as ApiCloudifySongsRouteImport } from './routes/api/cloudify/songs'
 import { Route as ApiCloudifySearchRouteImport } from './routes/api/cloudify/search'
@@ -169,6 +172,11 @@ const ConvertRoute = ConvertRouteImport.update({
 const CloudifyRoute = CloudifyRouteImport.update({
   id: '/cloudify',
   path: '/cloudify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClipboardRoute = ClipboardRouteImport.update({
+  id: '/clipboard',
+  path: '/clipboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiServicesRoute = ApiServicesRouteImport.update({
@@ -347,6 +355,16 @@ const ApiGitnetworkManageRoute = ApiGitnetworkManageRouteImport.update({
   path: '/api/gitnetwork/manage',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCrossdeviceSendRoute = ApiCrossdeviceSendRouteImport.update({
+  id: '/api/crossdevice/send',
+  path: '/api/crossdevice/send',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCrossdeviceReceiveRoute = ApiCrossdeviceReceiveRouteImport.update({
+  id: '/api/crossdevice/receive',
+  path: '/api/crossdevice/receive',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCloudifyUpdateRoute = ApiCloudifyUpdateRouteImport.update({
   id: '/api/cloudify/update',
   path: '/api/cloudify/update',
@@ -412,6 +430,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$filename': typeof FilenameRoute
   '/api-services': typeof ApiServicesRoute
+  '/clipboard': typeof ClipboardRoute
   '/cloudify': typeof CloudifyRoute
   '/convert': typeof ConvertRoute
   '/db-console': typeof DbConsoleRoute
@@ -447,6 +466,8 @@ export interface FileRoutesByFullPath {
   '/api/cloudify/search': typeof ApiCloudifySearchRoute
   '/api/cloudify/songs': typeof ApiCloudifySongsRoute
   '/api/cloudify/update': typeof ApiCloudifyUpdateRoute
+  '/api/crossdevice/receive': typeof ApiCrossdeviceReceiveRoute
+  '/api/crossdevice/send': typeof ApiCrossdeviceSendRoute
   '/api/gitnetwork/manage': typeof ApiGitnetworkManageRoute
   '/api/gitnetwork/v1': typeof ApiGitnetworkV1Route
   '/api/instagram/download': typeof ApiInstagramDownloadRoute
@@ -480,6 +501,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$filename': typeof FilenameRoute
   '/api-services': typeof ApiServicesRoute
+  '/clipboard': typeof ClipboardRoute
   '/cloudify': typeof CloudifyRoute
   '/convert': typeof ConvertRoute
   '/db-console': typeof DbConsoleRoute
@@ -514,6 +536,8 @@ export interface FileRoutesByTo {
   '/api/cloudify/search': typeof ApiCloudifySearchRoute
   '/api/cloudify/songs': typeof ApiCloudifySongsRoute
   '/api/cloudify/update': typeof ApiCloudifyUpdateRoute
+  '/api/crossdevice/receive': typeof ApiCrossdeviceReceiveRoute
+  '/api/crossdevice/send': typeof ApiCrossdeviceSendRoute
   '/api/gitnetwork/manage': typeof ApiGitnetworkManageRoute
   '/api/gitnetwork/v1': typeof ApiGitnetworkV1Route
   '/api/instagram/download': typeof ApiInstagramDownloadRoute
@@ -548,6 +572,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/$filename': typeof FilenameRoute
   '/api-services': typeof ApiServicesRoute
+  '/clipboard': typeof ClipboardRoute
   '/cloudify': typeof CloudifyRoute
   '/convert': typeof ConvertRoute
   '/db-console': typeof DbConsoleRoute
@@ -583,6 +608,8 @@ export interface FileRoutesById {
   '/api/cloudify/search': typeof ApiCloudifySearchRoute
   '/api/cloudify/songs': typeof ApiCloudifySongsRoute
   '/api/cloudify/update': typeof ApiCloudifyUpdateRoute
+  '/api/crossdevice/receive': typeof ApiCrossdeviceReceiveRoute
+  '/api/crossdevice/send': typeof ApiCrossdeviceSendRoute
   '/api/gitnetwork/manage': typeof ApiGitnetworkManageRoute
   '/api/gitnetwork/v1': typeof ApiGitnetworkV1Route
   '/api/instagram/download': typeof ApiInstagramDownloadRoute
@@ -618,6 +645,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$filename'
     | '/api-services'
+    | '/clipboard'
     | '/cloudify'
     | '/convert'
     | '/db-console'
@@ -653,6 +681,8 @@ export interface FileRouteTypes {
     | '/api/cloudify/search'
     | '/api/cloudify/songs'
     | '/api/cloudify/update'
+    | '/api/crossdevice/receive'
+    | '/api/crossdevice/send'
     | '/api/gitnetwork/manage'
     | '/api/gitnetwork/v1'
     | '/api/instagram/download'
@@ -686,6 +716,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$filename'
     | '/api-services'
+    | '/clipboard'
     | '/cloudify'
     | '/convert'
     | '/db-console'
@@ -720,6 +751,8 @@ export interface FileRouteTypes {
     | '/api/cloudify/search'
     | '/api/cloudify/songs'
     | '/api/cloudify/update'
+    | '/api/crossdevice/receive'
+    | '/api/crossdevice/send'
     | '/api/gitnetwork/manage'
     | '/api/gitnetwork/v1'
     | '/api/instagram/download'
@@ -753,6 +786,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$filename'
     | '/api-services'
+    | '/clipboard'
     | '/cloudify'
     | '/convert'
     | '/db-console'
@@ -788,6 +822,8 @@ export interface FileRouteTypes {
     | '/api/cloudify/search'
     | '/api/cloudify/songs'
     | '/api/cloudify/update'
+    | '/api/crossdevice/receive'
+    | '/api/crossdevice/send'
     | '/api/gitnetwork/manage'
     | '/api/gitnetwork/v1'
     | '/api/instagram/download'
@@ -822,6 +858,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   FilenameRoute: typeof FilenameRoute
   ApiServicesRoute: typeof ApiServicesRoute
+  ClipboardRoute: typeof ClipboardRoute
   CloudifyRoute: typeof CloudifyRoute
   ConvertRoute: typeof ConvertRoute
   DbConsoleRoute: typeof DbConsoleRoute
@@ -855,6 +892,8 @@ export interface RootRouteChildren {
   ApiCloudifySearchRoute: typeof ApiCloudifySearchRoute
   ApiCloudifySongsRoute: typeof ApiCloudifySongsRoute
   ApiCloudifyUpdateRoute: typeof ApiCloudifyUpdateRoute
+  ApiCrossdeviceReceiveRoute: typeof ApiCrossdeviceReceiveRoute
+  ApiCrossdeviceSendRoute: typeof ApiCrossdeviceSendRoute
   ApiGitnetworkManageRoute: typeof ApiGitnetworkManageRoute
   ApiGitnetworkV1Route: typeof ApiGitnetworkV1Route
   ApiInstagramDownloadRoute: typeof ApiInstagramDownloadRoute
@@ -1016,6 +1055,13 @@ declare module '@tanstack/react-router' {
       path: '/cloudify'
       fullPath: '/cloudify'
       preLoaderRoute: typeof CloudifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/clipboard': {
+      id: '/clipboard'
+      path: '/clipboard'
+      fullPath: '/clipboard'
+      preLoaderRoute: typeof ClipboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api-services': {
@@ -1263,6 +1309,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiGitnetworkManageRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/crossdevice/send': {
+      id: '/api/crossdevice/send'
+      path: '/api/crossdevice/send'
+      fullPath: '/api/crossdevice/send'
+      preLoaderRoute: typeof ApiCrossdeviceSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/crossdevice/receive': {
+      id: '/api/crossdevice/receive'
+      path: '/api/crossdevice/receive'
+      fullPath: '/api/crossdevice/receive'
+      preLoaderRoute: typeof ApiCrossdeviceReceiveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/cloudify/update': {
       id: '/api/cloudify/update'
       path: '/api/cloudify/update'
@@ -1380,6 +1440,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   FilenameRoute: FilenameRoute,
   ApiServicesRoute: ApiServicesRoute,
+  ClipboardRoute: ClipboardRoute,
   CloudifyRoute: CloudifyRoute,
   ConvertRoute: ConvertRoute,
   DbConsoleRoute: DbConsoleRoute,
@@ -1413,6 +1474,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCloudifySearchRoute: ApiCloudifySearchRoute,
   ApiCloudifySongsRoute: ApiCloudifySongsRoute,
   ApiCloudifyUpdateRoute: ApiCloudifyUpdateRoute,
+  ApiCrossdeviceReceiveRoute: ApiCrossdeviceReceiveRoute,
+  ApiCrossdeviceSendRoute: ApiCrossdeviceSendRoute,
   ApiGitnetworkManageRoute: ApiGitnetworkManageRoute,
   ApiGitnetworkV1Route: ApiGitnetworkV1Route,
   ApiInstagramDownloadRoute: ApiInstagramDownloadRoute,

@@ -42,7 +42,8 @@ import {
   Trash2,
   RefreshCw,
   Instagram,
-  Code2
+  Code2,
+  Smartphone
 } from "lucide-react";
 
 function StarOfDavidIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -483,6 +484,15 @@ function DashboardHome() {
       link: "/instagram",
       badge: "BETA",
       color: "text-zinc-200 border-zinc-800 bg-zinc-900/40 hover:border-zinc-700"
+    },
+    { 
+      id: "clipboard", 
+      title: "Cross-Device Clipboard", 
+      desc: "Instant cross-device text & media transfer powered by 7-digit security codes.", 
+      icon: Smartphone, 
+      link: "/clipboard",
+      badge: "SYNC",
+      color: "text-sky-400 border-sky-500/20 bg-sky-500/5 hover:border-sky-500/40"
     },
     { 
       id: "api-services", 
