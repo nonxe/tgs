@@ -43,8 +43,7 @@ import {
   RefreshCw,
   Instagram,
   Code2,
-  Smartphone,
-  Music2
+  Smartphone
 } from "lucide-react";
 
 function StarOfDavidIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -494,15 +493,6 @@ function DashboardHome() {
       link: "/clipboard",
       badge: "SYNC",
       color: "text-sky-400 border-sky-500/20 bg-sky-500/5 hover:border-sky-500/40"
-    },
-    { 
-      id: "lyrics", 
-      title: "Apple Lyrics", 
-      desc: "Search song lyrics with interactive Apple Music line-by-line display & 1-click copy.", 
-      icon: Music2, 
-      link: "/lyrics",
-      badge: "MUSIC",
-      color: "text-pink-400 border-pink-500/20 bg-pink-500/5 hover:border-pink-500/40"
     },
     { 
       id: "api-services", 

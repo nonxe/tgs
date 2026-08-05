@@ -21,7 +21,6 @@ import { Route as NoteRouteImport } from './routes/note'
 import { Route as MoreRouteImport } from './routes/more'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as MainRouteImport } from './routes/main'
-import { Route as LyricsRouteImport } from './routes/lyrics'
 import { Route as LinksRouteImport } from './routes/links'
 import { Route as IsraelRouteImport } from './routes/israel'
 import { Route as InstagramRouteImport } from './routes/instagram'
@@ -61,7 +60,6 @@ import { Route as ApiMessagesPostRouteImport } from './routes/api/messages/post'
 import { Route as ApiMessagesListRouteImport } from './routes/api/messages/list'
 import { Route as ApiMessagesFeedRouteImport } from './routes/api/messages/feed'
 import { Route as ApiMessagesActionRouteImport } from './routes/api/messages/action'
-import { Route as ApiLyricsSearchRouteImport } from './routes/api/lyrics/search'
 import { Route as ApiLinksManageRouteImport } from './routes/api/links/manage'
 import { Route as ApiInstagramDownloadRouteImport } from './routes/api/instagram/download'
 import { Route as ApiGitnetworkV1RouteImport } from './routes/api/gitnetwork/v1'
@@ -139,11 +137,6 @@ const MessagesRoute = MessagesRouteImport.update({
 const MainRoute = MainRouteImport.update({
   id: '/main',
   path: '/main',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LyricsRoute = LyricsRouteImport.update({
-  id: '/lyrics',
-  path: '/lyrics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LinksRoute = LinksRouteImport.update({
@@ -342,11 +335,6 @@ const ApiMessagesActionRoute = ApiMessagesActionRouteImport.update({
   path: '/api/messages/action',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiLyricsSearchRoute = ApiLyricsSearchRouteImport.update({
-  id: '/api/lyrics/search',
-  path: '/api/lyrics/search',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiLinksManageRoute = ApiLinksManageRouteImport.update({
   id: '/api/links/manage',
   path: '/api/links/manage',
@@ -450,7 +438,6 @@ export interface FileRoutesByFullPath {
   '/instagram': typeof InstagramRoute
   '/israel': typeof IsraelRoute
   '/links': typeof LinksRoute
-  '/lyrics': typeof LyricsRoute
   '/main': typeof MainRoute
   '/messages': typeof MessagesRoute
   '/more': typeof MoreRoute
@@ -485,7 +472,6 @@ export interface FileRoutesByFullPath {
   '/api/gitnetwork/v1': typeof ApiGitnetworkV1Route
   '/api/instagram/download': typeof ApiInstagramDownloadRoute
   '/api/links/manage': typeof ApiLinksManageRoute
-  '/api/lyrics/search': typeof ApiLyricsSearchRoute
   '/api/messages/action': typeof ApiMessagesActionRoute
   '/api/messages/feed': typeof ApiMessagesFeedRouteWithChildren
   '/api/messages/list': typeof ApiMessagesListRoute
@@ -523,7 +509,6 @@ export interface FileRoutesByTo {
   '/instagram': typeof InstagramRoute
   '/israel': typeof IsraelRoute
   '/links': typeof LinksRoute
-  '/lyrics': typeof LyricsRoute
   '/main': typeof MainRoute
   '/messages': typeof MessagesRoute
   '/more': typeof MoreRoute
@@ -557,7 +542,6 @@ export interface FileRoutesByTo {
   '/api/gitnetwork/v1': typeof ApiGitnetworkV1Route
   '/api/instagram/download': typeof ApiInstagramDownloadRoute
   '/api/links/manage': typeof ApiLinksManageRoute
-  '/api/lyrics/search': typeof ApiLyricsSearchRoute
   '/api/messages/action': typeof ApiMessagesActionRoute
   '/api/messages/feed': typeof ApiMessagesFeedRouteWithChildren
   '/api/messages/list': typeof ApiMessagesListRoute
@@ -596,7 +580,6 @@ export interface FileRoutesById {
   '/instagram': typeof InstagramRoute
   '/israel': typeof IsraelRoute
   '/links': typeof LinksRoute
-  '/lyrics': typeof LyricsRoute
   '/main': typeof MainRoute
   '/messages': typeof MessagesRoute
   '/more': typeof MoreRoute
@@ -631,7 +614,6 @@ export interface FileRoutesById {
   '/api/gitnetwork/v1': typeof ApiGitnetworkV1Route
   '/api/instagram/download': typeof ApiInstagramDownloadRoute
   '/api/links/manage': typeof ApiLinksManageRoute
-  '/api/lyrics/search': typeof ApiLyricsSearchRoute
   '/api/messages/action': typeof ApiMessagesActionRoute
   '/api/messages/feed': typeof ApiMessagesFeedRouteWithChildren
   '/api/messages/list': typeof ApiMessagesListRoute
@@ -671,7 +653,6 @@ export interface FileRouteTypes {
     | '/instagram'
     | '/israel'
     | '/links'
-    | '/lyrics'
     | '/main'
     | '/messages'
     | '/more'
@@ -706,7 +687,6 @@ export interface FileRouteTypes {
     | '/api/gitnetwork/v1'
     | '/api/instagram/download'
     | '/api/links/manage'
-    | '/api/lyrics/search'
     | '/api/messages/action'
     | '/api/messages/feed'
     | '/api/messages/list'
@@ -744,7 +724,6 @@ export interface FileRouteTypes {
     | '/instagram'
     | '/israel'
     | '/links'
-    | '/lyrics'
     | '/main'
     | '/messages'
     | '/more'
@@ -778,7 +757,6 @@ export interface FileRouteTypes {
     | '/api/gitnetwork/v1'
     | '/api/instagram/download'
     | '/api/links/manage'
-    | '/api/lyrics/search'
     | '/api/messages/action'
     | '/api/messages/feed'
     | '/api/messages/list'
@@ -816,7 +794,6 @@ export interface FileRouteTypes {
     | '/instagram'
     | '/israel'
     | '/links'
-    | '/lyrics'
     | '/main'
     | '/messages'
     | '/more'
@@ -851,7 +828,6 @@ export interface FileRouteTypes {
     | '/api/gitnetwork/v1'
     | '/api/instagram/download'
     | '/api/links/manage'
-    | '/api/lyrics/search'
     | '/api/messages/action'
     | '/api/messages/feed'
     | '/api/messages/list'
@@ -890,7 +866,6 @@ export interface RootRouteChildren {
   InstagramRoute: typeof InstagramRoute
   IsraelRoute: typeof IsraelRoute
   LinksRoute: typeof LinksRoute
-  LyricsRoute: typeof LyricsRoute
   MainRoute: typeof MainRoute
   MessagesRoute: typeof MessagesRoute
   MoreRoute: typeof MoreRoute
@@ -923,7 +898,6 @@ export interface RootRouteChildren {
   ApiGitnetworkV1Route: typeof ApiGitnetworkV1Route
   ApiInstagramDownloadRoute: typeof ApiInstagramDownloadRoute
   ApiLinksManageRoute: typeof ApiLinksManageRoute
-  ApiLyricsSearchRoute: typeof ApiLyricsSearchRoute
   ApiMessagesActionRoute: typeof ApiMessagesActionRoute
   ApiMessagesFeedRoute: typeof ApiMessagesFeedRouteWithChildren
   ApiMessagesListRoute: typeof ApiMessagesListRoute
@@ -1032,13 +1006,6 @@ declare module '@tanstack/react-router' {
       path: '/main'
       fullPath: '/main'
       preLoaderRoute: typeof MainRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lyrics': {
-      id: '/lyrics'
-      path: '/lyrics'
-      fullPath: '/lyrics'
-      preLoaderRoute: typeof LyricsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/links': {
@@ -1314,13 +1281,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMessagesActionRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/lyrics/search': {
-      id: '/api/lyrics/search'
-      path: '/api/lyrics/search'
-      fullPath: '/api/lyrics/search'
-      preLoaderRoute: typeof ApiLyricsSearchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/links/manage': {
       id: '/api/links/manage'
       path: '/api/links/manage'
@@ -1488,7 +1448,6 @@ const rootRouteChildren: RootRouteChildren = {
   InstagramRoute: InstagramRoute,
   IsraelRoute: IsraelRoute,
   LinksRoute: LinksRoute,
-  LyricsRoute: LyricsRoute,
   MainRoute: MainRoute,
   MessagesRoute: MessagesRoute,
   MoreRoute: MoreRoute,
@@ -1521,7 +1480,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiGitnetworkV1Route: ApiGitnetworkV1Route,
   ApiInstagramDownloadRoute: ApiInstagramDownloadRoute,
   ApiLinksManageRoute: ApiLinksManageRoute,
-  ApiLyricsSearchRoute: ApiLyricsSearchRoute,
   ApiMessagesActionRoute: ApiMessagesActionRoute,
   ApiMessagesFeedRoute: ApiMessagesFeedRouteWithChildren,
   ApiMessagesListRoute: ApiMessagesListRoute,
