@@ -500,10 +500,10 @@ function CrossDeviceClipboardPage() {
                       </div>
 
                       <a
-                        href={receivedItem.mediaUrl}
-                        target="_blank"
-                        rel="noreferrer"
+                        href={`/api/public/download?url=${encodeURIComponent(receivedItem.mediaUrl)}&name=${encodeURIComponent(receivedItem.fileName || "media_file")}`}
+                        download={receivedItem.fileName || "media_file"}
                         className="h-9 px-4 rounded-xl bg-white hover:bg-zinc-200 text-black font-bold text-xs transition-all flex items-center justify-center gap-1.5 active:scale-95 shrink-0"
+                        title="Direct Download File"
                       >
                         <Download className="size-3.5" />
                         <span>Download</span>

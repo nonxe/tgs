@@ -48,6 +48,7 @@ import { Route as ApiV1Ytv3RouteImport } from './routes/api/v1/ytv3'
 import { Route as ApiV1InstagramRouteImport } from './routes/api/v1/instagram'
 import { Route as ApiV1AiRouteImport } from './routes/api/v1/ai'
 import { Route as ApiPublicUploadRouteImport } from './routes/api/public/upload'
+import { Route as ApiPublicDownloadRouteImport } from './routes/api/public/download'
 import { Route as ApiPfpUploadRouteImport } from './routes/api/pfp/upload'
 import { Route as ApiPfpRemoveRouteImport } from './routes/api/pfp/remove'
 import { Route as ApiPfpGetRouteImport } from './routes/api/pfp/get'
@@ -274,6 +275,11 @@ const ApiPublicUploadRoute = ApiPublicUploadRouteImport.update({
   path: '/api/public/upload',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicDownloadRoute = ApiPublicDownloadRouteImport.update({
+  id: '/api/public/download',
+  path: '/api/public/download',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPfpUploadRoute = ApiPfpUploadRouteImport.update({
   id: '/api/pfp/upload',
   path: '/api/pfp/upload',
@@ -484,6 +490,7 @@ export interface FileRoutesByFullPath {
   '/api/pfp/get': typeof ApiPfpGetRoute
   '/api/pfp/remove': typeof ApiPfpRemoveRoute
   '/api/pfp/upload': typeof ApiPfpUploadRoute
+  '/api/public/download': typeof ApiPublicDownloadRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
   '/api/v1/ai': typeof ApiV1AiRoute
   '/api/v1/instagram': typeof ApiV1InstagramRoute
@@ -554,6 +561,7 @@ export interface FileRoutesByTo {
   '/api/pfp/get': typeof ApiPfpGetRoute
   '/api/pfp/remove': typeof ApiPfpRemoveRoute
   '/api/pfp/upload': typeof ApiPfpUploadRoute
+  '/api/public/download': typeof ApiPublicDownloadRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
   '/api/v1/ai': typeof ApiV1AiRoute
   '/api/v1/instagram': typeof ApiV1InstagramRoute
@@ -626,6 +634,7 @@ export interface FileRoutesById {
   '/api/pfp/get': typeof ApiPfpGetRoute
   '/api/pfp/remove': typeof ApiPfpRemoveRoute
   '/api/pfp/upload': typeof ApiPfpUploadRoute
+  '/api/public/download': typeof ApiPublicDownloadRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
   '/api/v1/ai': typeof ApiV1AiRoute
   '/api/v1/instagram': typeof ApiV1InstagramRoute
@@ -699,6 +708,7 @@ export interface FileRouteTypes {
     | '/api/pfp/get'
     | '/api/pfp/remove'
     | '/api/pfp/upload'
+    | '/api/public/download'
     | '/api/public/upload'
     | '/api/v1/ai'
     | '/api/v1/instagram'
@@ -769,6 +779,7 @@ export interface FileRouteTypes {
     | '/api/pfp/get'
     | '/api/pfp/remove'
     | '/api/pfp/upload'
+    | '/api/public/download'
     | '/api/public/upload'
     | '/api/v1/ai'
     | '/api/v1/instagram'
@@ -840,6 +851,7 @@ export interface FileRouteTypes {
     | '/api/pfp/get'
     | '/api/pfp/remove'
     | '/api/pfp/upload'
+    | '/api/public/download'
     | '/api/public/upload'
     | '/api/v1/ai'
     | '/api/v1/instagram'
@@ -910,6 +922,7 @@ export interface RootRouteChildren {
   ApiPfpGetRoute: typeof ApiPfpGetRoute
   ApiPfpRemoveRoute: typeof ApiPfpRemoveRoute
   ApiPfpUploadRoute: typeof ApiPfpUploadRoute
+  ApiPublicDownloadRoute: typeof ApiPublicDownloadRoute
   ApiPublicUploadRoute: typeof ApiPublicUploadRoute
   ApiV1AiRoute: typeof ApiV1AiRoute
   ApiV1InstagramRoute: typeof ApiV1InstagramRoute
@@ -1195,6 +1208,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/upload'
       fullPath: '/api/public/upload'
       preLoaderRoute: typeof ApiPublicUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/download': {
+      id: '/api/public/download'
+      path: '/api/public/download'
+      fullPath: '/api/public/download'
+      preLoaderRoute: typeof ApiPublicDownloadRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/pfp/upload': {
@@ -1492,6 +1512,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPfpGetRoute: ApiPfpGetRoute,
   ApiPfpRemoveRoute: ApiPfpRemoveRoute,
   ApiPfpUploadRoute: ApiPfpUploadRoute,
+  ApiPublicDownloadRoute: ApiPublicDownloadRoute,
   ApiPublicUploadRoute: ApiPublicUploadRoute,
   ApiV1AiRoute: ApiV1AiRoute,
   ApiV1InstagramRoute: ApiV1InstagramRoute,
