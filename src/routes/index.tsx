@@ -495,6 +495,15 @@ function DashboardHome() {
       color: "text-sky-400 border-sky-500/20 bg-sky-500/5 hover:border-sky-500/40"
     },
     { 
+      id: "ai-image", 
+      title: "AI Image Studio", 
+      desc: "Generate high-res AI artwork with Flux v2, Animagine Anime, and Epic Realism.", 
+      icon: Sparkles, 
+      link: "/ai-image",
+      badge: "ART",
+      color: "text-purple-400 border-purple-500/20 bg-purple-500/5 hover:border-purple-500/40"
+    },
+    { 
       id: "api-services", 
       title: "Cloud API Services", 
       desc: "Developer API Gateway. Generate API keys & proxy YouTube, Instagram & AI endpoints.", 

@@ -30,6 +30,7 @@ import { Route as ConvertRouteImport } from './routes/convert'
 import { Route as CloudifyRouteImport } from './routes/cloudify'
 import { Route as ClipboardRouteImport } from './routes/clipboard'
 import { Route as ApiServicesRouteImport } from './routes/api-services'
+import { Route as AiImageRouteImport } from './routes/ai-image'
 import { Route as FilenameRouteImport } from './routes/$filename'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as NoteIndexRouteImport } from './routes/note.index'
@@ -46,6 +47,7 @@ import { Route as ApiXDownloadRouteImport } from './routes/api/x/download'
 import { Route as ApiWabotManageRouteImport } from './routes/api/wabot/manage'
 import { Route as ApiV1Ytv3RouteImport } from './routes/api/v1/ytv3'
 import { Route as ApiV1InstagramRouteImport } from './routes/api/v1/instagram'
+import { Route as ApiV1ImageRouteImport } from './routes/api/v1/image'
 import { Route as ApiV1AiRouteImport } from './routes/api/v1/ai'
 import { Route as ApiPublicUploadRouteImport } from './routes/api/public/upload'
 import { Route as ApiPublicDownloadRouteImport } from './routes/api/public/download'
@@ -63,6 +65,7 @@ import { Route as ApiMessagesFeedRouteImport } from './routes/api/messages/feed'
 import { Route as ApiMessagesActionRouteImport } from './routes/api/messages/action'
 import { Route as ApiLinksManageRouteImport } from './routes/api/links/manage'
 import { Route as ApiInstagramDownloadRouteImport } from './routes/api/instagram/download'
+import { Route as ApiImageGenerateRouteImport } from './routes/api/image/generate'
 import { Route as ApiGitnetworkV1RouteImport } from './routes/api/gitnetwork/v1'
 import { Route as ApiGitnetworkManageRouteImport } from './routes/api/gitnetwork/manage'
 import { Route as ApiCrossdeviceSendRouteImport } from './routes/api/crossdevice/send'
@@ -185,6 +188,11 @@ const ApiServicesRoute = ApiServicesRouteImport.update({
   path: '/api-services',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AiImageRoute = AiImageRouteImport.update({
+  id: '/ai-image',
+  path: '/ai-image',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FilenameRoute = FilenameRouteImport.update({
   id: '/$filename',
   path: '/$filename',
@@ -263,6 +271,11 @@ const ApiV1Ytv3Route = ApiV1Ytv3RouteImport.update({
 const ApiV1InstagramRoute = ApiV1InstagramRouteImport.update({
   id: '/api/v1/instagram',
   path: '/api/v1/instagram',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1ImageRoute = ApiV1ImageRouteImport.update({
+  id: '/api/v1/image',
+  path: '/api/v1/image',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiV1AiRoute = ApiV1AiRouteImport.update({
@@ -351,6 +364,11 @@ const ApiInstagramDownloadRoute = ApiInstagramDownloadRouteImport.update({
   path: '/api/instagram/download',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiImageGenerateRoute = ApiImageGenerateRouteImport.update({
+  id: '/api/image/generate',
+  path: '/api/image/generate',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiGitnetworkV1Route = ApiGitnetworkV1RouteImport.update({
   id: '/api/gitnetwork/v1',
   path: '/api/gitnetwork/v1',
@@ -435,6 +453,7 @@ const ApiMessagesFeedCommentRoute = ApiMessagesFeedCommentRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$filename': typeof FilenameRoute
+  '/ai-image': typeof AiImageRoute
   '/api-services': typeof ApiServicesRoute
   '/clipboard': typeof ClipboardRoute
   '/cloudify': typeof CloudifyRoute
@@ -476,6 +495,7 @@ export interface FileRoutesByFullPath {
   '/api/crossdevice/send': typeof ApiCrossdeviceSendRoute
   '/api/gitnetwork/manage': typeof ApiGitnetworkManageRoute
   '/api/gitnetwork/v1': typeof ApiGitnetworkV1Route
+  '/api/image/generate': typeof ApiImageGenerateRoute
   '/api/instagram/download': typeof ApiInstagramDownloadRoute
   '/api/links/manage': typeof ApiLinksManageRoute
   '/api/messages/action': typeof ApiMessagesActionRoute
@@ -493,6 +513,7 @@ export interface FileRoutesByFullPath {
   '/api/public/download': typeof ApiPublicDownloadRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
   '/api/v1/ai': typeof ApiV1AiRoute
+  '/api/v1/image': typeof ApiV1ImageRoute
   '/api/v1/instagram': typeof ApiV1InstagramRoute
   '/api/v1/ytv3': typeof ApiV1Ytv3Route
   '/api/wabot/manage': typeof ApiWabotManageRoute
@@ -507,6 +528,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$filename': typeof FilenameRoute
+  '/ai-image': typeof AiImageRoute
   '/api-services': typeof ApiServicesRoute
   '/clipboard': typeof ClipboardRoute
   '/cloudify': typeof CloudifyRoute
@@ -547,6 +569,7 @@ export interface FileRoutesByTo {
   '/api/crossdevice/send': typeof ApiCrossdeviceSendRoute
   '/api/gitnetwork/manage': typeof ApiGitnetworkManageRoute
   '/api/gitnetwork/v1': typeof ApiGitnetworkV1Route
+  '/api/image/generate': typeof ApiImageGenerateRoute
   '/api/instagram/download': typeof ApiInstagramDownloadRoute
   '/api/links/manage': typeof ApiLinksManageRoute
   '/api/messages/action': typeof ApiMessagesActionRoute
@@ -564,6 +587,7 @@ export interface FileRoutesByTo {
   '/api/public/download': typeof ApiPublicDownloadRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
   '/api/v1/ai': typeof ApiV1AiRoute
+  '/api/v1/image': typeof ApiV1ImageRoute
   '/api/v1/instagram': typeof ApiV1InstagramRoute
   '/api/v1/ytv3': typeof ApiV1Ytv3Route
   '/api/wabot/manage': typeof ApiWabotManageRoute
@@ -579,6 +603,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$filename': typeof FilenameRoute
+  '/ai-image': typeof AiImageRoute
   '/api-services': typeof ApiServicesRoute
   '/clipboard': typeof ClipboardRoute
   '/cloudify': typeof CloudifyRoute
@@ -620,6 +645,7 @@ export interface FileRoutesById {
   '/api/crossdevice/send': typeof ApiCrossdeviceSendRoute
   '/api/gitnetwork/manage': typeof ApiGitnetworkManageRoute
   '/api/gitnetwork/v1': typeof ApiGitnetworkV1Route
+  '/api/image/generate': typeof ApiImageGenerateRoute
   '/api/instagram/download': typeof ApiInstagramDownloadRoute
   '/api/links/manage': typeof ApiLinksManageRoute
   '/api/messages/action': typeof ApiMessagesActionRoute
@@ -637,6 +663,7 @@ export interface FileRoutesById {
   '/api/public/download': typeof ApiPublicDownloadRoute
   '/api/public/upload': typeof ApiPublicUploadRoute
   '/api/v1/ai': typeof ApiV1AiRoute
+  '/api/v1/image': typeof ApiV1ImageRoute
   '/api/v1/instagram': typeof ApiV1InstagramRoute
   '/api/v1/ytv3': typeof ApiV1Ytv3Route
   '/api/wabot/manage': typeof ApiWabotManageRoute
@@ -653,6 +680,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$filename'
+    | '/ai-image'
     | '/api-services'
     | '/clipboard'
     | '/cloudify'
@@ -694,6 +722,7 @@ export interface FileRouteTypes {
     | '/api/crossdevice/send'
     | '/api/gitnetwork/manage'
     | '/api/gitnetwork/v1'
+    | '/api/image/generate'
     | '/api/instagram/download'
     | '/api/links/manage'
     | '/api/messages/action'
@@ -711,6 +740,7 @@ export interface FileRouteTypes {
     | '/api/public/download'
     | '/api/public/upload'
     | '/api/v1/ai'
+    | '/api/v1/image'
     | '/api/v1/instagram'
     | '/api/v1/ytv3'
     | '/api/wabot/manage'
@@ -725,6 +755,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/$filename'
+    | '/ai-image'
     | '/api-services'
     | '/clipboard'
     | '/cloudify'
@@ -765,6 +796,7 @@ export interface FileRouteTypes {
     | '/api/crossdevice/send'
     | '/api/gitnetwork/manage'
     | '/api/gitnetwork/v1'
+    | '/api/image/generate'
     | '/api/instagram/download'
     | '/api/links/manage'
     | '/api/messages/action'
@@ -782,6 +814,7 @@ export interface FileRouteTypes {
     | '/api/public/download'
     | '/api/public/upload'
     | '/api/v1/ai'
+    | '/api/v1/image'
     | '/api/v1/instagram'
     | '/api/v1/ytv3'
     | '/api/wabot/manage'
@@ -796,6 +829,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/$filename'
+    | '/ai-image'
     | '/api-services'
     | '/clipboard'
     | '/cloudify'
@@ -837,6 +871,7 @@ export interface FileRouteTypes {
     | '/api/crossdevice/send'
     | '/api/gitnetwork/manage'
     | '/api/gitnetwork/v1'
+    | '/api/image/generate'
     | '/api/instagram/download'
     | '/api/links/manage'
     | '/api/messages/action'
@@ -854,6 +889,7 @@ export interface FileRouteTypes {
     | '/api/public/download'
     | '/api/public/upload'
     | '/api/v1/ai'
+    | '/api/v1/image'
     | '/api/v1/instagram'
     | '/api/v1/ytv3'
     | '/api/wabot/manage'
@@ -869,6 +905,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   FilenameRoute: typeof FilenameRoute
+  AiImageRoute: typeof AiImageRoute
   ApiServicesRoute: typeof ApiServicesRoute
   ClipboardRoute: typeof ClipboardRoute
   CloudifyRoute: typeof CloudifyRoute
@@ -908,6 +945,7 @@ export interface RootRouteChildren {
   ApiCrossdeviceSendRoute: typeof ApiCrossdeviceSendRoute
   ApiGitnetworkManageRoute: typeof ApiGitnetworkManageRoute
   ApiGitnetworkV1Route: typeof ApiGitnetworkV1Route
+  ApiImageGenerateRoute: typeof ApiImageGenerateRoute
   ApiInstagramDownloadRoute: typeof ApiInstagramDownloadRoute
   ApiLinksManageRoute: typeof ApiLinksManageRoute
   ApiMessagesActionRoute: typeof ApiMessagesActionRoute
@@ -925,6 +963,7 @@ export interface RootRouteChildren {
   ApiPublicDownloadRoute: typeof ApiPublicDownloadRoute
   ApiPublicUploadRoute: typeof ApiPublicUploadRoute
   ApiV1AiRoute: typeof ApiV1AiRoute
+  ApiV1ImageRoute: typeof ApiV1ImageRoute
   ApiV1InstagramRoute: typeof ApiV1InstagramRoute
   ApiV1Ytv3Route: typeof ApiV1Ytv3Route
   ApiWabotManageRoute: typeof ApiWabotManageRoute
@@ -1084,6 +1123,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiServicesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ai-image': {
+      id: '/ai-image'
+      path: '/ai-image'
+      fullPath: '/ai-image'
+      preLoaderRoute: typeof AiImageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/$filename': {
       id: '/$filename'
       path: '/$filename'
@@ -1194,6 +1240,13 @@ declare module '@tanstack/react-router' {
       path: '/api/v1/instagram'
       fullPath: '/api/v1/instagram'
       preLoaderRoute: typeof ApiV1InstagramRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/image': {
+      id: '/api/v1/image'
+      path: '/api/v1/image'
+      fullPath: '/api/v1/image'
+      preLoaderRoute: typeof ApiV1ImageRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/v1/ai': {
@@ -1313,6 +1366,13 @@ declare module '@tanstack/react-router' {
       path: '/api/instagram/download'
       fullPath: '/api/instagram/download'
       preLoaderRoute: typeof ApiInstagramDownloadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/image/generate': {
+      id: '/api/image/generate'
+      path: '/api/image/generate'
+      fullPath: '/api/image/generate'
+      preLoaderRoute: typeof ApiImageGenerateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/gitnetwork/v1': {
@@ -1459,6 +1519,7 @@ const ApiMessagesFeedRouteWithChildren = ApiMessagesFeedRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   FilenameRoute: FilenameRoute,
+  AiImageRoute: AiImageRoute,
   ApiServicesRoute: ApiServicesRoute,
   ClipboardRoute: ClipboardRoute,
   CloudifyRoute: CloudifyRoute,
@@ -1498,6 +1559,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCrossdeviceSendRoute: ApiCrossdeviceSendRoute,
   ApiGitnetworkManageRoute: ApiGitnetworkManageRoute,
   ApiGitnetworkV1Route: ApiGitnetworkV1Route,
+  ApiImageGenerateRoute: ApiImageGenerateRoute,
   ApiInstagramDownloadRoute: ApiInstagramDownloadRoute,
   ApiLinksManageRoute: ApiLinksManageRoute,
   ApiMessagesActionRoute: ApiMessagesActionRoute,
@@ -1515,6 +1577,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicDownloadRoute: ApiPublicDownloadRoute,
   ApiPublicUploadRoute: ApiPublicUploadRoute,
   ApiV1AiRoute: ApiV1AiRoute,
+  ApiV1ImageRoute: ApiV1ImageRoute,
   ApiV1InstagramRoute: ApiV1InstagramRoute,
   ApiV1Ytv3Route: ApiV1Ytv3Route,
   ApiWabotManageRoute: ApiWabotManageRoute,
