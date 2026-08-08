@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { validateAndIncrementApiKey } from "../../../lib/github-api-records";
-import { extractDirectPngUrl } from "../image/generate";
+import { resolveTmpfilesDirectUrl } from "../image/generate";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -93,7 +93,7 @@ async function handleImageProxy(request: Request) {
 
     const data = await apiRes.json();
     const rawUrl = data.result || data.cdn_url || data.url || data.image || "";
-    const directPngUrl = extractDirectPngUrl(rawUrl);
+    const directPngUrl = await resolveTmpfilesDirectUrl(rawUrl);
 
     return new Response(
       JSON.stringify(

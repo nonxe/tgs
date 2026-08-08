@@ -7,11 +7,36 @@ const CORS_HEADERS = {
   "Content-Type": "application/json; charset=utf-8",
 };
 
-export function extractDirectPngUrl(url: string): string {
-  if (!url) return "";
-  let cleanUrl = url.trim();
+export async function resolveTmpfilesDirectUrl(pageUrl: string): Promise<string> {
+  if (!pageUrl) return "";
+  let cleanUrl = pageUrl.trim();
+  if (!cleanUrl.startsWith("http")) return cleanUrl;
 
-  // If URL is from tmpfiles.org and lacks /dl/, convert to direct download URL
+  try {
+    const pageRes = await fetch(cleanUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      },
+    });
+
+    if (pageRes.ok) {
+      const html = await pageRes.text();
+      // Match direct image link inside tmpfiles.org HTML page
+      const imgMatch = html.match(/<img[^>]+src=["'](https?:\/\/[^"']*tmpfiles\.org\/dl\/[^"']+)["']/i);
+      if (imgMatch && imgMatch[1]) {
+        return imgMatch[1];
+      }
+
+      const anchorMatch = html.match(/<a[^>]+href=["'](https?:\/\/[^"']*tmpfiles\.org\/dl\/[^"']+)["']/i);
+      if (anchorMatch && anchorMatch[1]) {
+        return anchorMatch[1];
+      }
+    }
+  } catch (e) {
+    console.warn("HTML scrape failed for tmpfiles:", e);
+  }
+
+  // Fallback: insert /dl/ if missing
   if (cleanUrl.includes("tmpfiles.org/") && !cleanUrl.includes("tmpfiles.org/dl/")) {
     cleanUrl = cleanUrl.replace("tmpfiles.org/", "tmpfiles.org/dl/");
   }
@@ -73,7 +98,8 @@ async function handleImageGenerate(request: Request) {
       );
     }
 
-    const directPngUrl = extractDirectPngUrl(rawUrl);
+    // Scrape direct .png URL from tmpfiles HTML page
+    const directPngUrl = await resolveTmpfilesDirectUrl(rawUrl);
 
     return new Response(
       JSON.stringify({
