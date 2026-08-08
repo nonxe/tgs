@@ -90,10 +90,29 @@ function AIImageStudioPage() {
         throw new Error(data.error || "Failed to generate AI image.");
       }
 
+      let finalDirectUrl = data.directUrl;
+
+      // Extra client-side fallback if tmpfiles HTML needs browser session expansion
+      if (finalDirectUrl && finalDirectUrl.includes("tmpfiles.org/dl/")) {
+        const parts = finalDirectUrl.split("tmpfiles.org/dl/")[1]?.split("/");
+        if (parts && parts.length === 2) {
+          try {
+            const pageRes = await fetch(finalDirectUrl);
+            if (pageRes.ok) {
+              const html = await pageRes.text();
+              const m = html.match(/<img[^>]+src=["'](https?:\/\/[^"']*tmpfiles\.org\/dl\/[^"']+)["']/i) || html.match(/<a[^>]+href=["'](https?:\/\/[^"']*tmpfiles\.org\/dl\/[^"']+)["']/i);
+              if (m && m[1]) {
+                finalDirectUrl = m[1];
+              }
+            }
+          } catch {}
+        }
+      }
+
       const newImg: GeneratedImage = {
         prompt: prompt.trim(),
         model,
-        directUrl: data.directUrl,
+        directUrl: finalDirectUrl,
         origUrl: data.origUrl || data.directUrl,
         createdAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
