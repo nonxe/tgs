@@ -49,13 +49,9 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
       error?.name === "ChunkLoadError";
 
     if (isChunkError && typeof window !== "undefined") {
-      const lastReload = sessionStorage.getItem("chunk_reload_time");
-      const now = Date.now();
-      // Prevent infinite reload loops if network is offline
-      if (!lastReload || now - parseInt(lastReload, 10) > 8000) {
-        sessionStorage.setItem("chunk_reload_time", now.toString());
-        window.location.reload();
-      }
+      // Instantly reload to fetch latest deployment bundle assets
+      window.location.reload();
+      return;
     }
   }, [error]);
 
@@ -144,6 +140,20 @@ function RootShell({ children }: { children: ReactNode }) {
                   document.documentElement.classList.add('dark');
                 }
               } catch (e) {}
+
+              // Auto-reload window if a stale deployment chunk fails to fetch
+              if (typeof window !== 'undefined') {
+                window.addEventListener('error', function(e) {
+                  if (e && e.message && (e.message.includes('Failed to fetch dynamically imported module') || e.message.includes('Importing a module script failed'))) {
+                    window.location.reload();
+                  }
+                }, true);
+                window.addEventListener('unhandledrejection', function(e) {
+                  if (e && e.reason && e.reason.message && (e.reason.message.includes('Failed to fetch dynamically imported module') || e.reason.message.includes('Importing a module script failed'))) {
+                    window.location.reload();
+                  }
+                });
+              }
             `,
           }}
         />
